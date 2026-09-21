@@ -1,0 +1,10 @@
+# Secrets & Private Keys
+*.pem
+*.key
+.env*
+
+# Dependencies & Build
+node_modules/
+.next/
+venv/
+__pycache__/
