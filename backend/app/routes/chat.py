@@ -117,4 +117,4 @@ def get_chat_inbox(
         .limit(limit)
 
     result = query.execute()
-    return result.data or []
+    return result.data or []
