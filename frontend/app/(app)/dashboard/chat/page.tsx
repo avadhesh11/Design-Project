@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -540,7 +538,6 @@ export default function ChatPage() {
           </div>
 
           {/* Direct Messages Section */}
-          {/* 
           <div>
             <div className="text-[10px] font-mono tracking-wider uppercase text-orbit-muted px-2 mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5 font-semibold">
@@ -656,7 +653,6 @@ export default function ChatPage() {
               </div>
             )}
           </div>
-          */}
         </div>
 
         {/* User Info Bar at bottom */}

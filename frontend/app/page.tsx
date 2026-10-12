@@ -72,7 +72,7 @@ export default function LandingPage() {
           </div>
           
           {/* Active Server Status Badge */}
-          {/* <Link 
+          <Link 
             href="/status" 
             className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border border-[#1e1e2e] bg-[#111118]/60 hover:border-accent/40 hover:bg-[#111118] transition-all duration-150 group"
           >
@@ -86,7 +86,7 @@ export default function LandingPage() {
             <span className="text-[10px] text-[#8a8a9e] group-hover:text-accent font-mono uppercase tracking-wider transition-colors">
               {apiStatus === "online" ? "API: Online" : apiStatus === "offline" ? "API: Offline" : "Checking System Status"}
             </span>
-          </Link> */}
+          </Link>
         </div>
 
         <div className="flex gap-2.5">

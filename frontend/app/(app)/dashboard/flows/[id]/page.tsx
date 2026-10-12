@@ -505,6 +505,14 @@ interface RawApiEdge {
     if (!flowId) return;
     try {
       setSaving(true);
+      // 1. Update workflow title and metadata
+      await api.put(`/flows/${flowId}`, {
+        title: flowMeta.title?.trim() || "Untitled Workflow",
+        description: flowMeta.description || undefined,
+        visibility: flowMeta.visibility || "workspace",
+      });
+
+      // 2. Synchronize canvas nodes and edges
       const syncPayload = {
         nodes: nodes.map((n) => ({
           node_key: n.id,
@@ -731,7 +739,21 @@ interface RawApiEdge {
                 setFlowMeta((prev) => ({ ...prev, title: e.target.value }));
                 setHasUnsavedChanges(true);
               }}
-              className="bg-transparent border-none text-orbit-text font-semibold text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 rounded px-1.5 py-0.5"
+              onBlur={async () => {
+                if (flowMeta.title.trim()) {
+                  try {
+                    await api.put(`/flows/${flowId}`, { title: flowMeta.title.trim() });
+                  } catch (e) {
+                    console.error("Failed to rename workflow:", e);
+                  }
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              className="bg-transparent border border-transparent hover:border-orbit-border focus:border-purple-500/50 text-orbit-text font-semibold text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 rounded px-1.5 py-0.5 transition-colors"
             />
           </div>
 

@@ -3,9 +3,6 @@ from typing import Optional, Literal
 from datetime import datetime
 from uuid import UUID
 
-# =====================================================================
-# 1. Authentication Schemas
-# =====================================================================
 
 class RegisterRequest(BaseModel):
     email: EmailStr
@@ -41,9 +38,6 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# =====================================================================
-# 2. Workspace & Member Schemas
-# =====================================================================
 
 class WorkspaceCreate(BaseModel):
     name: str
@@ -106,9 +100,6 @@ class WorkspaceActivityResponse(BaseModel):
     activities: list[WorkspaceActivityItem] = []
 
 
-# =====================================================================
-# 3. Document Management Schemas (RAG Knowledge Base)
-# =====================================================================
 
 class DocumentCreate(BaseModel):
     title: str = "Untitled"
@@ -134,9 +125,7 @@ class DocumentOut(BaseModel):
         from_attributes = True
 
 
-# =====================================================================
-# 4. Task Management Schemas (Kanban Board)
-# =====================================================================
+
 
 class TaskCreate(BaseModel):
     title: str
@@ -179,9 +168,6 @@ class TaskOut(BaseModel):
         from_attributes = True
 
 
-# =====================================================================
-# 5. AI Workspace Chat Schemas (Gemini 2.5 Flash / Agentic)
-# =====================================================================
 
 class ChatMessage(BaseModel):
     role: str        # "user" or "model"

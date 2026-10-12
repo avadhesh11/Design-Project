@@ -17,6 +17,10 @@ import {
   Circle,
   Timer,
   CheckCircle2,
+  MessageSquare,
+  Workflow,
+  GitBranch,
+  Settings,
 } from "lucide-react";
 
 const greeting = () => {
@@ -255,21 +259,71 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── AI Chat quick access ──────────────────────────────────── */}
-      <div
-        className="orbit-card p-4 flex items-center gap-4 hover:border-orbit-border2 hover:bg-surface2 transition-all cursor-pointer group"
-        onClick={() => router.push("/dashboard/ai")}
-      >
-        <div className="w-8 h-8 rounded-md bg-accent-dim border border-accent-border flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-accent" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-orbit-text">AI Chat</div>
-          <div className="text-[11px] text-orbit-muted">
-            Ask questions about your workspace documents
+      {/* ── Quick Feature Access ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className="orbit-card p-4 flex items-center gap-3.5 hover:border-orbit-border2 hover:bg-surface2 transition-all cursor-pointer group"
+          onClick={() => router.push("/dashboard/ai")}
+        >
+          <div className="w-9 h-9 rounded-lg bg-accent-dim border border-accent-border flex items-center justify-center flex-shrink-0">
+            <Bot className="w-4 h-4 text-accent" />
           </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-orbit-text group-hover:text-accent transition-colors">AI Assistant</div>
+            <div className="text-[11px] text-orbit-muted truncate">
+              Query docs & automated actions
+            </div>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-orbit-muted group-hover:text-orbit-text transition-colors flex-shrink-0" />
         </div>
-        <ArrowRight className="w-4 h-4 text-orbit-muted group-hover:text-orbit-text transition-colors flex-shrink-0" />
+
+        <div
+          className="orbit-card p-4 flex items-center gap-3.5 hover:border-orbit-border2 hover:bg-surface2 transition-all cursor-pointer group"
+          onClick={() => router.push("/dashboard/chat")}
+        >
+          <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <MessageSquare className="w-4 h-4 text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-orbit-text group-hover:text-blue-400 transition-colors">Realtime Chat</div>
+            <div className="text-[11px] text-orbit-muted truncate">
+              Channels & Direct Messages
+            </div>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-orbit-muted group-hover:text-orbit-text transition-colors flex-shrink-0" />
+        </div>
+
+        <div
+          className="orbit-card p-4 flex items-center gap-3.5 hover:border-orbit-border2 hover:bg-surface2 transition-all cursor-pointer group"
+          onClick={() => router.push("/dashboard/flows")}
+        >
+          <div className="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+            <Workflow className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-orbit-text group-hover:text-purple-400 transition-colors">Visual Flows</div>
+            <div className="text-[11px] text-orbit-muted truncate">
+              Canvas orchestration & CI
+            </div>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-orbit-muted group-hover:text-orbit-text transition-colors flex-shrink-0" />
+        </div>
+
+        <div
+          className="orbit-card p-4 flex items-center gap-3.5 hover:border-orbit-border2 hover:bg-surface2 transition-all cursor-pointer group"
+          onClick={() => router.push("/dashboard/integrations")}
+        >
+          <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <GitBranch className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold text-orbit-text group-hover:text-emerald-400 transition-colors">Integrations</div>
+            <div className="text-[11px] text-orbit-muted truncate">
+              GitHub activity & webhooks
+            </div>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-orbit-muted group-hover:text-orbit-text transition-colors flex-shrink-0" />
+        </div>
       </div>
 
     </div>

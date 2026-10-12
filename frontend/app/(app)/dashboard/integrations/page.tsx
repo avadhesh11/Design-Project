@@ -534,7 +534,7 @@ export default function IntegrationsPage() {
       )}
 
       {/* Intelligence & Webhook Info Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-[fadeUp_0.5s_0.15s_ease_both]">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 animate-[fadeUp_0.5s_0.15s_ease_both]">
         {/* Since You Were Away Preview */}
         <div className="orbit-card p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -551,7 +551,7 @@ export default function IntegrationsPage() {
         </div>
 
         {/* Security & Webhook Gateway */}
-        <div className="orbit-card p-5">
+        {/* <div className="orbit-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Shield className="w-4 h-4 text-[#5b8aff]" />
             <span className="font-semibold text-sm">Security & Webhook Gateway</span>
@@ -574,7 +574,7 @@ export default function IntegrationsPage() {
               <span>Short-lived installation tokens automatically rotated.</span>
             </li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

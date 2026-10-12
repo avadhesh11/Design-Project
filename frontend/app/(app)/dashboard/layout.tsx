@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -28,13 +27,21 @@ import {
   X,
   AlertCircle,
   Users,
+  MessageSquare,
+  Workflow,
+  GitBranch,
+  Settings,
 } from "lucide-react";
 
 const NAV = [
   { path: "/dashboard", href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/documents", href: "/dashboard/documents", label: "Documents", icon: FileText },
   { path: "/tasks", href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
-  { path: "/ai", href: "/dashboard/ai", label: "AI Chat", icon: Bot },
+  { path: "/chat", href: "/dashboard/chat", label: "Chat", icon: MessageSquare },
+  { path: "/flows", href: "/dashboard/flows", label: "Flows", icon: Workflow },
+  { path: "/ai", href: "/dashboard/ai", label: "AI Assistant", icon: Bot },
+  { path: "/integrations", href: "/dashboard/integrations", label: "Integrations", icon: GitBranch },
+  { path: "/settings", href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -10,10 +10,8 @@ def extract_text_from_file(file: UploadFile) -> str:
     
     file_bytes = file.file.read()
     
-    # Reset file pointer for potential future reads
     file.file.seek(0)
     
-    # 1. Plain Text or Markdown
     if filename.endswith('.txt') or filename.endswith('.md') or content_type == "text/plain":
         return file_bytes.decode("utf-8", errors="ignore")
         

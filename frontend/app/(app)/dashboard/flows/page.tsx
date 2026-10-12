@@ -181,7 +181,7 @@ export default function FlowsGalleryPage() {
       </div>
 
       {/* Starter Templates Section */}
-      <div className="space-y-3">
+      {/* <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold tracking-wide uppercase text-orbit-muted flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-400" />
@@ -226,7 +226,7 @@ export default function FlowsGalleryPage() {
             );
           })}
         </div>
-      </div>
+      </div> */}
 
       {/* Flows List Section */}
       <div className="space-y-4 pt-2">
