@@ -747,11 +747,8 @@ async def get_since_you_were_away(
             summary = cached_summary
         else:
             try:
-                llm = ChatGoogleGenerativeAI(
-                    model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-                    google_api_key=os.getenv("GEMINI_API_KEY"),
-                    temperature=0.3
-                )
+                from ..utils.llm_factory import get_chat_llm
+                llm = get_chat_llm(workspace_id=workspace_id, db=db, temperature=0.3)
                 pr_bullets = "\n".join([f"- PR #{p.pr_number} '{p.title}' ({p.state}) by @{p.author_login}" for p in prs[:6]])
                 commit_bullets = "\n".join([f"- Commit on '{c.branch}': {c.message.splitlines()[0]} by {c.author_login}" for c in commits[:8]])
 

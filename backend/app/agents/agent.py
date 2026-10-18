@@ -140,11 +140,8 @@ async def run_agent(
     if history is None:
         history = []
 
-    llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-        google_api_key=os.getenv("GEMINI_API_KEY"),
-        temperature=0.3,
-    )
+    from ..utils.llm_factory import get_chat_llm
+    llm = get_chat_llm(workspace_id=workspace_id, temperature=0.3)
 
     tools = get_agent_tools(is_admin, workspace_id, user_id)
 

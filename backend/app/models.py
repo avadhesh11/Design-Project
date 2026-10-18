@@ -33,6 +33,11 @@ class Workspace(Base):
     settings_allow_file_uploads = Column(Boolean, default=True, nullable=False)
     settings_restrict_invites = Column(Boolean, default=False, nullable=False)
     
+    # AI Provider & Model Config (Gemini vs Local Ollama/Llama)
+    ai_provider = Column(String, default="gemini", nullable=False)
+    ai_model = Column(String, default="gemini-2.5-flash", nullable=False)
+    ai_ollama_url = Column(String, default="http://localhost:11434", nullable=False)
+    
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
 
     members = relationship("WorkspaceMember", back_populates="workspace")

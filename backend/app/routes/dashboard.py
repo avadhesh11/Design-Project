@@ -506,20 +506,13 @@ async def get_when_you_were_away(
     if not has_events:
         summary = f"No new changes or team activity were recorded in this workspace {since_label.lower()}. Everything is up to date."
     else:
-        # Build factual summary
+        # Build factual summary using workspace preferred LLM (Gemini or Local Ollama/Llama)
         summary = None
-        gemini_api_key = os.getenv("GEMINI_API_KEY")
+        try:
+            from ..utils.llm_factory import get_chat_llm
+            from langchain_core.messages import SystemMessage, HumanMessage
 
-        if gemini_api_key:
-            try:
-                from langchain_google_genai import ChatGoogleGenerativeAI
-                from langchain_core.messages import SystemMessage, HumanMessage
-
-                llm = ChatGoogleGenerativeAI(
-                    model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-                    google_api_key=gemini_api_key,
-                    temperature=0.2
-                )
+            llm = get_chat_llm(workspace=ws, temperature=0.2)
 
                 # Format actual factual bullets strictly from verified lists
                 task_bullets = []

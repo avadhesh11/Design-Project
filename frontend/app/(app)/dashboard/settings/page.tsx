@@ -22,6 +22,11 @@ import {
   Save,
   CheckCircle2,
   Zap,
+  Sparkles,
+  Cpu,
+  Server,
+  AlertCircle,
+  Laptop
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -37,6 +42,17 @@ export default function SettingsPage() {
   const [aiLimit, setAiLimit] = useState(50);
   const [allowUploads, setAllowUploads] = useState(true);
   const [restrictInvites, setRestrictInvites] = useState(false);
+
+  // AI Provider & Model settings
+  const [aiProvider, setAiProvider] = useState<"gemini" | "ollama">("gemini");
+  const [aiModel, setAiModel] = useState("gemini-2.5-flash");
+  const [aiOllamaUrl, setAiOllamaUrl] = useState("http://localhost:11434");
+  const [testingOllama, setTestingOllama] = useState(false);
+  const [testFeedback, setTestFeedback] = useState<{
+    status: "idle" | "success" | "error";
+    message: string;
+    models?: string[];
+  }>({ status: "idle", message: "" });
 
   // 1. Fetch Workspace Settings
   const { data: settings, isLoading: loadingSettings } = useQuery<WorkspaceSettings>({
@@ -58,6 +74,10 @@ export default function SettingsPage() {
       setAiLimit(settings.settings_ai_daily_limit);
       setAllowUploads(settings.settings_allow_file_uploads);
       setRestrictInvites(settings.settings_restrict_invites);
+      const prov = (settings.ai_provider?.toLowerCase() === "ollama" ? "ollama" : "gemini");
+      setAiProvider(prov);
+      setAiModel(settings.ai_model || (prov === "ollama" ? "llama3.2" : "gemini-2.5-flash"));
+      setAiOllamaUrl(settings.ai_ollama_url || "http://localhost:11434");
     }
   }, [settings]);
 
@@ -68,6 +88,9 @@ export default function SettingsPage() {
       settings_ai_daily_limit: number;
       settings_allow_file_uploads: boolean;
       settings_restrict_invites: boolean;
+      ai_provider?: string;
+      ai_model?: string;
+      ai_ollama_url?: string;
     }) => api.patch(`/workspaces/${currentWorkspace?.id}/settings`, newSettings),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-settings", currentWorkspace?.id] });
@@ -79,6 +102,42 @@ export default function SettingsPage() {
       alert(error.response?.data?.detail || "Failed to update workspace settings");
     },
   });
+
+  // Test Ollama Connection
+  const handleTestOllama = async () => {
+    setTestingOllama(true);
+    setTestFeedback({ status: "idle", message: "" });
+    try {
+      const res = await api.post(
+        `/workspaces/${currentWorkspace?.id}/test-ollama?ollama_url=${encodeURIComponent(aiOllamaUrl)}`
+      );
+      if (res.data.status === "connected") {
+        setTestFeedback({
+          status: "success",
+          message: res.data.message,
+          models: res.data.models,
+        });
+        if (res.data.models && res.data.models.length > 0) {
+          if (!res.data.models.includes(aiModel)) {
+            setAiModel(res.data.models[0]);
+          }
+        }
+      } else {
+        setTestFeedback({
+          status: "error",
+          message: res.data.message || "Failed to connect to Ollama.",
+        });
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      setTestFeedback({
+        status: "error",
+        message: error.response?.data?.detail || "Could not reach Ollama test endpoint.",
+      });
+    } finally {
+      setTestingOllama(false);
+    }
+  };
 
   // Update Member Role Mutation
   const updateRoleMutation = useMutation({
@@ -118,6 +177,9 @@ export default function SettingsPage() {
       settings_ai_daily_limit: Number(aiLimit),
       settings_allow_file_uploads: allowUploads,
       settings_restrict_invites: restrictInvites,
+      ai_provider: aiProvider,
+      ai_model: aiModel,
+      ai_ollama_url: aiOllamaUrl,
     });
   };
 
@@ -349,6 +411,259 @@ export default function SettingsPage() {
             </label>
           </div>
         </div>
+      </div>
+
+      {/* AI Model Provider & Engine */}
+      <div className="orbit-card p-5 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-orbit-border">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <div>
+              <span className="font-display font-bold text-sm text-orbit-text">AI Model Provider & Engine</span>
+              <p className="text-[11px] text-orbit-muted mt-0.5">
+                Select whether AI features (When You Were Away, Workflow analysis, AI Agent chat) use Google Gemini Cloud or a Local LLM (Ollama).
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface2 text-accent border border-orbit-border">
+            {aiProvider === "ollama" ? "Local Offline Mode" : "Cloud AI Mode"}
+          </span>
+        </div>
+
+        {/* Provider Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Gemini Card */}
+          <div
+            onClick={() => {
+              if (isAdmin) {
+                setAiProvider("gemini");
+                if (!aiModel.includes("gemini")) setAiModel("gemini-2.5-flash");
+              }
+            }}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              aiProvider === "gemini"
+                ? "border-accent bg-accent/5 ring-1 ring-accent"
+                : "border-orbit-border bg-surface2/30 hover:border-orbit-border/80"
+            } ${!isAdmin ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-orbit-text">Google Gemini</div>
+                  <div className="text-[10px] text-orbit-muted">High-speed Cloud AI</div>
+                </div>
+              </div>
+              <input
+                type="radio"
+                name="aiProvider"
+                checked={aiProvider === "gemini"}
+                onChange={() => {}}
+                disabled={!isAdmin}
+                className="accent-accent"
+              />
+            </div>
+            <p className="text-[11px] text-orbit-muted mt-3 leading-relaxed">
+              Fast, intelligent cloud reasoning powered by Google Gemini. Recommended for general workspace usage.
+            </p>
+          </div>
+
+          {/* Ollama / Local Card */}
+          <div
+            onClick={() => {
+              if (isAdmin) {
+                setAiProvider("ollama");
+                if (aiModel.includes("gemini")) setAiModel("llama3.2");
+              }
+            }}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              aiProvider === "ollama"
+                ? "border-accent bg-accent/5 ring-1 ring-accent"
+                : "border-orbit-border bg-surface2/30 hover:border-orbit-border/80"
+            } ${!isAdmin ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Laptop className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-orbit-text">Local LLM (Ollama / Llama)</div>
+                  <div className="text-[10px] text-orbit-muted">100% Private & On-Device</div>
+                </div>
+              </div>
+              <input
+                type="radio"
+                name="aiProvider"
+                checked={aiProvider === "ollama"}
+                onChange={() => {}}
+                disabled={!isAdmin}
+                className="accent-accent"
+              />
+            </div>
+            <p className="text-[11px] text-orbit-muted mt-3 leading-relaxed">
+              Runs offline directly on your machine via Ollama (Llama 3.2, Qwen, etc.). Zero data leaves your machine.
+            </p>
+          </div>
+        </div>
+
+        {/* Detailed Model Configuration */}
+        {aiProvider === "gemini" ? (
+          <div className="p-4 rounded-xl border border-orbit-border bg-surface2/40 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-orbit-text">
+              <Cpu className="w-3.5 h-3.5 text-accent" />
+              <span>Gemini Model Variant</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", tag: "Recommended • Balanced" },
+                { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite", tag: "Ultra-Fast • Low Latency" },
+                { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro", tag: "Complex Logic & Deep Code" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={!isAdmin}
+                  onClick={() => setAiModel(m.id)}
+                  className={`p-2.5 rounded-lg border text-left transition-all ${
+                    aiModel === m.id
+                      ? "border-accent bg-accent/10 text-orbit-text"
+                      : "border-orbit-border bg-surface hover:border-orbit-border/80 text-orbit-muted"
+                  }`}
+                >
+                  <div className="text-xs font-medium text-orbit-text">{m.name}</div>
+                  <div className="text-[10px] text-orbit-muted mt-0.5">{m.tag}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 rounded-xl border border-orbit-border bg-surface2/40 space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-orbit-text">
+                  <Cpu className="w-3.5 h-3.5 text-accent" />
+                  <span>Local Model Selection</span>
+                </div>
+                <span className="text-[10px] text-orbit-muted font-mono">
+                  Active Model: <strong className="text-accent">{aiModel}</strong>
+                </span>
+              </div>
+
+              {/* Model Presets */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: "llama3.2", label: "Llama 3.2 (3B Default)" },
+                  { id: "llama3.1", label: "Llama 3.1 (8B)" },
+                  { id: "qwen2.5-coder", label: "Qwen 2.5 Coder" },
+                  { id: "qwen2.5", label: "Qwen 2.5" },
+                  { id: "deepseek-r1", label: "DeepSeek R1" },
+                  { id: "mistral", label: "Mistral" },
+                ].map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    disabled={!isAdmin}
+                    onClick={() => setAiModel(preset.id)}
+                    className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                      aiModel === preset.id
+                        ? "bg-accent text-black font-semibold border-accent shadow-sm"
+                        : "border-orbit-border bg-surface text-orbit-muted hover:text-orbit-text"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-1">
+                <label className="text-[11px] text-orbit-muted block mb-1">
+                  Or type any model name installed in your Ollama:
+                </label>
+                <input
+                  type="text"
+                  value={aiModel}
+                  disabled={!isAdmin}
+                  onChange={(e) => setAiModel(e.target.value)}
+                  placeholder="e.g. llama3.2:1b or codellama:7b"
+                  className="w-full bg-surface border border-orbit-border rounded-lg px-3 py-1.5 text-xs text-orbit-text font-mono focus:outline-none focus:border-accent"
+                />
+              </div>
+            </div>
+
+            {/* Ollama Endpoint & Connection Test */}
+            <div className="pt-2 border-t border-orbit-border space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-semibold text-orbit-text">
+                  <Server className="w-3.5 h-3.5 text-accent" />
+                  <span>Ollama Server Endpoint URL</span>
+                </div>
+                <span className="text-[10px] text-orbit-muted">
+                  Default: <code className="text-accent">http://localhost:11434</code>
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={aiOllamaUrl}
+                  disabled={!isAdmin}
+                  onChange={(e) => setAiOllamaUrl(e.target.value)}
+                  placeholder="http://localhost:11434"
+                  className="flex-1 bg-surface border border-orbit-border rounded-lg px-3 py-1.5 text-xs text-orbit-text font-mono focus:outline-none focus:border-accent"
+                />
+                <button
+                  type="button"
+                  onClick={handleTestOllama}
+                  disabled={testingOllama || !isAdmin}
+                  className="orbit-btn-secondary text-xs px-3 py-1.5 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  {testingOllama ? (
+                    <Spinner className="w-3 h-3" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                  <span>Test Connection</span>
+                </button>
+              </div>
+
+              <p className="text-[10px] text-orbit-muted">
+                Tip: If running inside Docker, use <code className="text-accent font-mono">http://host.docker.internal:11434</code> so containers can reach your Windows host.
+              </p>
+
+              {/* Test Feedback */}
+              {testFeedback.status !== "idle" && (
+                <div
+                  className={`p-2.5 rounded-lg text-xs flex flex-col gap-1.5 animate-fade-up ${
+                    testFeedback.status === "success"
+                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                      : "bg-red-500/10 border border-red-500/20 text-red-400"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {testFeedback.status === "success" ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    )}
+                    <span>{testFeedback.message}</span>
+                  </div>
+
+                  {testFeedback.models && testFeedback.models.length > 0 && (
+                    <div className="text-[11px] text-orbit-muted pt-1 border-t border-emerald-500/20">
+                      Installed models detected:{" "}
+                      <span className="font-mono text-emerald-300">
+                        {testFeedback.models.join(", ")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Member Governance & Roles */}

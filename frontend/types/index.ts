@@ -41,6 +41,9 @@ export interface WorkspaceSettings {
   settings_ai_daily_limit: number;
   settings_allow_file_uploads: boolean;
   settings_restrict_invites: boolean;
+  ai_provider?: string;
+  ai_model?: string;
+  ai_ollama_url?: string;
   ai_today_usage: number;
   ai_daily_limit: number;
 }

@@ -10,11 +10,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Create tables
+from sqlalchemy import text
+
+# Create tables & ensure new columns exist
 try:
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        for col_sql in [
+            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_provider VARCHAR DEFAULT 'gemini'",
+            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_model VARCHAR DEFAULT 'gemini-2.5-flash'",
+            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_ollama_url VARCHAR DEFAULT 'http://localhost:11434'",
+        ]:
+            try:
+                conn.execute(text(col_sql))
+            except Exception as migrate_err:
+                logger.debug(f"Migration notice: {migrate_err}")
 except Exception as e:
-    logger.warning(f"Could not create tables: {e}")
+    logger.warning(f"Could not initialize or migrate tables: {e}")
 
 app = FastAPI(title="Orbit AI API")
 

@@ -460,11 +460,8 @@ User Specific Question:
 """
 
     try:
-        llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-            google_api_key=os.getenv("GEMINI_API_KEY"),
-            temperature=0.3
-        )
+        from ..utils.llm_factory import get_chat_llm
+        llm = get_chat_llm(workspace_id=str(flow.workspace_id), db=db, temperature=0.3)
         res = await llm.ainvoke([
             SystemMessage(content="You are an expert system architect and workflow analyst. Provide crisp, structured markdown explanations highlighting triggers, decisions, actions, and potential bottlenecks."),
             HumanMessage(content=prompt)

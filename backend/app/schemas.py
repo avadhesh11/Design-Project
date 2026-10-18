@@ -71,6 +71,9 @@ class WorkspaceSettingsOut(BaseModel):
     settings_ai_daily_limit: int
     settings_allow_file_uploads: bool
     settings_restrict_invites: bool
+    ai_provider: str = "gemini"
+    ai_model: str = "gemini-2.5-flash"
+    ai_ollama_url: str = "http://localhost:11434"
     ai_today_usage: int
     ai_daily_limit: int
 
@@ -79,6 +82,9 @@ class WorkspaceSettingsUpdate(BaseModel):
     settings_ai_daily_limit: Optional[int] = None
     settings_allow_file_uploads: Optional[bool] = None
     settings_restrict_invites: Optional[bool] = None
+    ai_provider: Optional[str] = None
+    ai_model: Optional[str] = None
+    ai_ollama_url: Optional[str] = None
 
 class WorkspaceOut(BaseModel):
     id: UUID
@@ -90,6 +96,9 @@ class WorkspaceOut(BaseModel):
     settings_ai_daily_limit: int = 50
     settings_allow_file_uploads: bool = True
     settings_restrict_invites: bool = False
+    ai_provider: str = "gemini"
+    ai_model: str = "gemini-2.5-flash"
+    ai_ollama_url: str = "http://localhost:11434"
     created_at: datetime
     members: list[WorkspaceMemberOut] = []
 

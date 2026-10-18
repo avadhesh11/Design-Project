@@ -350,6 +350,9 @@ def get_workspace_settings(
         settings_ai_daily_limit=ws.settings_ai_daily_limit,
         settings_allow_file_uploads=ws.settings_allow_file_uploads,
         settings_restrict_invites=ws.settings_restrict_invites,
+        ai_provider=getattr(ws, "ai_provider", "gemini") or "gemini",
+        ai_model=getattr(ws, "ai_model", "gemini-2.5-flash") or "gemini-2.5-flash",
+        ai_ollama_url=getattr(ws, "ai_ollama_url", "http://localhost:11434") or "http://localhost:11434",
         ai_today_usage=used_today,
         ai_daily_limit=ws.settings_ai_daily_limit
     )
@@ -372,6 +375,12 @@ def update_workspace_settings(
         ws.settings_allow_file_uploads = body.settings_allow_file_uploads
     if body.settings_restrict_invites is not None:
         ws.settings_restrict_invites = body.settings_restrict_invites
+    if body.ai_provider is not None:
+        ws.ai_provider = body.ai_provider.strip().lower()
+    if body.ai_model is not None:
+        ws.ai_model = body.ai_model.strip()
+    if body.ai_ollama_url is not None:
+        ws.ai_ollama_url = body.ai_ollama_url.strip()
 
     db.commit()
     db.refresh(ws)
@@ -394,9 +403,44 @@ def update_workspace_settings(
         settings_ai_daily_limit=ws.settings_ai_daily_limit,
         settings_allow_file_uploads=ws.settings_allow_file_uploads,
         settings_restrict_invites=ws.settings_restrict_invites,
+        ai_provider=getattr(ws, "ai_provider", "gemini") or "gemini",
+        ai_model=getattr(ws, "ai_model", "gemini-2.5-flash") or "gemini-2.5-flash",
+        ai_ollama_url=getattr(ws, "ai_ollama_url", "http://localhost:11434") or "http://localhost:11434",
         ai_today_usage=used_today,
         ai_daily_limit=ws.settings_ai_daily_limit
     )
+
+
+@router.post("/{workspace_id}/test-ollama")
+def test_ollama_connection(
+    workspace_id: str,
+    ollama_url: str = "http://localhost:11434",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    check_workspace_membership(workspace_id, str(current_user.id), db)
+    import requests
+    try:
+        url = (ollama_url or "http://localhost:11434").rstrip("/") + "/api/tags"
+        resp = requests.get(url, timeout=4)
+        if resp.status_code == 200:
+            data = resp.json()
+            models = [m.get("name") for m in data.get("models", [])]
+            return {
+                "status": "connected",
+                "message": f"Successfully connected to Ollama! Found {len(models)} installed models.",
+                "models": models
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"Ollama responded with HTTP {resp.status_code}."
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Cannot reach Ollama at {ollama_url}. Is Ollama running on your machine? ({str(e)})"
+        }
 
 
 # DELETE workspace (admin only)
