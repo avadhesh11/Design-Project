@@ -29,6 +29,8 @@ ENV/
 .env.production
 .env.staging
 *.env
+.env.*
+!.env.example
 
 # IDE
 .vscode/
@@ -58,6 +60,4 @@ htmlcov/
 # MyPy
 .mypy_cache/
 .dmypy.json
-
-# Docker
-*.dockerignore
+

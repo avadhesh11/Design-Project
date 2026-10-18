@@ -16,7 +16,7 @@ if not DATABASE_URL:
 
 # Use NullPool for Supabase (cloud, SSL, connection-limited) or
 # QueuePool for local Postgres (load testing, no SSL overhead, no cap).
-_is_local = "localhost" in DATABASE_URL or "127.0.0.1" in DATABASE_URL
+_is_local = "localhost" in DATABASE_URL or "127.0.0.1" in DATABASE_URL or "@postgres:" in DATABASE_URL
 
 if _is_local:
     # Local Postgres — use a real connection pool so load tests don't pay
