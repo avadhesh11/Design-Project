@@ -419,9 +419,16 @@ export default function AIPage() {
               <span className="text-sm font-medium text-orbit-text truncate max-w-[200px]">
                 {currentSessionTitle}
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-orbit-border text-orbit-muted hidden sm:inline">
-                Gemini 2.5 Flash
-              </span>
+              {settings?.ai_provider === "ollama" || settings?.ai_provider === "local" || settings?.ai_provider === "llama" ? (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hidden sm:inline-flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Local: {settings?.ai_model || "llama3:8b"}
+                </span>
+              ) : (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-orbit-border text-orbit-muted hidden sm:inline">
+                  {settings?.ai_model || "Gemini 2.5 Flash"}
+                </span>
+              )}
             </div>
           </div>
 

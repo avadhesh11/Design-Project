@@ -203,6 +203,22 @@ def check_is_workspace_admin(workspace_id: str, user_id: str, db: Session) -> tu
     return ws, member
 
 
+def check_workspace_membership(workspace_id: str, user_id: str, db: Session) -> tuple[Workspace, WorkspaceMember | None]:
+    ws = db.query(Workspace).filter(Workspace.id == workspace_id).first()
+    if not ws:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+
+    member = db.query(WorkspaceMember).filter(
+        WorkspaceMember.workspace_id == workspace_id,
+        WorkspaceMember.user_id == user_id
+    ).first()
+
+    if not member and str(ws.owner_id) != str(user_id):
+        raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+    return ws, member
+
+
 # --- Member Management Endpoints ---
 
 @router.get("/{workspace_id}/members", response_model=list[WorkspaceMemberDetailOut])

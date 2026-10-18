@@ -49,6 +49,25 @@ def get_chat_llm(
         base_url = getattr(ws, "ai_ollama_url", None) or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         base_url = base_url.rstrip("/")
 
+        # Auto-detect installed models in Ollama to avoid 404 'model not found'
+        try:
+            import requests
+            tag_resp = requests.get(f"{base_url}/api/tags", timeout=1.5)
+            if tag_resp.status_code == 200:
+                installed = [m.get("name") for m in tag_resp.json().get("models", [])]
+                if installed and model not in installed:
+                    base_req = model.split(":")[0].split(".")[0].lower()
+                    matched = next((m for m in installed if base_req in m.lower()), None)
+                    if matched:
+                        print(f"[AI ENGINE] Notice: Model '{model}' not found in Ollama. Auto-resolved to installed '{matched}'.", flush=True)
+                        model = matched
+                    else:
+                        print(f"[AI ENGINE] Notice: Model '{model}' not found in Ollama. Falling back to '{installed[0]}'.", flush=True)
+                        model = installed[0]
+        except Exception as tag_err:
+            logger.debug(f"Could not query Ollama tags: {tag_err}")
+
+        print(f"\n[AI ENGINE] ==> Active Provider: LOCAL OLLAMA | Model: '{model}' | URL: {base_url}\n", flush=True)
         logger.info(f"Using Local Ollama LLM: model={model}, base_url={base_url}")
 
         # 1. Try langchain_ollama
@@ -88,6 +107,7 @@ def get_chat_llm(
             model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         api_key = os.getenv("GEMINI_API_KEY")
+        print(f"\n[AI ENGINE] ==> Active Provider: GOOGLE GEMINI (Cloud) | Model: '{model}'\n", flush=True)
         logger.info(f"Using Google Gemini LLM: model={model}")
 
         from langchain_google_genai import ChatGoogleGenerativeAI

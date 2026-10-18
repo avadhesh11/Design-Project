@@ -155,8 +155,17 @@ def delete_doc(
 
     if str(doc.created_by)!=str(current_user.id) and member.role!="admin":
         raise HTTPException(status_code=403, detail="Not allowed to delete this document")
+
+    # Delete corresponding embeddings from Supabase pgvector
+    try:
+        supabase.table("embeddings").delete().eq("source_id", str(doc.id)).execute()
+    except Exception as emb_err:
+        logger.warning(f"Failed to delete embeddings from Supabase for doc {doc_id}: {emb_err}")
+
     db.delete(doc)
     db.commit()
+    return {"message": "Document deleted successfully"}
+
 @router.patch("/{doc_id}", response_model=DocumentOut)
 def update_document(
     doc_id: str,

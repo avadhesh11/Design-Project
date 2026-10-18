@@ -241,14 +241,24 @@ async def chat(
     session.updated_at = datetime.now(UTC)
     db.commit()
 
-    result = await run_agent(
-        message=body.message,
-        workspace_id=body.workspace_id,
-        user_id=str(current_user.id),
-        user_email=current_user.email,
-        is_admin=is_admin,
-        history=[{"role": m.role, "content": m.content} for m in body.history]
-    )
+    try:
+        result = await run_agent(
+            message=body.message,
+            workspace_id=body.workspace_id,
+            user_id=str(current_user.id),
+            user_email=current_user.email,
+            is_admin=is_admin,
+            history=[{"role": m.role, "content": m.content} for m in body.history]
+        )
+    except Exception as agent_err:
+        logger.exception(f"Error during agent execution: {agent_err}")
+        clean_err = str(agent_err).strip() or "Unknown AI engine error"
+        result = {
+            "response": f"⚠️ Error from AI model: {clean_err}\n\nPlease check your model settings or verify that your LLM provider/Ollama is running properly.",
+            "tools_used": [],
+            "role": "model",
+            "is_admin": is_admin
+        }
 
     response_content = result.get("response", "")
     if isinstance(response_content, list):

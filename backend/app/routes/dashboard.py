@@ -514,32 +514,32 @@ async def get_when_you_were_away(
 
             llm = get_chat_llm(workspace=ws, temperature=0.2)
 
-                # Format actual factual bullets strictly from verified lists
-                task_bullets = []
-                for t in tasks_created_list[:5]:
-                    task_bullets.append(f"- Created task '{t.title}' [{t.priority.upper()}] by @{t.creator_email.split('@')[0] if t.creator_email else 'member'}")
-                for t in tasks_updated_list[:5]:
-                    task_bullets.append(f"- Updated task '{t.title}' (Status: {t.status.upper()})")
+            # Format actual factual bullets strictly from verified lists
+            task_bullets = []
+            for t in tasks_created_list[:5]:
+                task_bullets.append(f"- Created task '{t.title}' [{t.priority.upper()}] by @{t.creator_email.split('@')[0] if t.creator_email else 'member'}")
+            for t in tasks_updated_list[:5]:
+                task_bullets.append(f"- Updated task '{t.title}' (Status: {t.status.upper()})")
 
-                deadline_bullets = []
-                for t in tasks_overdue_list[:4]:
-                    deadline_bullets.append(f"- OVERDUE: Task '{t.title}' was due on {t.due_date.strftime('%b %d') if t.due_date else 'unknown'}")
-                for t in tasks_approaching_list[:4]:
-                    deadline_bullets.append(f"- Approaching Deadline: Task '{t.title}' due {t.due_date.strftime('%b %d') if t.due_date else 'soon'}")
+            deadline_bullets = []
+            for t in tasks_overdue_list[:4]:
+                deadline_bullets.append(f"- OVERDUE: Task '{t.title}' was due on {t.due_date.strftime('%b %d') if t.due_date else 'unknown'}")
+            for t in tasks_approaching_list[:4]:
+                deadline_bullets.append(f"- Approaching Deadline: Task '{t.title}' due {t.due_date.strftime('%b %d') if t.due_date else 'soon'}")
 
-                pr_bullets = []
-                for p in github_prs_list[:5]:
-                    pr_bullets.append(f"- PR #{p.pr_number} '{p.title}' ({p.state.upper()}) on {p.repository_name}")
+            pr_bullets = []
+            for p in github_prs_list[:5]:
+                pr_bullets.append(f"- PR #{p.pr_number} '{p.title}' ({p.state.upper()}) on {p.repository_name}")
 
-                commit_bullets = []
-                for c in github_commits_list[:6]:
-                    commit_bullets.append(f"- Commit on '{c.branch}': {c.message} by @{c.author_login or 'dev'}")
+            commit_bullets = []
+            for c in github_commits_list[:6]:
+                commit_bullets.append(f"- Commit on '{c.branch}': {c.message} by @{c.author_login or 'dev'}")
 
-                team_bullets = []
-                for a in team_activities_list[:5]:
-                    team_bullets.append(f"- {a.action}: '{a.title}' ({a.description or ''})")
+            team_bullets = []
+            for a in team_activities_list[:5]:
+                team_bullets.append(f"- {a.action}: '{a.title}' ({a.description or ''})")
 
-                prompt = f"""You are the Orbit Executive Assistant. Summarize ONLY the following factual recorded events that occurred in this workspace during the window: {since_label}.
+            prompt = f"""You are the Orbit Executive Assistant. Summarize ONLY the following factual recorded events that occurred in this workspace during the window: {since_label}.
 CRITICAL CONSTRAINT: You must ONLY refer to items explicitly provided below. Do not fabricate, assume, or invent updates. If a category is empty, ignore it.
 Highlight key tasks, urgent deadlines, pull requests/commits, and team interactions in 2-3 crisp, professional executive sentences.
 
@@ -558,18 +558,18 @@ GitHub Commits:
 Team Activity:
 {chr(10).join(team_bullets) if team_bullets else 'No document or chat updates.'}
 """
-                res = await llm.ainvoke([
-                    SystemMessage(content="You are an accurate workspace intelligence reporter. Keep it factual, concise, and under 3 sentences."),
-                    HumanMessage(content=prompt)
-                ])
+            res = await llm.ainvoke([
+                SystemMessage(content="You are an accurate workspace intelligence reporter. Keep it factual, concise, and under 3 sentences."),
+                HumanMessage(content=prompt)
+            ])
 
-                raw = res.content
-                if isinstance(raw, list):
-                    summary = "".join([part.get("text", "") if isinstance(part, dict) else str(part) for part in raw]).strip()
-                else:
-                    summary = str(raw or "").strip()
-            except Exception as e:
-                logger.warning(f"When You Were Away: LLM synthesis error: {e}")
+            raw = res.content
+            if isinstance(raw, list):
+                summary = "".join([part.get("text", "") if isinstance(part, dict) else str(part) for part in raw]).strip()
+            else:
+                summary = str(raw or "").strip()
+        except Exception as e:
+            logger.warning(f"When You Were Away: LLM synthesis error: {e}")
 
         # Deterministic factual fallback if LLM is unavailable or fails
         if not summary:

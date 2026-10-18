@@ -6,6 +6,8 @@
   /* ─── Dark Mode (default) ───────────────────────────────────── */
   :root,
   .dark {
+    color-scheme: dark;
+
     /* Canvas */
     --bg: #0d0d0f;
     --surface: #111115;
@@ -43,6 +45,8 @@
 
   /* ─── Light Mode ────────────────────────────────────────────── */
   .light {
+    color-scheme: light;
+
     --bg: #f5f5f7;
     --surface: #ffffff;
     --surface2: #f0f0f3;

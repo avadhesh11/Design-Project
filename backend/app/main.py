@@ -20,6 +20,7 @@ try:
             "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_provider VARCHAR DEFAULT 'gemini'",
             "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_model VARCHAR DEFAULT 'gemini-2.5-flash'",
             "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_ollama_url VARCHAR DEFAULT 'http://localhost:11434'",
+            "ALTER TABLE users ALTER COLUMN password DROP NOT NULL",
         ]:
             try:
                 conn.execute(text(col_sql))
