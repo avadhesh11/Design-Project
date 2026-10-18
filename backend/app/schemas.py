@@ -1,9 +1,8 @@
+from __future__ import annotations
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, Literal
 from datetime import datetime
 from uuid import UUID
-from typing import Optional
-from datetime import datetime
 # --- Auth schemas (already exist) ---
 
 class RegisterRequest(BaseModel):
@@ -144,6 +143,8 @@ class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
     priority: Optional[Literal["low", "medium", "high"]] = "medium"
+    task_type: Optional[str] = "feature"
+    requires_commit: Optional[bool] = False
     workspace_id: UUID
     assigned_to: Optional[UUID] = None
     assigned_to_ids: Optional[list[UUID]] = []
@@ -155,6 +156,10 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[Literal["todo", "in_progress", "done"]] = None
     priority: Optional[Literal["low", "medium", "high"]] = None
+    task_type: Optional[str] = None
+    requires_commit: Optional[bool] = None
+    no_commit_reason: Optional[str] = None
+    completion_notes: Optional[str] = None
     assigned_to: Optional[UUID] = None
     assigned_to_ids: Optional[list[UUID]] = None
     due_date: Optional[datetime] = None
@@ -162,9 +167,13 @@ class TaskUpdate(BaseModel):
 class TaskOut(BaseModel):
     id: UUID
     title: str
-    description: Optional[str]
+    description: Optional[str] = None
     status: str
     priority: str
+    task_type: Optional[str] = "feature"
+    requires_commit: Optional[bool] = False
+    no_commit_reason: Optional[str] = None
+    completion_notes: Optional[str] = None
     workspace_id: UUID
     created_by: UUID
     assigned_to: Optional[UUID] = None
@@ -174,9 +183,26 @@ class TaskOut(BaseModel):
     due_date: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    github_links: list[TaskGitHubLinkOut] = []
+    primary_commit: Optional[GitHubCommitOut] = None
+    primary_pr: Optional[GitHubPullRequestOut] = None
 
     class Config:
         from_attributes = True
+
+
+class TaskLinkCommitIn(BaseModel):
+    commit_sha: Optional[str] = None
+    commit_id: Optional[UUID] = None
+    pr_id: Optional[UUID] = None
+    verification_notes: Optional[str] = None
+
+
+class TaskCompleteIn(BaseModel):
+    commit_sha: Optional[str] = None
+    commit_id: Optional[UUID] = None
+    no_commit_reason: Optional[str] = None
+    completion_notes: Optional[str] = None
 
 
 class ChatMessage(BaseModel):
@@ -299,13 +325,16 @@ class GitHubCommitOut(BaseModel):
 class TaskGitHubLinkOut(BaseModel):
     id: UUID
     task_id: UUID
-    pr_id: Optional[UUID]
-    commit_id: Optional[UUID]
-    match_score: float
-    match_reason: Optional[str]
+    pr_id: Optional[UUID] = None
+    commit_id: Optional[UUID] = None
+    match_score: float = 1.0
+    match_reason: Optional[str] = None
     status: str
+    verification_status: Optional[str] = "linked"
+    verification_source: Optional[str] = "local"
+    verification_notes: Optional[str] = None
     created_at: datetime
-    reviewed_at: Optional[datetime]
+    reviewed_at: Optional[datetime] = None
     pr: Optional[GitHubPullRequestOut] = None
     commit: Optional[GitHubCommitOut] = None
 
@@ -341,6 +370,100 @@ class WorkspaceActivityItem(BaseModel):
 class WorkspaceActivityResponse(BaseModel):
     workspace_id: UUID
     activities: list[WorkspaceActivityItem] = []
+
+
+class WhenYouWereAwayTask(BaseModel):
+    id: str
+    title: str
+    description: Optional[str] = None
+    status: str
+    priority: str
+    creator_email: Optional[str] = None
+    assigned_to_email: Optional[str] = None
+    assigned_to_ids: list[str] = []
+    due_date: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    is_overdue: bool = False
+    is_approaching: bool = False
+    is_new: bool = False
+    is_status_changed: bool = False
+    is_assigned_to_me: bool = False
+    link: str = "/dashboard/tasks"
+
+
+class WhenYouWereAwayGitHubPR(BaseModel):
+    id: str
+    pr_number: int
+    title: str
+    state: str
+    author_login: Optional[str] = None
+    repository_name: Optional[str] = None
+    url: str
+    merged_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    link: str
+
+
+class WhenYouWereAwayGitHubCommit(BaseModel):
+    id: str
+    sha: str
+    message: str
+    author_login: Optional[str] = None
+    branch: Optional[str] = None
+    url: Optional[str] = None
+    additions: int = 0
+    deletions: int = 0
+    committed_at: datetime
+    repository_name: Optional[str] = None
+    link: str
+
+
+class WhenYouWereAwayTeamActivity(BaseModel):
+    id: str
+    category: Literal["document", "chat", "member", "workflow", "github", "task"]
+    action: str
+    title: str
+    description: Optional[str] = None
+    actor_email: Optional[str] = None
+    target_link: str
+    created_at: datetime
+
+
+class WhenYouWereAwayStats(BaseModel):
+    tasks_created_count: int = 0
+    tasks_updated_count: int = 0
+    tasks_assigned_to_user_count: int = 0
+    tasks_overdue_count: int = 0
+    tasks_approaching_count: int = 0
+    github_commits_count: int = 0
+    github_prs_count: int = 0
+    team_docs_count: int = 0
+    team_chats_count: int = 0
+    team_members_count: int = 0
+    total_events_count: int = 0
+
+
+class WhenYouWereAwayResponse(BaseModel):
+    workspace_id: UUID
+    time_window_type: str
+    since: datetime
+    until: datetime
+    since_label: str
+    away_duration_seconds: int
+    has_events: bool
+    summary: str
+    stats: WhenYouWereAwayStats
+    tasks_created: list[WhenYouWereAwayTask] = []
+    tasks_updated: list[WhenYouWereAwayTask] = []
+    tasks_assigned_to_user: list[WhenYouWereAwayTask] = []
+    tasks_overdue: list[WhenYouWereAwayTask] = []
+    tasks_approaching: list[WhenYouWereAwayTask] = []
+    github_prs: list[WhenYouWereAwayGitHubPR] = []
+    github_commits: list[WhenYouWereAwayGitHubCommit] = []
+    team_activities: list[WhenYouWereAwayTeamActivity] = []
+    last_fetched_at: Optional[datetime] = None
 
 
 # --- Orbit Flow (Section 26: Workflow / Flowchart Canvas) Schemas ---

@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Task, WorkspaceMemberDetail, WorkspaceSettings } from "@/types";
 import { Spinner } from "@/components/app/Spinner";
 import { TasksSkeleton } from "@/components/app/LoadingScreen";
+import { TaskCommitLinkModal } from "@/components/app/TaskCommitLinkModal";
 
 import {
   Plus,
@@ -18,8 +19,11 @@ import {
   Users,
   Check,
   ShieldCheck,
+  GitCommit,
+  ExternalLink,
+  HelpCircle,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatRelative } from "@/lib/utils";
 
 const COLUMNS = [
   { id: "todo", label: "Todo", dotColor: "#6b6b80" },
@@ -35,14 +39,16 @@ function TaskCard({
   onDragEnd,
   isDragging,
   isAdmin,
+  onOpenCommitModal,
 }: {
   task: Task;
-  onMove: (id: string, status: string) => void;
+  onMove: (task: Task, status: string) => void;
   onDelete: (id: string) => void;
   onDragStart: (e: React.DragEvent, task: Task) => void;
   onDragEnd: (e: React.DragEvent) => void;
   isDragging: boolean;
   isAdmin: boolean;
+  onOpenCommitModal: (task: Task) => void;
 }) {
   const priClass =
     { low: "badge-low", medium: "badge-medium", high: "badge-high" }[task.priority] || "badge-low";
@@ -52,6 +58,11 @@ function TaskCard({
     : task.assignee_email
     ? [task.assignee_email]
     : [];
+
+  // Determine primary linked commit
+  const primaryLink = task.github_links?.find((l) => l.commit_id != null && l.status !== "dismissed");
+  const linkedCommit = primaryLink?.commit || task.primary_commit;
+  const isVerifiedInRepo = primaryLink?.verification_status === "verified_in_repo";
 
   return (
     <div
@@ -87,10 +98,88 @@ function TaskCard({
         </div>
       )}
 
+      {/* ── Linked Commit Evidence Banner (if present) ──────────────── */}
+      {linkedCommit ? (
+        <div className="mb-2.5 ml-4 p-2 rounded-md bg-surface2/80 border border-orbit-border/80 text-[11px] space-y-1">
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.2 rounded">
+                <GitCommit className="w-2.5 h-2.5" />
+                {linkedCommit.sha.slice(0, 7)}
+              </span>
+              {isVerifiedInRepo ? (
+                <span
+                  className="flex items-center gap-0.5 text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 rounded"
+                  title="Commit verified against repository. Note: Confirms code delivery; independent correctness verification recommended."
+                >
+                  <ShieldCheck className="w-2.5 h-2.5" />
+                  Verified in Repo
+                </span>
+              ) : (
+                <span
+                  className="text-[9px] font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1 py-0.2 rounded"
+                  title="Manual commit link recorded."
+                >
+                  Linked
+                </span>
+              )}
+            </div>
+
+            {linkedCommit.url && (
+              <a
+                href={linkedCommit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-orbit-muted hover:text-accent p-0.5 transition-colors"
+                title="View Commit on GitHub"
+              >
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+
+          <div className="text-[10px] text-orbit-text truncate font-normal">
+            &quot;{linkedCommit.message}&quot;
+          </div>
+
+          <div className="flex items-center justify-between text-[9px] font-mono text-orbit-muted">
+            <span>by @{linkedCommit.author_login || "dev"}</span>
+            <span>
+              {linkedCommit.committed_at && formatRelative(linkedCommit.committed_at)}
+            </span>
+          </div>
+        </div>
+      ) : task.no_commit_reason ? (
+        <div className="mb-2.5 ml-4 p-1.5 rounded-md bg-yellow-500/5 border border-yellow-500/20 text-[10px] text-orbit-muted flex items-start gap-1.5">
+          <HelpCircle className="w-3 h-3 text-yellow-400/80 flex-shrink-0 mt-0.5" />
+          <span className="line-clamp-1">
+            <strong className="text-yellow-400/90 font-medium">No commit:</strong> {task.no_commit_reason}
+          </span>
+        </div>
+      ) : null}
+
       {/* Meta row */}
       <div className="flex items-center justify-between pl-4 flex-wrap gap-1.5">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className={`${priClass}`}>{task.priority}</span>
+
+          {task.task_type && task.task_type !== "feature" && (
+            <span className="px-1.5 py-0.5 rounded bg-surface2 border border-orbit-border text-[9px] font-mono uppercase text-orbit-muted">
+              {task.task_type}
+            </span>
+          )}
+
+          {task.requires_commit && (
+            <span
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-mono text-red-400"
+              title="Commit evidence enforced for this task"
+            >
+              <GitCommit className="w-2.5 h-2.5" />
+              Required
+            </span>
+          )}
+
           {assigneeEmails.length > 0 ? (
             <span
               className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface2 border border-orbit-border text-[10px] text-orbit-muted font-mono"
@@ -117,12 +206,12 @@ function TaskCard({
         )}
       </div>
 
-      {/* Quick move */}
-      {task.status !== "done" && (
-        <div className="flex gap-1 mt-2 pt-2 border-t border-orbit-border opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Quick move & Commit actions */}
+      <div className="flex items-center justify-between gap-1 mt-2 pt-2 border-t border-orbit-border opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1">
           {task.status === "todo" && (
             <button
-              onClick={() => onMove(task.id, "in_progress")}
+              onClick={() => onMove(task, "in_progress")}
               className="text-[10px] px-2 py-0.5 rounded border border-orbit-border text-orbit-muted hover:border-blue-400 hover:text-blue-400 transition-colors font-mono"
             >
               → In Progress
@@ -130,14 +219,35 @@ function TaskCard({
           )}
           {task.status === "in_progress" && (
             <button
-              onClick={() => onMove(task.id, "done")}
-              className="text-[10px] px-2 py-0.5 rounded border border-orbit-border text-orbit-muted hover:border-accent hover:text-accent transition-colors font-mono"
+              onClick={() => onMove(task, "done")}
+              className="text-[10px] px-2 py-0.5 rounded border border-orbit-border text-orbit-muted hover:border-accent hover:text-accent transition-colors font-mono font-medium"
             >
               ✓ Done
             </button>
           )}
+          {task.status === "done" && (
+            <button
+              onClick={() => onMove(task, "in_progress")}
+              className="text-[10px] px-2 py-0.5 rounded border border-orbit-border text-orbit-muted hover:border-orbit-border2 hover:text-orbit-text transition-colors font-mono"
+            >
+              Reopen
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Link / Edit Commit Evidence */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenCommitModal(task);
+          }}
+          className="text-[10px] px-2 py-0.5 rounded border border-orbit-border text-orbit-muted hover:border-accent hover:text-accent transition-colors font-mono flex items-center gap-1"
+          title={linkedCommit ? "Manage linked commit" : "Link commit evidence"}
+        >
+          <GitCommit className="w-2.5 h-2.5" />
+          {linkedCommit ? "Evidence" : "+ Commit"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -148,10 +258,17 @@ export default function TasksPage() {
   const { currentWorkspace } = useWorkspaceStore();
 
   const [showModal, setShowModal] = useState(false);
+  const [taskForCommitModal, setTaskForCommitModal] = useState<{
+    task: Task;
+    isCompletionPrompt: boolean;
+  } | null>(null);
+
   const [form, setForm] = useState<{
     title: string;
     description: string;
     priority: "low" | "medium" | "high";
+    task_type: "feature" | "bug" | "chore" | "design" | "docs" | "other";
+    requires_commit: boolean;
     due_date: string;
     assigned_to_ids: string[];
     notify_assignee: boolean;
@@ -159,10 +276,13 @@ export default function TasksPage() {
     title: "",
     description: "",
     priority: "medium",
+    task_type: "feature",
+    requires_commit: false,
     due_date: "",
     assigned_to_ids: [],
     notify_assignee: false,
   });
+
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
 
@@ -194,6 +314,8 @@ export default function TasksPage() {
         title: form.title,
         description: form.description || undefined,
         priority: form.priority,
+        task_type: form.task_type,
+        requires_commit: form.requires_commit,
         due_date: form.due_date ? new Date(form.due_date).toISOString() : undefined,
         assigned_to_ids: form.assigned_to_ids.length > 0 ? form.assigned_to_ids : [],
         assigned_to: form.assigned_to_ids.length > 0 ? form.assigned_to_ids[0] : null,
@@ -203,8 +325,18 @@ export default function TasksPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks", currentWorkspace?.id] });
       qc.invalidateQueries({ queryKey: ["workspace-activity", currentWorkspace?.id] });
+      qc.invalidateQueries({ queryKey: ["when-you-were-away", currentWorkspace?.id] });
       setShowModal(false);
-      setForm({ title: "", description: "", priority: "medium", due_date: "", assigned_to_ids: [], notify_assignee: false });
+      setForm({
+        title: "",
+        description: "",
+        priority: "medium",
+        task_type: "feature",
+        requires_commit: false,
+        due_date: "",
+        assigned_to_ids: [],
+        notify_assignee: false,
+      });
     },
   });
 
@@ -230,6 +362,7 @@ export default function TasksPage() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["tasks", currentWorkspace?.id] });
       qc.invalidateQueries({ queryKey: ["workspace-activity", currentWorkspace?.id] });
+      qc.invalidateQueries({ queryKey: ["when-you-were-away", currentWorkspace?.id] });
     },
   });
 
@@ -249,24 +382,50 @@ export default function TasksPage() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["tasks", currentWorkspace?.id] });
       qc.invalidateQueries({ queryKey: ["workspace-activity", currentWorkspace?.id] });
+      qc.invalidateQueries({ queryKey: ["when-you-were-away", currentWorkspace?.id] });
     },
   });
+
+  // Handler for moving tasks (intercepts move to 'done' if commit evidence required or unlinked)
+  const handleMoveTask = (task: Task, targetStatus: string) => {
+    if (targetStatus === "done") {
+      const hasCommit =
+        (task.github_links && task.github_links.some((l) => l.commit_id != null)) ||
+        !!task.primary_commit;
+      const hasReason = !!task.no_commit_reason;
+
+      // When moving from In Progress to Done: prompt to link a commit or explain why no commit applies
+      if (!hasCommit && !hasReason) {
+        setTaskForCommitModal({ task, isCompletionPrompt: true });
+        return;
+      }
+    }
+
+    updateMutation.mutate({ id: task.id, status: targetStatus });
+  };
 
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     setDraggingTaskId(task.id);
     e.dataTransfer.setData("text/plain", task.id);
     e.dataTransfer.effectAllowed = "move";
   };
-  const handleDragEnd = () => { setDraggingTaskId(null); setDragOverColumnId(null); };
+
+  const handleDragEnd = () => {
+    setDraggingTaskId(null);
+    setDragOverColumnId(null);
+  };
+
   const handleDragOver = (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     if (dragOverColumnId !== columnId) setDragOverColumnId(columnId);
   };
+
   const handleDragLeave = (e: React.DragEvent, columnId: string) => {
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     if (dragOverColumnId === columnId) setDragOverColumnId(null);
   };
+
   const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
     e.preventDefault();
     const taskId = e.dataTransfer.getData("text/plain") || draggingTaskId;
@@ -275,9 +434,10 @@ export default function TasksPage() {
     if (!taskId) return;
     const task = tasks.find((t) => t.id === taskId);
     if (task && task.status !== targetColumnId) {
-      updateMutation.mutate({ id: taskId, status: targetColumnId });
+      handleMoveTask(task, targetColumnId);
     }
   };
+
   const toggleAssignee = (userId: string) => {
     setForm((p) => {
       const exists = p.assigned_to_ids.includes(userId);
@@ -298,25 +458,16 @@ export default function TasksPage() {
       <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <div className="section-label mb-1 flex items-center gap-2">
-            Tasks
-            {isAdmin && (
-              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 text-accent bg-accent-dim rounded border border-accent-border font-mono">
-                <ShieldCheck className="w-2.5 h-2.5" /> Admin
-              </span>
-            )}
+            <span>TASK BOARD</span>
+            <span className="text-[10px] text-orbit-muted">• Commit Linking & Verification</span>
           </div>
-          <h1 className="page-title">{tasks.length} {tasks.length === 1 ? "task" : "tasks"}</h1>
+          <h1 className="text-xl font-bold text-orbit-text">Tasks</h1>
         </div>
 
         {isAdmin ? (
-          <button
-            className="orbit-btn-primary text-xs"
-            onClick={() => {
-              setForm({ title: "", description: "", priority: "medium", due_date: "", assigned_to_ids: [], notify_assignee: false });
-              setShowModal(true);
-            }}
-          >
-            <Plus className="w-3.5 h-3.5" /> New task
+          <button onClick={() => setShowModal(true)} className="orbit-btn-primary text-xs flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            <span>New task</span>
           </button>
         ) : (
           <div className="text-[11px] text-orbit-muted font-mono bg-surface border border-orbit-border px-2.5 py-1 rounded flex items-center gap-1.5">
@@ -362,8 +513,11 @@ export default function TasksPage() {
                     isDragging={draggingTaskId === task.id}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
-                    onMove={(id, status) => updateMutation.mutate({ id, status })}
+                    onMove={handleMoveTask}
                     onDelete={(id) => deleteMutation.mutate(id)}
+                    onOpenCommitModal={(t) =>
+                      setTaskForCommitModal({ task: t, isCompletionPrompt: false })
+                    }
                   />
                 ))}
 
@@ -394,7 +548,7 @@ export default function TasksPage() {
             <div className="flex items-center justify-between mb-4 pb-3.5 border-b border-orbit-border flex-shrink-0">
               <div>
                 <h3 className="text-sm font-semibold text-orbit-text">New task</h3>
-                <p className="text-[11px] text-orbit-muted mt-0.5">Assign work and set a deadline</p>
+                <p className="text-[11px] text-orbit-muted mt-0.5">Assign work, type and commit evidence rules</p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-1.5 rounded text-orbit-muted hover:text-orbit-text hover:bg-surface2 transition-colors">
                 <X className="w-4 h-4" />
@@ -427,6 +581,55 @@ export default function TasksPage() {
                   onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                   placeholder="Context, acceptance criteria, or notes"
                 />
+              </div>
+
+              {/* Task Type & Commit Enforcement */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-orbit-text mb-1.5">Task Type</label>
+                  <select
+                    className="orbit-input text-xs"
+                    value={form.task_type}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        task_type: e.target.value as
+                          | "feature"
+                          | "bug"
+                          | "chore"
+                          | "design"
+                          | "docs"
+                          | "other",
+                        // Auto-enable commit enforcement for code-heavy tasks
+                        requires_commit: ["feature", "bug", "chore"].includes(e.target.value),
+                      }))
+                    }
+                  >
+                    <option value="feature">Feature (Code)</option>
+                    <option value="bug">Bug Fix (Code)</option>
+                    <option value="chore">Chore (Code)</option>
+                    <option value="design">Design (UI/UX)</option>
+                    <option value="docs">Documentation</option>
+                    <option value="other">Other / Operations</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-orbit-text mb-1.5">Evidence Policy</label>
+                  <label className="flex items-center gap-2 p-2 rounded-lg bg-surface2 border border-orbit-border cursor-pointer select-none text-xs">
+                    <input
+                      type="checkbox"
+                      checked={form.requires_commit}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, requires_commit: e.target.checked }))
+                      }
+                      className="accent-accent rounded"
+                    />
+                    <span className="text-[11px] font-medium text-orbit-text">
+                      Require Commit
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {/* Assignees */}
@@ -561,6 +764,19 @@ export default function TasksPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Commit-to-Task Link & Completion Evidence Modal ───────── */}
+      {taskForCommitModal && currentWorkspace?.id && (
+        <TaskCommitLinkModal
+          task={taskForCommitModal.task}
+          workspaceId={currentWorkspace.id}
+          isCompletionPrompt={taskForCommitModal.isCompletionPrompt}
+          onClose={() => setTaskForCommitModal(null)}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ["tasks", currentWorkspace.id] });
+          }}
+        />
       )}
     </div>
   );

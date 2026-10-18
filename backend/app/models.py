@@ -95,6 +95,10 @@ class Task(Base):
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     due_date = Column(DateTime, nullable=True)
+    task_type = Column(String, default="feature", nullable=True)
+    requires_commit = Column(Boolean, default=False, nullable=True)
+    no_commit_reason = Column(String, nullable=True)
+    completion_notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
 
@@ -103,6 +107,7 @@ class Task(Base):
     creator = relationship("User", foreign_keys=[created_by])
     assignee = relationship("User", foreign_keys=[assigned_to])
     assignees = relationship("TaskAssignee", back_populates="task", cascade="all, delete-orphan")
+    github_links = relationship("TaskGitHubLink", back_populates="task", cascade="all, delete-orphan")
 
 
 class TaskAssignee(Base):
@@ -233,11 +238,18 @@ class TaskGitHubLink(Base):
     task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
     pr_id = Column(UUID(as_uuid=True), ForeignKey("github_pull_requests.id"), nullable=True)
     commit_id = Column(UUID(as_uuid=True), ForeignKey("github_commits.id"), nullable=True)
-    match_score = Column(Float, nullable=False)
+    match_score = Column(Float, nullable=False, default=1.0)
     match_reason = Column(String, nullable=True)
-    status = Column(String, default="suggested", nullable=False)  # suggested, accepted, dismissed
+    status = Column(String, default="suggested", nullable=False)  # suggested, accepted, dismissed, linked
+    verification_status = Column(String, default="linked", nullable=True)  # verified_in_repo, manual_entry, unverified
+    verification_source = Column(String, default="local", nullable=True)  # github_api, local_db, manual
+    verification_notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     reviewed_at = Column(DateTime, nullable=True)  # For scoring weight feedback loop
+
+    task = relationship("Task", back_populates="github_links")
+    commit = relationship("GitHubCommit")
+    pr = relationship("GitHubPullRequest")
 
 
 class UserActivityState(Base):

@@ -20,9 +20,11 @@ import {
   ReactFlowProvider,
   NodeTypes,
   NodeProps,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useWorkspaceStore } from "@/store/workspaceStore";
 
@@ -88,16 +90,31 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 // --- Custom Nodes ---
 
-function TriggerNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
+function TriggerNode({ id, data, selected }: NodeProps<Node<FlowNodeData>>) {
+  const { deleteElements } = useReactFlow();
   const IconComponent = (data.icon && ICON_MAP[data.icon]) ? ICON_MAP[data.icon] : Play;
   return (
     <div
-      className={`relative px-4 py-3 rounded-2xl bg-surface/95 border backdrop-blur-md shadow-xl transition-all duration-200 min-w-[200px] max-w-[260px] ${
+      className={`group relative px-4 py-3 rounded-2xl bg-surface border backdrop-blur-md shadow-sm transition-all duration-200 min-w-[210px] max-w-[270px] ${
         selected
-          ? "border-purple-500 ring-2 ring-purple-500/30 scale-[1.02]"
-          : "border-purple-500/40 hover:border-purple-500/80"
+          ? "border-purple-500 ring-2 ring-purple-500/30 scale-[1.02] shadow-md"
+          : "border-purple-300 dark:border-purple-500/40 hover:border-purple-400 dark:hover:border-purple-500/80 hover:shadow-md"
       }`}
     >
+      {/* Quick Delete Node Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteElements({ nodes: [{ id }] });
+        }}
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-surface border border-rose-300 dark:border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm flex items-center justify-center transition-all hover:scale-110 z-30 cursor-pointer ${
+          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        title="Delete this node"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+
       <div className="flex items-center gap-2.5 mb-1.5">
         <div
           className="p-1.5 rounded-lg text-white shadow-inner flex items-center justify-center"
@@ -106,7 +123,7 @@ function TriggerNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
           <IconComponent className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">
             Trigger Event
           </span>
           <h4 className="text-xs font-semibold text-orbit-text truncate">{data.label || "Trigger"}</h4>
@@ -118,8 +135,8 @@ function TriggerNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       )}
 
       {data.linked_object_type && (
-        <div className="mt-2 pt-2 border-t border-orbit-border flex items-center gap-1.5 text-[10px] text-purple-400 font-medium">
-          <Tag className="w-3 h-3 text-purple-400" />
+        <div className="mt-2 pt-2 border-t border-orbit-border flex items-center gap-1.5 text-[10px] text-purple-600 dark:text-purple-400 font-medium">
+          <Tag className="w-3 h-3" />
           <span>Linked to {data.linked_object_type}</span>
         </div>
       )}
@@ -127,38 +144,53 @@ function TriggerNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 !bg-purple-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-purple-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        className="w-3 h-3 !bg-purple-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-purple-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
     </div>
   );
 }
 
-function ActionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
+function ActionNode({ id, data, selected }: NodeProps<Node<FlowNodeData>>) {
+  const { deleteElements } = useReactFlow();
   const IconComponent = (data.icon && ICON_MAP[data.icon]) ? ICON_MAP[data.icon] : Cpu;
   return (
     <div
-      className={`relative px-4 py-3 rounded-2xl bg-surface/95 border backdrop-blur-md shadow-xl transition-all duration-200 min-w-[200px] max-w-[260px] ${
+      className={`group relative px-4 py-3 rounded-2xl bg-surface border backdrop-blur-md shadow-sm transition-all duration-200 min-w-[210px] max-w-[270px] ${
         selected
-          ? "border-blue-500 ring-2 ring-blue-500/30 scale-[1.02]"
-          : "border-blue-500/40 hover:border-blue-500/80"
+          ? "border-blue-500 ring-2 ring-blue-500/30 scale-[1.02] shadow-md"
+          : "border-blue-300 dark:border-blue-500/40 hover:border-blue-400 dark:hover:border-blue-500/80 hover:shadow-md"
       }`}
     >
+      {/* Quick Delete Node Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteElements({ nodes: [{ id }] });
+        }}
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-surface border border-rose-300 dark:border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm flex items-center justify-center transition-all hover:scale-110 z-30 cursor-pointer ${
+          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        title="Delete this node"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3 h-3 !bg-blue-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-blue-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        className="w-3 h-3 !bg-blue-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-blue-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
 
       <div className="flex items-center gap-2.5 mb-1.5">
@@ -169,7 +201,7 @@ function ActionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
           <IconComponent className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
             Action Step
           </span>
           <h4 className="text-xs font-semibold text-orbit-text truncate">{data.label || "Action"}</h4>
@@ -181,8 +213,8 @@ function ActionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       )}
 
       {data.linked_object_type && (
-        <div className="mt-2 pt-2 border-t border-orbit-border flex items-center gap-1.5 text-[10px] text-blue-400 font-medium">
-          <Tag className="w-3 h-3 text-blue-400" />
+        <div className="mt-2 pt-2 border-t border-orbit-border flex items-center gap-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+          <Tag className="w-3 h-3" />
           <span>Linked to {data.linked_object_type}</span>
         </div>
       )}
@@ -190,37 +222,52 @@ function ActionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 !bg-blue-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-blue-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        className="w-3 h-3 !bg-blue-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-blue-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
     </div>
   );
 }
 
-function DecisionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
+function DecisionNode({ id, data, selected }: NodeProps<Node<FlowNodeData>>) {
+  const { deleteElements } = useReactFlow();
   return (
     <div
-      className={`relative px-4 py-3 rounded-2xl bg-surface/95 border backdrop-blur-md shadow-xl transition-all duration-200 min-w-[210px] max-w-[270px] ${
+      className={`group relative px-4 py-3 rounded-2xl bg-surface border backdrop-blur-md shadow-sm transition-all duration-200 min-w-[210px] max-w-[270px] ${
         selected
-          ? "border-amber-500 ring-2 ring-amber-500/30 scale-[1.02]"
-          : "border-amber-500/40 hover:border-amber-500/80"
+          ? "border-amber-500 ring-2 ring-amber-500/30 scale-[1.02] shadow-md"
+          : "border-amber-300 dark:border-amber-500/40 hover:border-amber-400 dark:hover:border-amber-500/80 hover:shadow-md"
       }`}
     >
+      {/* Quick Delete Node Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteElements({ nodes: [{ id }] });
+        }}
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-surface border border-rose-300 dark:border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm flex items-center justify-center transition-all hover:scale-110 z-30 cursor-pointer ${
+          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        title="Delete this node"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3 h-3 !bg-amber-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-amber-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        className="w-3 h-3 !bg-amber-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-amber-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
 
       <div className="flex items-center gap-2.5 mb-1.5">
@@ -228,7 +275,7 @@ function DecisionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
           <HelpCircle className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
             Decision Gate
           </span>
           <h4 className="text-xs font-semibold text-orbit-text truncate">{data.label || "Decision?"}</h4>
@@ -239,40 +286,55 @@ function DecisionNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
         <p className="text-[11px] text-orbit-muted line-clamp-2 leading-relaxed">{data.description}</p>
       )}
 
-      <div className="mt-2 pt-2 border-t border-orbit-border flex items-center justify-between text-[10px] text-orbit-muted">
-        <span className="text-emerald-400 font-medium">➔ Top/Right: Pass</span>
-        <span className="text-rose-400 font-medium">➔ Bottom: Fail</span>
+      <div className="mt-2 pt-2 border-t border-orbit-border flex items-center justify-between text-[10px]">
+        <span className="text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">➔ Pass</span>
+        <span className="text-rose-600 dark:text-rose-400 font-semibold bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 rounded">➔ Fail</span>
       </div>
 
       <Handle
         type="source"
         position={Position.Right}
         id="yes"
-        className="w-3 h-3 !bg-emerald-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-emerald-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="no"
-        className="w-3 h-3 !bg-rose-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-rose-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
     </div>
   );
 }
 
-function DelayNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
+function DelayNode({ id, data, selected }: NodeProps<Node<FlowNodeData>>) {
+  const { deleteElements } = useReactFlow();
   return (
     <div
-      className={`relative px-4 py-3 rounded-2xl bg-surface/95 border backdrop-blur-md shadow-xl transition-all duration-200 min-w-[190px] max-w-[240px] ${
+      className={`group relative px-4 py-3 rounded-2xl bg-surface border backdrop-blur-md shadow-sm transition-all duration-200 min-w-[200px] max-w-[250px] ${
         selected
-          ? "border-pink-500 ring-2 ring-pink-500/30 scale-[1.02]"
-          : "border-pink-500/40 hover:border-pink-500/80"
+          ? "border-pink-500 ring-2 ring-pink-500/30 scale-[1.02] shadow-md"
+          : "border-pink-300 dark:border-pink-500/40 hover:border-pink-400 dark:hover:border-pink-500/80 hover:shadow-md"
       }`}
     >
+      {/* Quick Delete Node Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteElements({ nodes: [{ id }] });
+        }}
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-surface border border-rose-300 dark:border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm flex items-center justify-center transition-all hover:scale-110 z-30 cursor-pointer ${
+          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        title="Delete this node"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+
       <Handle
         type="target"
         position={Position.Left}
-        className="w-3 h-3 !bg-pink-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-pink-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
 
       <div className="flex items-center gap-2.5 mb-1.5">
@@ -280,7 +342,7 @@ function DelayNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
           <Clock className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-pink-400 block">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 block">
             Delay / Pause
           </span>
           <h4 className="text-xs font-semibold text-orbit-text truncate">{data.label || "Wait"}</h4>
@@ -294,22 +356,37 @@ function DelayNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 !bg-pink-500 !border-2 !border-surface rounded-full hover:scale-125 transition-transform"
+        className="w-3 h-3 !bg-pink-500 !border-2 !border-white dark:!border-zinc-900 rounded-full hover:scale-125 transition-transform shadow-sm"
       />
     </div>
   );
 }
 
-function NoteNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
+function NoteNode({ id, data, selected }: NodeProps<Node<FlowNodeData>>) {
+  const { deleteElements } = useReactFlow();
   return (
     <div
-      className={`relative px-4 py-3 rounded-2xl bg-amber-500/10 border backdrop-blur-md shadow-xl transition-all duration-200 min-w-[200px] max-w-[260px] ${
+      className={`group relative px-4 py-3 rounded-2xl bg-amber-500/10 border backdrop-blur-md shadow-sm transition-all duration-200 min-w-[210px] max-w-[270px] ${
         selected
-          ? "border-amber-400 ring-2 ring-amber-400/30 scale-[1.02]"
-          : "border-amber-400/40 hover:border-amber-400/80"
+          ? "border-amber-400 ring-2 ring-amber-400/30 scale-[1.02] shadow-md"
+          : "border-amber-300 dark:border-amber-400/40 hover:border-amber-400 hover:shadow-md"
       }`}
     >
-      <div className="flex items-center gap-2 mb-1.5 text-amber-500">
+      {/* Quick Delete Node Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteElements({ nodes: [{ id }] });
+        }}
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-surface border border-rose-300 dark:border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm flex items-center justify-center transition-all hover:scale-110 z-30 cursor-pointer ${
+          selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        title="Delete this note"
+      >
+        <Trash2 className="w-3 h-3" />
+      </button>
+
+      <div className="flex items-center gap-2 mb-1.5 text-amber-600 dark:text-amber-400">
         <StickyNote className="w-4 h-4" />
         <h4 className="text-xs font-bold uppercase tracking-wider text-orbit-text">{data.label || "Architecture Note"}</h4>
       </div>
@@ -321,12 +398,12 @@ function NoteNode({ data, selected }: NodeProps<Node<FlowNodeData>>) {
       <Handle
         type="target"
         position={Position.Top}
-        className="w-2.5 h-2.5 !bg-amber-400 !border !border-surface rounded-full"
+        className="w-2.5 h-2.5 !bg-amber-400 !border-2 !border-white dark:!border-zinc-900 rounded-full shadow-sm"
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        className="w-2.5 h-2.5 !bg-amber-400 !border !border-surface rounded-full"
+        className="w-2.5 h-2.5 !bg-amber-400 !border-2 !border-white dark:!border-zinc-900 rounded-full shadow-sm"
       />
     </div>
   );
@@ -346,6 +423,7 @@ const nodeTypesConfig: NodeTypes = {
 function FlowCanvas() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const flowId = params?.id as string;
   const { currentWorkspace } = useWorkspaceStore();
 
@@ -506,7 +584,7 @@ interface RawApiEdge {
     try {
       setSaving(true);
       // 1. Update workflow title and metadata
-      await api.put(`/flows/${flowId}`, {
+      await api.patch(`/flows/${flowId}`, {
         title: flowMeta.title?.trim() || "Untitled Workflow",
         description: flowMeta.description || undefined,
         visibility: flowMeta.visibility || "workspace",
@@ -541,6 +619,7 @@ interface RawApiEdge {
 
       await api.post(`/flows/${flowId}/sync`, syncPayload);
       setHasUnsavedChanges(false);
+      queryClient.invalidateQueries({ queryKey: ["flows"] });
     } catch (err) {
       console.error("Save flow failed:", err);
     } finally {
@@ -729,7 +808,7 @@ interface RawApiEdge {
           </button>
 
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <Workflow className="w-4 h-4" />
             </div>
             <input
@@ -742,18 +821,20 @@ interface RawApiEdge {
               onBlur={async () => {
                 if (flowMeta.title.trim()) {
                   try {
-                    await api.put(`/flows/${flowId}`, { title: flowMeta.title.trim() });
+                    await api.patch(`/flows/${flowId}`, { title: flowMeta.title.trim() });
+                    setHasUnsavedChanges(false);
+                    queryClient.invalidateQueries({ queryKey: ["flows"] });
                   } catch (e) {
                     console.error("Failed to rename workflow:", e);
                   }
                 }
               }}
-              onKeyDown={(e) => {
+              onKeyDown={async (e) => {
                 if (e.key === "Enter") {
                   (e.target as HTMLInputElement).blur();
                 }
               }}
-              className="bg-transparent border border-transparent hover:border-orbit-border focus:border-purple-500/50 text-orbit-text font-semibold text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 rounded px-1.5 py-0.5 transition-colors"
+              className="bg-surface2/60 hover:bg-surface2 border border-orbit-border hover:border-orbit-border2 focus:border-purple-500/70 text-orbit-text font-semibold text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 rounded-lg px-2.5 py-1 transition-all"
             />
           </div>
 
@@ -763,12 +844,12 @@ interface RawApiEdge {
                 <RefreshCw className="w-3 h-3 animate-spin text-purple-400" /> Saving...
               </span>
             ) : hasUnsavedChanges ? (
-              <span className="text-amber-400/80 flex items-center gap-1 font-medium">
+              <span className="text-amber-500 flex items-center gap-1 font-medium">
                 • Unsaved changes
               </span>
             ) : (
-              <span className="text-emerald-400/80 flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Saved
+              <span className="text-emerald-500 flex items-center gap-1 font-medium">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Saved
               </span>
             )}
 
@@ -779,7 +860,8 @@ interface RawApiEdge {
                 const val = e.target.value;
                 setFlowMeta((prev) => ({ ...prev, visibility: val }));
                 try {
-                  await api.put(`/flows/${flowId}`, { visibility: val });
+                  await api.patch(`/flows/${flowId}`, { visibility: val });
+                  queryClient.invalidateQueries({ queryKey: ["flows"] });
                 } catch (err) {
                   console.error("Failed to update visibility:", err);
                 }
@@ -806,11 +888,10 @@ interface RawApiEdge {
           {/* AI Explain */}
           <button
             onClick={handleAIExplain}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium transition-all shadow-inner"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-medium transition-all shadow-inner"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
             AI Explain
-
           </button>
 
           {/* Versions / Snapshots */}
@@ -818,11 +899,11 @@ interface RawApiEdge {
             onClick={() => setActiveDrawer(activeDrawer === "versions" ? "none" : "versions")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
               activeDrawer === "versions"
-                ? "bg-zinc-800 text-white border-zinc-600"
-                : "bg-zinc-900 hover:bg-zinc-800/80 text-zinc-300 border-zinc-800"
+                ? "bg-surface2 text-orbit-text border-purple-500 shadow-xs"
+                : "bg-surface hover:bg-surface2 text-orbit-text border-orbit-border"
             }`}
           >
-            <History className="w-3.5 h-3.5" />
+            <History className="w-3.5 h-3.5 text-orbit-muted" />
             Snapshots
           </button>
 
@@ -831,11 +912,11 @@ interface RawApiEdge {
             onClick={() => setActiveDrawer(activeDrawer === "comments" ? "none" : "comments")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
               activeDrawer === "comments"
-                ? "bg-zinc-800 text-white border-zinc-600"
-                : "bg-zinc-900 hover:bg-zinc-800/80 text-zinc-300 border-zinc-800"
+                ? "bg-surface2 text-orbit-text border-purple-500 shadow-xs"
+                : "bg-surface hover:bg-surface2 text-orbit-text border-orbit-border"
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-3.5 h-3.5 text-orbit-muted" />
             Comments
             {comments.length > 0 && (
               <span className="ml-1 px-1.5 py-0.2 rounded-full bg-purple-600 text-white text-[10px]">
@@ -846,20 +927,20 @@ interface RawApiEdge {
 
           {/* Export Dropdown */}
           <div className="relative group">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 text-zinc-300 text-xs font-medium transition-all">
-              <Download className="w-3.5 h-3.5" />
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface hover:bg-surface2 border border-orbit-border text-orbit-text text-xs font-medium transition-all">
+              <Download className="w-3.5 h-3.5 text-orbit-muted" />
               Export
             </button>
-            <div className="absolute right-0 top-full mt-1 w-44 rounded-xl bg-zinc-900 border border-zinc-800 p-1.5 shadow-2xl hidden group-hover:block z-50">
+            <div className="absolute right-0 top-full mt-1 w-44 rounded-xl bg-surface border border-orbit-border p-1.5 shadow-xl hidden group-hover:block z-50">
               <button
                 onClick={handleExportPNG}
-                className="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-200 hover:bg-purple-500/10 hover:text-purple-300 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 rounded-lg text-xs text-orbit-text hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300 flex items-center gap-2"
               >
                 <Download className="w-3.5 h-3.5" /> Export PNG Image
               </button>
               <button
                 onClick={handleExportJSON}
-                className="w-full text-left px-3 py-2 rounded-lg text-xs text-zinc-200 hover:bg-purple-500/10 hover:text-purple-300 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 rounded-lg text-xs text-orbit-text hover:bg-purple-500/10 hover:text-purple-600 dark:hover:text-purple-300 flex items-center gap-2"
               >
                 <FileText className="w-3.5 h-3.5" /> Export JSON Blueprint
               </button>
@@ -870,7 +951,7 @@ interface RawApiEdge {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-all shadow-lg shadow-purple-600/20 active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-all shadow-md shadow-purple-600/20 active:scale-95 disabled:opacity-50"
           >
             <Save className="w-3.5 h-3.5" />
             Save
@@ -881,84 +962,84 @@ interface RawApiEdge {
       {/* Main Canvas Area */}
       <div className="flex-1 flex relative overflow-hidden" ref={canvasRef}>
         {/* Left Node Palette Sidebar */}
-        <aside className="w-56 border-r border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md p-3.5 flex flex-col gap-3 z-20 shrink-0">
-          <div className="text-[11px] font-bold tracking-wider uppercase text-zinc-400 flex items-center gap-1.5">
-            <Plus className="w-3.5 h-3.5 text-purple-400" />
+        <aside className="w-56 border-r border-orbit-border bg-surface/90 backdrop-blur-md p-3.5 flex flex-col gap-3 z-20 shrink-0">
+          <div className="text-[11px] font-bold tracking-wider uppercase text-orbit-muted flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             Add Flow Components
           </div>
 
           <div className="space-y-2">
             <button
               onClick={() => handleAddNode("trigger", "Event Trigger", "Play", "#8B5CF6")}
-              className="w-full p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-left flex items-center gap-2.5 text-xs text-purple-200 transition-all hover:scale-[1.02]"
+              className="w-full p-2.5 rounded-xl bg-surface border border-purple-200 dark:border-purple-500/30 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-500/10 text-left flex items-center gap-2.5 text-xs text-orbit-text transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
             >
-              <div className="p-1.5 rounded-lg bg-purple-600 text-white">
+              <div className="p-1.5 rounded-lg bg-purple-600 text-white shadow-xs">
                 <Play className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Trigger Node</div>
-                <div className="text-[10px] text-zinc-400">Webhook, Push, Cron</div>
+                <div className="font-semibold text-orbit-text">Trigger Node</div>
+                <div className="text-[10px] text-orbit-muted">Webhook, Push, Cron</div>
               </div>
             </button>
 
             <button
               onClick={() => handleAddNode("action", "Execute Step", "Cpu", "#3B82F6")}
-              className="w-full p-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-left flex items-center gap-2.5 text-xs text-blue-200 transition-all hover:scale-[1.02]"
+              className="w-full p-2.5 rounded-xl bg-surface border border-blue-200 dark:border-blue-500/30 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-500/10 text-left flex items-center gap-2.5 text-xs text-orbit-text transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
             >
-              <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+              <div className="p-1.5 rounded-lg bg-blue-600 text-white shadow-xs">
                 <Cpu className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Action Step</div>
-                <div className="text-[10px] text-zinc-400">Task, API, Notify</div>
+                <div className="font-semibold text-orbit-text">Action Step</div>
+                <div className="text-[10px] text-orbit-muted">Task, API, Notify</div>
               </div>
             </button>
 
             <button
               onClick={() => handleAddNode("decision", "Condition Gate", "HelpCircle", "#F59E0B")}
-              className="w-full p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-left flex items-center gap-2.5 text-xs text-amber-200 transition-all hover:scale-[1.02]"
+              className="w-full p-2.5 rounded-xl bg-surface border border-amber-200 dark:border-amber-500/30 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-500/10 text-left flex items-center gap-2.5 text-xs text-orbit-text transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
             >
-              <div className="p-1.5 rounded-lg bg-amber-600 text-white">
+              <div className="p-1.5 rounded-lg bg-amber-600 text-white shadow-xs">
                 <HelpCircle className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Decision Gate</div>
-                <div className="text-[10px] text-zinc-400">Pass / Fail branching</div>
+                <div className="font-semibold text-orbit-text">Decision Gate</div>
+                <div className="text-[10px] text-orbit-muted">Pass / Fail branching</div>
               </div>
             </button>
 
             <button
               onClick={() => handleAddNode("delay", "Wait / Timer", "Clock", "#EC4899")}
-              className="w-full p-2.5 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-left flex items-center gap-2.5 text-xs text-pink-200 transition-all hover:scale-[1.02]"
+              className="w-full p-2.5 rounded-xl bg-surface border border-pink-200 dark:border-pink-500/30 hover:border-pink-400 dark:hover:border-pink-500 hover:bg-pink-50/50 dark:hover:bg-pink-500/10 text-left flex items-center gap-2.5 text-xs text-orbit-text transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
             >
-              <div className="p-1.5 rounded-lg bg-pink-600 text-white">
+              <div className="p-1.5 rounded-lg bg-pink-600 text-white shadow-xs">
                 <Clock className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Wait Marker</div>
-                <div className="text-[10px] text-zinc-400">Delay / Approval pause</div>
+                <div className="font-semibold text-orbit-text">Wait Marker</div>
+                <div className="text-[10px] text-orbit-muted">Delay / Approval pause</div>
               </div>
             </button>
 
             <button
               onClick={() => handleAddNode("note", "Team Note", "StickyNote", "#FCD34D")}
-              className="w-full p-2.5 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-left flex items-center gap-2.5 text-xs text-yellow-200 transition-all hover:scale-[1.02]"
+              className="w-full p-2.5 rounded-xl bg-surface border border-yellow-200 dark:border-yellow-500/30 hover:border-yellow-400 dark:hover:border-yellow-500 hover:bg-yellow-50/50 dark:hover:bg-yellow-500/10 text-left flex items-center gap-2.5 text-xs text-orbit-text transition-all hover:scale-[1.02] shadow-xs cursor-pointer"
             >
-              <div className="p-1.5 rounded-lg bg-yellow-600 text-black font-bold">
-                <StickyNote className="w-3.5 h-3.5 text-white" />
+              <div className="p-1.5 rounded-lg bg-yellow-500 text-white shadow-xs">
+                <StickyNote className="w-3.5 h-3.5" />
               </div>
               <div>
-                <div className="font-semibold text-white">Sticky Note</div>
-                <div className="text-[10px] text-zinc-400">Collaborative note</div>
+                <div className="font-semibold text-orbit-text">Sticky Note</div>
+                <div className="text-[10px] text-orbit-muted">Collaborative note</div>
               </div>
             </button>
           </div>
 
-          <div className="mt-auto pt-4 border-t border-zinc-800 text-[11px] text-zinc-500 space-y-1.5">
-            <div className="font-medium text-zinc-400">Quick Tips:</div>
+          <div className="mt-auto pt-4 border-t border-orbit-border text-[11px] text-orbit-muted space-y-1.5">
+            <div className="font-medium text-orbit-text">Quick Tips:</div>
             <div>• Drag handles to connect</div>
-            <div>• Click any node to link to Task/Doc</div>
-            <div>• Press Del to remove selected</div>
+            <div>• Click any node to configure</div>
+            <div>• Click trash button or Del key to delete</div>
           </div>
         </aside>
 
@@ -979,12 +1060,12 @@ interface RawApiEdge {
             onNodeClick={handleNodeClick}
             nodeTypes={nodeTypesConfig}
             fitView
-            className="bg-zinc-950"
+            className="bg-bg"
           >
-            <Background color="#27272a" gap={20} size={1.5} variant={BackgroundVariant.Dots} />
-            <Controls className="!bg-zinc-900 !border-zinc-800 !text-white rounded-xl shadow-2xl fill-white" />
+            <Background color="var(--orbit-border)" gap={20} size={1.5} variant={BackgroundVariant.Dots} />
+            <Controls className="!bg-surface !border-orbit-border !text-orbit-text rounded-xl shadow-md fill-current [&>button]:!border-orbit-border [&>button]:!bg-surface [&>button]:hover:!bg-surface2" />
             <MiniMap
-              className="!bg-zinc-900/90 !border-zinc-800 rounded-xl overflow-hidden shadow-2xl"
+              className="!bg-surface/90 !border-orbit-border rounded-xl overflow-hidden shadow-lg"
               nodeColor={(node) => {
                 if (node.type === "trigger") return "#8B5CF6";
                 if (node.type === "decision") return "#F59E0B";
@@ -1000,37 +1081,46 @@ interface RawApiEdge {
 
         {/* 1. Node Config & Object Linking Drawer */}
         {activeDrawer === "node_config" && selectedNode && (
-          <div className="w-80 border-l border-zinc-800/80 bg-zinc-900/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+          <div className="w-80 border-l border-orbit-border bg-surface/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200 shadow-xl">
+            <div className="space-y-4 flex-1 overflow-y-auto pr-1">
+              <div className="flex items-center justify-between border-b border-orbit-border pb-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 rounded bg-purple-500/20 text-purple-400">
+                  <div className="p-1 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                     <Tag className="w-4 h-4" />
                   </div>
-                  <h3 className="font-semibold text-white text-sm">Step Properties</h3>
+                  <h3 className="font-semibold text-orbit-text text-sm">Step Properties</h3>
                 </div>
-                <button
-                  onClick={() => setActiveDrawer("none")}
-                  className="p-1 rounded text-zinc-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleDeleteSelectedNode}
+                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 transition-colors"
+                    title="Delete this workflow node"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setActiveDrawer("none")}
+                    className="p-1.5 rounded-lg text-orbit-muted hover:text-orbit-text hover:bg-surface2 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Title Input */}
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">Step Label</label>
+                <label className="block text-[11px] font-medium text-orbit-muted mb-1">Step Label</label>
                 <input
                   type="text"
                   value={String(selectedNode.data.label || "")}
                   onChange={(e) => handleUpdateSelectedNode("label", e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
                 />
               </div>
 
               {/* Description Input */}
               <div>
-                <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                <label className="block text-[11px] font-medium text-orbit-muted mb-1">
                   Description / Documentation
                 </label>
                 <textarea
@@ -1038,14 +1128,14 @@ interface RawApiEdge {
                   value={String(selectedNode.data.description || "")}
                   onChange={(e) => handleUpdateSelectedNode("description", e.target.value)}
                   placeholder="Explain what occurs in this step..."
-                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text placeholder-orbit-muted focus:outline-none focus:border-purple-500 resize-none"
                 />
               </div>
 
               {/* Linking to Orbit Object (Task / Document) */}
-              <div className="pt-2 border-t border-zinc-800/80 space-y-3">
+              <div className="pt-2 border-t border-orbit-border space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-purple-400">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
                     Link to Workspace Object
                   </label>
                   {selectedNode.data.linked_object_type && (
@@ -1054,7 +1144,7 @@ interface RawApiEdge {
                         handleUpdateSelectedNode("linked_object_type", null);
                         handleUpdateSelectedNode("linked_object_id", null);
                       }}
-                      className="text-[10px] text-zinc-500 hover:text-red-400"
+                      className="text-[10px] text-orbit-muted hover:text-rose-500 transition-colors"
                     >
                       Clear link
                     </button>
@@ -1063,7 +1153,7 @@ interface RawApiEdge {
 
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-[10px] text-zinc-400 mb-1">Link to Task</label>
+                    <label className="block text-[10px] text-orbit-muted mb-1">Link to Task</label>
                     <select
                       value={
                         selectedNode.data.linked_object_type === "task"
@@ -1079,7 +1169,7 @@ interface RawApiEdge {
                           handleUpdateSelectedNode("linked_object_id", null);
                         }
                       }}
-                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
+                      className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
                     >
                       <option value="">-- No task linked --</option>
                       {tasks.map((t) => (
@@ -1091,7 +1181,7 @@ interface RawApiEdge {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-zinc-400 mb-1">Link to Document</label>
+                    <label className="block text-[10px] text-orbit-muted mb-1">Link to Document</label>
                     <select
                       value={
                         selectedNode.data.linked_object_type === "document"
@@ -1107,7 +1197,7 @@ interface RawApiEdge {
                           handleUpdateSelectedNode("linked_object_id", null);
                         }
                       }}
-                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
+                      className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
                     >
                       <option value="">-- No document linked --</option>
                       {documents.map((d) => (
@@ -1119,7 +1209,7 @@ interface RawApiEdge {
                   </div>
 
                   {selectedNode.data.linked_object_type && (
-                    <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300 text-xs flex items-center justify-between">
                       <span className="truncate">
                         Linked: {String(selectedNode.data.linked_object_type)} #
                         {String(selectedNode.data.linked_object_id || "").slice(0, 8)}
@@ -1132,7 +1222,7 @@ interface RawApiEdge {
                               : `/dashboard/documents`;
                           router.push(route);
                         }}
-                        className="p-1 hover:text-white"
+                        className="p-1 hover:text-purple-700 dark:hover:text-white transition-colors"
                         title="Jump to object"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -1143,64 +1233,67 @@ interface RawApiEdge {
               </div>
             </div>
 
-            <button
-              onClick={handleDeleteSelectedNode}
-              className="w-full mt-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Delete Step
-            </button>
+            {/* Always visible bottom action button */}
+            <div className="pt-3 border-t border-orbit-border shrink-0 mt-3">
+              <button
+                onClick={handleDeleteSelectedNode}
+                className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Delete Workflow Node
+              </button>
+            </div>
           </div>
         )}
 
         {/* 2. AI Explain Drawer */}
         {activeDrawer === "ai" && (
-          <div className="w-88 border-l border-zinc-800/80 bg-zinc-900/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200">
+          <div className="w-88 border-l border-orbit-border bg-surface/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200 shadow-xl">
             <div className="space-y-4 overflow-y-auto pr-1">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-orbit-border pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                  <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white text-sm">AI Flow Explainer</h3>
-                    <p className="text-[10px] text-zinc-400">Powered by Gemini 2.5 Flash</p>
+                    <h3 className="font-semibold text-orbit-text text-sm">AI Flow Explainer</h3>
+                    <p className="text-[10px] text-orbit-muted">Powered by Gemini 2.5 Flash</p>
                   </div>
                 </div>
-                <button onClick={() => setActiveDrawer("none")} className="p-1 text-zinc-400 hover:text-white">
+                <button onClick={() => setActiveDrawer("none")} className="p-1 text-orbit-muted hover:text-orbit-text">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {aiLoading ? (
                 <div className="p-8 text-center space-y-3">
-                  <RefreshCw className="w-6 h-6 animate-spin text-purple-400 mx-auto" />
-                  <p className="text-xs text-zinc-400">Analyzing nodes, pathways and decision points...</p>
+                  <RefreshCw className="w-6 h-6 animate-spin text-purple-500 mx-auto" />
+                  <p className="text-xs text-orbit-muted">Analyzing nodes, pathways and decision points...</p>
                 </div>
               ) : aiExplanation ? (
                 <div className="space-y-3">
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap">
+                  <div className="p-3.5 rounded-xl bg-surface2 border border-orbit-border text-xs text-orbit-text leading-relaxed whitespace-pre-wrap">
                     {aiExplanation}
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-zinc-500 text-center py-6">
+                <p className="text-xs text-orbit-muted text-center py-6">
                   Ask AI to analyze this workflow diagram, trace critical pathways, or draft team SOP docs.
                 </p>
               )}
             </div>
 
-            <div className="pt-3 border-t border-zinc-800 space-y-2">
+            <div className="pt-3 border-t border-orbit-border space-y-2">
               <input
                 type="text"
                 placeholder="Ask e.g. What are the decision gates?"
                 value={aiQuestion}
                 onChange={(e) => setAiQuestion(e.target.value)}
-                className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
               />
               <button
                 onClick={handleAIExplain}
                 disabled={aiLoading}
-                className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-purple-600/20"
+                className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20"
               >
                 <Sparkles className="w-3.5 h-3.5" /> Re-Analyze Flow
               </button>
@@ -1210,14 +1303,14 @@ interface RawApiEdge {
 
         {/* 3. Version Snapshots Drawer */}
         {activeDrawer === "versions" && (
-          <div className="w-80 border-l border-zinc-800/80 bg-zinc-900/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200">
+          <div className="w-80 border-l border-orbit-border bg-surface/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200 shadow-xl">
             <div className="space-y-4 overflow-y-auto pr-1">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-orbit-border pb-3">
                 <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-purple-400" />
-                  <h3 className="font-semibold text-white text-sm">Version Snapshots</h3>
+                  <History className="w-4 h-4 text-purple-500" />
+                  <h3 className="font-semibold text-orbit-text text-sm">Version Snapshots</h3>
                 </div>
-                <button onClick={() => setActiveDrawer("none")} className="p-1 text-zinc-400 hover:text-white">
+                <button onClick={() => setActiveDrawer("none")} className="p-1 text-orbit-muted hover:text-orbit-text">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1229,7 +1322,7 @@ interface RawApiEdge {
                   placeholder="Snapshot name (e.g. Pre-Q3 Architecture)"
                   value={snapshotName}
                   onChange={(e) => setSnapshotName(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
                 />
                 <button
                   onClick={handleCreateSnapshot}
@@ -1240,24 +1333,24 @@ interface RawApiEdge {
               </div>
 
               <div className="space-y-2 pt-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">History</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-orbit-muted">History</div>
                 {versions.length === 0 ? (
-                  <p className="text-xs text-zinc-500 text-center py-4">No snapshots saved yet.</p>
+                  <p className="text-xs text-orbit-muted text-center py-4">No snapshots saved yet.</p>
                 ) : (
                   versions.map((v) => (
                     <div
                       key={v.id}
-                      className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs"
+                      className="p-3 rounded-xl bg-surface2 border border-orbit-border flex items-center justify-between text-xs"
                     >
                       <div>
-                        <div className="font-medium text-white">{v.version_name}</div>
-                        <div className="text-[10px] text-zinc-500">
+                        <div className="font-medium text-orbit-text">{v.version_name}</div>
+                        <div className="text-[10px] text-orbit-muted">
                           {new Date(v.created_at).toLocaleDateString()} {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                       <button
                         onClick={() => handleRestoreSnapshot(v.id)}
-                        className="px-2 py-1 rounded bg-zinc-800 hover:bg-purple-600 hover:text-white text-zinc-300 text-[10px] font-medium transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-surface hover:bg-purple-600 hover:text-white text-orbit-text border border-orbit-border text-[10px] font-medium transition-colors"
                       >
                         Restore
                       </button>
@@ -1271,44 +1364,44 @@ interface RawApiEdge {
 
         {/* 4. Comments Drawer */}
         {activeDrawer === "comments" && (
-          <div className="w-80 border-l border-zinc-800/80 bg-zinc-900/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200">
+          <div className="w-80 border-l border-orbit-border bg-surface/95 backdrop-blur-md p-4 flex flex-col justify-between z-30 shrink-0 animate-in slide-in-from-right duration-200 shadow-xl">
             <div className="space-y-4 overflow-y-auto pr-1">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-orbit-border pb-3">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-purple-400" />
-                  <h3 className="font-semibold text-white text-sm">Flow Comments</h3>
+                  <MessageSquare className="w-4 h-4 text-purple-500" />
+                  <h3 className="font-semibold text-orbit-text text-sm">Flow Comments</h3>
                 </div>
-                <button onClick={() => setActiveDrawer("none")} className="p-1 text-zinc-400 hover:text-white">
+                <button onClick={() => setActiveDrawer("none")} className="p-1 text-orbit-muted hover:text-orbit-text">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-2.5">
                 {comments.length === 0 ? (
-                  <p className="text-xs text-zinc-500 text-center py-6">
+                  <p className="text-xs text-orbit-muted text-center py-6">
                     No comments yet. Start a discussion on this flow diagram.
                   </p>
                 ) : (
                   comments.map((c) => (
-                    <div key={c.id} className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
-                      <div className="flex items-center justify-between text-[10px] text-zinc-400">
-                        <span className="font-medium text-purple-300">{c.user_email || "Teammate"}</span>
+                    <div key={c.id} className="p-3 rounded-xl bg-surface2 border border-orbit-border space-y-1">
+                      <div className="flex items-center justify-between text-[10px] text-orbit-muted">
+                        <span className="font-medium text-purple-600 dark:text-purple-400">{c.user_email || "Teammate"}</span>
                         <span>{new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
-                      <p className="text-xs text-zinc-200">{c.text}</p>
+                      <p className="text-xs text-orbit-text">{c.text}</p>
                     </div>
                   ))
                 )}
               </div>
             </div>
 
-            <form onSubmit={handleAddComment} className="pt-3 border-t border-zinc-800 flex gap-2">
+            <form onSubmit={handleAddComment} className="pt-3 border-t border-orbit-border flex gap-2">
               <input
                 type="text"
                 placeholder={selectedNode ? `Comment on ${selectedNode.data.label}...` : "Write a comment..."}
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
-                className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500"
+                className="flex-1 px-3 py-2 bg-surface2 border border-orbit-border rounded-xl text-xs text-orbit-text focus:outline-none focus:border-purple-500"
               />
               <button
                 type="submit"

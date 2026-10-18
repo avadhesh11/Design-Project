@@ -41,7 +41,7 @@ const NAV = [
   { path: "/flows", href: "/dashboard/flows", label: "Flows", icon: Workflow },
   { path: "/ai", href: "/dashboard/ai", label: "AI Assistant", icon: Bot },
   { path: "/integrations", href: "/dashboard/integrations", label: "Integrations", icon: GitBranch },
-  // { path: "/settings", href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { path: "/settings", href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

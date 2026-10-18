@@ -184,6 +184,7 @@ def get_flow_detail(
 
 
 @router.put("/{flow_id}", response_model=FlowOut)
+@router.patch("/{flow_id}", response_model=FlowOut)
 def update_flow(
     flow_id: UUID,
     flow_update: FlowUpdate,

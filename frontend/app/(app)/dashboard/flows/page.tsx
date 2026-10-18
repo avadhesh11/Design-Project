@@ -15,7 +15,6 @@ import {
   AlertTriangle,
   Clock,
   Trash2,
-  Sparkles,
   Layers,
   X
 } from "lucide-react";
@@ -146,20 +145,20 @@ export default function FlowsGalleryPage() {
   return (
     <div className="min-h-screen p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-orbit-border pb-6">
         <div>
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 shadow-inner">
               <Workflow className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-orbit-text flex items-center gap-2.5">
                 Orbit Flow
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-purple-500/10 text-purple-400 border border-purple-500/30">
                   Canvas
                 </span>
               </h1>
-              <p className="text-sm text-zinc-400 mt-0.5">
+              <p className="text-sm text-orbit-muted mt-0.5">
                 Visual process architecture and workflow diagrams linked directly to your tasks & documents.
               </p>
             </div>

@@ -5,7 +5,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from .database import engine, Base
-from .routes import auth, workspaces, documents, chat, tasks, ai, github, flows
+from .routes import auth, workspaces, documents, chat, tasks, ai, github, flows, dashboard
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8080", "http://localhost:3000", "https://orbit-avadhesh.vercel.app"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 app.include_router(auth.router, prefix="/api")
@@ -39,6 +39,7 @@ app.include_router(tasks.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
 app.include_router(github.router, prefix="/api")
 app.include_router(flows.router, prefix="/api")
+app.include_router(dashboard.router, prefix="/api")
 
 
 

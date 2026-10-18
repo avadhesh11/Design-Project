@@ -71,6 +71,10 @@ export interface Task {
   description?: string;
   status: "todo" | "in_progress" | "done";
   priority: "low" | "medium" | "high";
+  task_type?: "feature" | "bug" | "chore" | "design" | "docs" | "other" | string;
+  requires_commit?: boolean;
+  no_commit_reason?: string | null;
+  completion_notes?: string | null;
   workspace_id: string;
   created_by: string;
   assigned_to?: string | null;
@@ -80,6 +84,9 @@ export interface Task {
   due_date?: string;
   created_at: string;
   updated_at: string;
+  github_links?: TaskGitHubLink[];
+  primary_commit?: GitHubCommit | null;
+  primary_pr?: GitHubPullRequest | null;
 }
 
 export interface ChatMessage {
@@ -179,7 +186,10 @@ export interface TaskGitHubLink {
   commit_id?: string;
   match_score: number;
   match_reason?: string;
-  status: "suggested" | "accepted" | "dismissed";
+  status: "suggested" | "accepted" | "dismissed" | string;
+  verification_status?: "verified_in_repo" | "manual_entry" | "unverified" | string;
+  verification_source?: "github_api" | "local_db" | "manual" | string;
+  verification_notes?: string;
   created_at: string;
   reviewed_at?: string;
   pr?: GitHubPullRequest;
@@ -215,6 +225,101 @@ export interface WorkspaceActivityResponse {
   workspace_id: string;
   activities: WorkspaceActivityItem[];
 }
+
+export interface WhenYouWereAwayTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: "todo" | "in_progress" | "done" | string;
+  priority: "low" | "medium" | "high" | string;
+  creator_email?: string;
+  assigned_to_email?: string;
+  assigned_to_ids?: string[];
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+  is_overdue: boolean;
+  is_approaching: boolean;
+  is_new: boolean;
+  is_status_changed: boolean;
+  is_assigned_to_me: boolean;
+  link: string;
+}
+
+export interface WhenYouWereAwayGitHubPR {
+  id: string;
+  pr_number: number;
+  title: string;
+  state: "open" | "closed" | "merged" | string;
+  author_login?: string;
+  repository_name?: string;
+  url: string;
+  merged_at?: string;
+  created_at: string;
+  updated_at?: string;
+  link: string;
+}
+
+export interface WhenYouWereAwayGitHubCommit {
+  id: string;
+  sha: string;
+  message: string;
+  author_login?: string;
+  branch?: string;
+  url?: string;
+  additions: number;
+  deletions: number;
+  committed_at: string;
+  repository_name?: string;
+  link: string;
+}
+
+export interface WhenYouWereAwayTeamActivity {
+  id: string;
+  category: "document" | "chat" | "member" | "workflow" | "github" | "task";
+  action: string;
+  title: string;
+  description?: string;
+  actor_email?: string;
+  target_link: string;
+  created_at: string;
+}
+
+export interface WhenYouWereAwayStats {
+  tasks_created_count: number;
+  tasks_updated_count: number;
+  tasks_assigned_to_user_count: number;
+  tasks_overdue_count: number;
+  tasks_approaching_count: number;
+  github_commits_count: number;
+  github_prs_count: number;
+  team_docs_count: number;
+  team_chats_count: number;
+  team_members_count: number;
+  total_events_count: number;
+}
+
+export interface WhenYouWereAwayResponse {
+  workspace_id: string;
+  time_window_type: string;
+  since: string;
+  until: string;
+  since_label: string;
+  away_duration_seconds: number;
+  has_events: boolean;
+  summary: string;
+  stats: WhenYouWereAwayStats;
+  tasks_created: WhenYouWereAwayTask[];
+  tasks_updated: WhenYouWereAwayTask[];
+  tasks_assigned_to_user: WhenYouWereAwayTask[];
+  tasks_overdue: WhenYouWereAwayTask[];
+  tasks_approaching: WhenYouWereAwayTask[];
+  github_prs: WhenYouWereAwayGitHubPR[];
+  github_commits: WhenYouWereAwayGitHubCommit[];
+  team_activities: WhenYouWereAwayTeamActivity[];
+  last_fetched_at?: string;
+}
+
 
 
 

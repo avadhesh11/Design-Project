@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useWorkspaceStore } from "@/store/workspaceStore";
 import api from "@/lib/api";
 import { DashboardSkeleton } from "@/components/app/LoadingScreen";
+import { WhenYouWereAway } from "@/components/app/WhenYouWereAway";
 import { Document, Task } from "@/types";
 import { formatRelative } from "@/lib/utils";
 import {
@@ -20,7 +21,6 @@ import {
   MessageSquare,
   Workflow,
   GitBranch,
-  Settings,
 } from "lucide-react";
 
 const greeting = () => {
@@ -134,6 +134,11 @@ export default function DashboardPage() {
           </button>
         ))}
       </div>
+
+      {/* ── When You Were Away Intelligence ────────────────────────── */}
+      {currentWorkspace?.id && (
+        <WhenYouWereAway workspaceId={currentWorkspace.id} />
+      )}
 
       {/* ── Two column grid ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

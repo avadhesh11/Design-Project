@@ -235,3 +235,31 @@ async def fetch_repository_pull_requests(installation_id: str, owner: str, repo:
         return res.json()
 
 
+async def fetch_single_commit(installation_id: str, owner: str, repo: str, commit_sha: str) -> dict | None:
+    """Fetch and validate a single commit SHA from GitHub REST API."""
+    try:
+        token = await get_installation_access_token(installation_id)
+        url = f"https://api.github.com/repos/{owner}/{repo}/commits/{commit_sha}"
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.get(
+                url,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "OrbitAI-App"
+                }
+            )
+            if res.status_code == 200:
+                return res.json()
+            elif res.status_code == 404:
+                logger.info("Commit %s not found on %s/%s", commit_sha, owner, repo)
+                return None
+            else:
+                logger.warning("Error validating commit %s on %s/%s: %s", commit_sha, owner, repo, res.status_code)
+                return None
+    except Exception as e:
+        logger.warning("Failed to validate commit %s on %s/%s: %s", commit_sha, owner, repo, e)
+        return None
+
+

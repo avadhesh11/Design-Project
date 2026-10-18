@@ -10,7 +10,6 @@ import {
   AlertCircle,
   RefreshCw,
   ExternalLink,
-  Shield,
   Sparkles,
   GitCommit,
   GitPullRequest,
@@ -206,13 +205,13 @@ export default function IntegrationsPage() {
     <div className="p-6 max-w-5xl space-y-6">
       {/* Header */}
       <div className="animate-fade-up">
-        <div className="text-[10px] text-[#5a5a7a] font-mono tracking-widest mb-1">
+        <div className="text-[10px] text-orbit-muted font-mono tracking-widest mb-1">
           WORKSPACE INTEGRATIONS
         </div>
-        <h1 className="font-display font-extrabold text-2xl tracking-tight mb-1">
+        <h1 className="font-display font-extrabold text-2xl tracking-tight mb-1 text-orbit-text">
           GitHub Intelligence
         </h1>
-        <p className="text-[#5a5a7a] text-sm">
+        <p className="text-orbit-muted text-sm">
           Connect your GitHub App to receive real-time webhooks, track pull requests, and enable AI task correlation.
         </p>
       </div>
@@ -221,27 +220,27 @@ export default function IntegrationsPage() {
       <div className="orbit-card p-6 animate-[fadeUp_0.5s_0.05s_ease_both]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-[#1e1e2e] border border-[#2a2a3e] flex items-center justify-center flex-shrink-0 text-white">
+            <div className="w-12 h-12 rounded-xl bg-surface2 border border-orbit-border flex items-center justify-center flex-shrink-0 text-orbit-text">
               <GithubIcon className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-display font-bold text-base">GitHub App</span>
+                <span className="font-display font-bold text-base text-orbit-text">GitHub App</span>
                 {connectionStatus.connected ? (
-                  <span className="flex items-center gap-1 text-[11px] font-mono text-[#7fffb2] bg-[#7fffb2]/10 border border-[#7fffb2]/20 px-2 py-0.5 rounded-full">
+                  <span className="flex items-center gap-1 text-[11px] font-mono text-accent bg-accent-dim border border-accent-border px-2 py-0.5 rounded-full">
                     <CheckCircle2 className="w-3 h-3" /> Connected
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[11px] font-mono text-[#ffd166] bg-[#ffd166]/10 border border-[#ffd166]/20 px-2 py-0.5 rounded-full">
+                  <span className="flex items-center gap-1 text-[11px] font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
                     <AlertCircle className="w-3 h-3" /> Setup Required
                   </span>
                 )}
               </div>
-              <div className="text-xs text-[#5a5a7a]">
+              <div className="text-xs text-orbit-muted">
                 {connectionStatus.connected && connectionStatus.connection ? (
                   <span>
                     Installation ID:{" "}
-                    <code className="text-accent font-mono">
+                    <code className="text-accent font-mono font-medium">
                       {connectionStatus.connection.installation_id}
                     </code>{" "}
                     • {connectionStatus.repositories_count} active repo
@@ -268,7 +267,7 @@ export default function IntegrationsPage() {
             {!connectionStatus.connected && (
               <button
                 onClick={() => setShowManualInput(!showManualInput)}
-                className="flex items-center gap-1.5 px-3 py-2 border border-[#1e1e2e] hover:border-[#2a2a3e] rounded-lg text-xs font-mono text-[#5a5a7a] hover:text-[#e8e8f0] transition-colors"
+                className="orbit-btn-ghost text-xs font-mono py-2 px-3"
               >
                 <span>Link Installation ID</span>
               </button>
@@ -278,7 +277,7 @@ export default function IntegrationsPage() {
               <button
                 onClick={handleSyncRepositories}
                 disabled={syncing}
-                className="flex items-center gap-1.5 px-3 py-2 border border-[#1e1e2e] hover:border-[#2a2a3e] rounded-lg text-xs font-mono text-[#5a5a7a] hover:text-[#e8e8f0] transition-colors disabled:opacity-40"
+                className="orbit-btn-ghost text-xs font-mono py-2 px-3 disabled:opacity-40"
                 title="Sync latest commits and PRs from GitHub"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin text-accent" : ""}`} />
@@ -289,7 +288,7 @@ export default function IntegrationsPage() {
         </div>
 
         {showManualInput && !connectionStatus.connected && (
-          <div className="mt-4 pt-4 border-t border-[#1e1e2e] flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <div className="mt-4 pt-4 border-t border-orbit-border flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             <input
               type="text"
               placeholder="e.g. 12345678 (from github.com/settings/installations/ID)"
@@ -314,18 +313,18 @@ export default function IntegrationsPage() {
         <div className="orbit-card p-6 animate-[fadeUp_0.5s_0.1s_ease_both]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-semibold text-sm">Monitored Repositories</h2>
-              <p className="text-xs text-[#5a5a7a]">
+              <h2 className="font-semibold text-sm text-orbit-text">Monitored Repositories</h2>
+              <p className="text-xs text-orbit-muted">
                 Toggle which repositories Orbit should monitor for commits, PRs, and task automation.
               </p>
             </div>
-            <span className="text-[11px] font-mono text-[#5a5a7a]">
+            <span className="text-[11px] font-mono text-orbit-muted">
               {repositories.filter((r) => r.is_active).length} / {repositories.length} Active
             </span>
           </div>
 
           {repositories.length === 0 ? (
-            <div className="text-center py-8 border border-dashed border-[#1e1e2e] rounded-xl text-[#5a5a7a] text-xs">
+            <div className="text-center py-8 border border-dashed border-orbit-border rounded-xl text-orbit-muted text-xs">
               No repositories found for this installation. Click &quot;Sync Repos&quot; above to discover them.
             </div>
           ) : (
@@ -333,15 +332,15 @@ export default function IntegrationsPage() {
               {repositories.map((repo) => (
                 <div
                   key={repo.id}
-                  className="flex items-center justify-between p-3.5 rounded-lg border border-[#1e1e2e] bg-surface2/40 hover:border-[#2a2a3e] transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-lg border border-orbit-border bg-surface hover:bg-surface2/50 hover:border-orbit-border2 transition-colors shadow-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <div className="w-7 h-7 rounded-md bg-[#1e1e2e] flex items-center justify-center flex-shrink-0 text-white">
+                    <div className="w-7 h-7 rounded-md bg-surface2 border border-orbit-border flex items-center justify-center flex-shrink-0 text-orbit-text">
                       <GithubIcon className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-medium truncate">{repo.full_name}</div>
-                      <div className="text-[10px] font-mono text-[#5a5a7a]">
+                      <div className="text-xs font-medium text-orbit-text truncate">{repo.full_name}</div>
+                      <div className="text-[10px] font-mono text-orbit-muted">
                         Branch: {repo.default_branch} {repo.is_private && "• Private"}
                       </div>
                     </div>
@@ -350,12 +349,12 @@ export default function IntegrationsPage() {
                   <button
                     onClick={() => handleToggleRepository(repo)}
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      repo.is_active ? "bg-accent" : "bg-[#2a2a3e]"
+                      repo.is_active ? "bg-accent" : "bg-orbit-border"
                     }`}
                     title={repo.is_active ? "Disable monitoring" : "Enable monitoring"}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-bg shadow ring-0 transition duration-200 ease-in-out ${
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-zinc-200 shadow ring-0 transition duration-200 ease-in-out ${
                         repo.is_active ? "translate-x-4" : "translate-x-0"
                       }`}
                     />
@@ -373,25 +372,25 @@ export default function IntegrationsPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-sm">Recent Repository Activity</h2>
-                <span className="flex items-center gap-1 text-[10px] font-mono text-accent bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-full">
+                <h2 className="font-semibold text-sm text-orbit-text">Recent Repository Activity</h2>
+                <span className="flex items-center gap-1 text-[10px] font-mono text-accent bg-accent-dim border border-accent-border px-2 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                   Live Sync
                 </span>
               </div>
-              <p className="text-xs text-[#5a5a7a]">
+              <p className="text-xs text-orbit-muted">
                 Latest commits, pushes, and pull requests tracked across monitored repositories.
               </p>
             </div>
 
             {/* Sub-tabs */}
-            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-surface2/60 border border-[#1e1e2e]">
+            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-surface2/60 border border-orbit-border">
               <button
                 onClick={() => setActiveTab("commits")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                   activeTab === "commits"
-                    ? "bg-[#1e1e2e] text-[#e8e8f0] shadow-sm"
-                    : "text-[#5a5a7a] hover:text-[#e8e8f0]"
+                    ? "bg-surface text-orbit-text border border-orbit-border shadow-xs"
+                    : "text-orbit-muted hover:text-orbit-text"
                 }`}
               >
                 <GitCommit className="w-3.5 h-3.5" />
@@ -402,8 +401,8 @@ export default function IntegrationsPage() {
                 onClick={() => setActiveTab("pull_requests")}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                   activeTab === "pull_requests"
-                    ? "bg-[#1e1e2e] text-[#e8e8f0] shadow-sm"
-                    : "text-[#5a5a7a] hover:text-[#e8e8f0]"
+                    ? "bg-surface text-orbit-text border border-orbit-border shadow-xs"
+                    : "text-orbit-muted hover:text-orbit-text"
                 }`}
               >
                 <GitPullRequest className="w-3.5 h-3.5" />
@@ -416,27 +415,27 @@ export default function IntegrationsPage() {
           {activeTab === "commits" && (
             <div className="space-y-2.5">
               {recentCommits.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-[#1e1e2e] rounded-xl text-[#5a5a7a] text-xs">
+                <div className="text-center py-8 border border-dashed border-orbit-border rounded-xl text-orbit-muted text-xs">
                   No commits recorded yet. Click &quot;Sync Repos&quot; to fetch latest pushes.
                 </div>
               ) : (
                 recentCommits.map((cm) => (
                   <div
                     key={cm.id || cm.sha}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-[#1e1e2e] bg-surface2/30 hover:border-[#2a2a3e] hover:bg-surface2/50 transition-all group"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-orbit-border bg-surface hover:border-orbit-border2 hover:bg-surface2/40 transition-all group shadow-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="w-7 h-7 rounded-md bg-[#5b8aff]/10 border border-[#5b8aff]/20 flex items-center justify-center flex-shrink-0 text-[#5b8aff] mt-0.5">
                         <GitCommit className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium text-[#e8e8f0] line-clamp-2 leading-relaxed">
+                        <div className="text-xs font-medium text-orbit-text line-clamp-2 leading-relaxed">
                           {cm.message}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-[#5a5a7a] font-mono">
-                          <span className="text-[#a0a0c0]">@{cm.author_login || "developer"}</span>
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-orbit-muted font-mono">
+                          <span className="text-orbit-text font-medium">@{cm.author_login || "developer"}</span>
                           <span>•</span>
-                          <span className="flex items-center gap-1 text-accent/80">
+                          <span className="flex items-center gap-1 text-accent">
                             <GitBranch className="w-3 h-3" />
                             {cm.branch || "main"}
                           </span>
@@ -454,7 +453,7 @@ export default function IntegrationsPage() {
                         href={cm.url || `https://github.com/avadhesh11/Orbit/commit/${cm.sha}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 font-mono text-[11px] text-[#5a5a7a] group-hover:text-accent bg-[#1e1e2e] px-2.5 py-1 rounded-md border border-[#2a2a3e] transition-colors"
+                        className="flex items-center gap-1 font-mono text-xs text-orbit-text group-hover:text-accent bg-surface2 hover:bg-surface2/80 px-2.5 py-1.5 rounded-md border border-orbit-border transition-colors shadow-xs"
                       >
                         <code>{cm.sha.slice(0, 7)}</code>
                         <ArrowUpRight className="w-3 h-3" />
@@ -470,38 +469,38 @@ export default function IntegrationsPage() {
           {activeTab === "pull_requests" && (
             <div className="space-y-2.5">
               {recentPRs.length === 0 ? (
-                <div className="text-center py-8 border border-dashed border-[#1e1e2e] rounded-xl text-[#5a5a7a] text-xs">
+                <div className="text-center py-8 border border-dashed border-orbit-border rounded-xl text-orbit-muted text-xs">
                   No pull requests recorded yet for this repository.
                 </div>
               ) : (
                 recentPRs.map((pr) => (
                   <div
                     key={pr.id || pr.github_pr_id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-[#1e1e2e] bg-surface2/30 hover:border-[#2a2a3e] hover:bg-surface2/50 transition-all group"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-orbit-border bg-surface hover:border-orbit-border2 hover:bg-surface2/40 transition-all group shadow-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="w-7 h-7 rounded-md bg-[#7fffb2]/10 border border-[#7fffb2]/20 flex items-center justify-center flex-shrink-0 text-[#7fffb2] mt-0.5">
+                      <div className="w-7 h-7 rounded-md bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center flex-shrink-0 text-accent mt-0.5">
                         <GitPullRequest className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-semibold text-[#e8e8f0]">
+                          <span className="text-xs font-semibold text-orbit-text">
                             #{pr.pr_number} {pr.title}
                           </span>
                           <span
                             className={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase ${
                               pr.state === "merged"
-                                ? "bg-[#a78bfa]/15 text-[#a78bfa] border border-[#a78bfa]/30"
+                                ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30"
                                 : pr.state === "open"
-                                ? "bg-[#7fffb2]/15 text-[#7fffb2] border border-[#7fffb2]/30"
-                                : "bg-[#5a5a7a]/15 text-[#5a5a7a] border border-[#5a5a7a]/30"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                                : "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 border border-zinc-500/30"
                             }`}
                           >
                             {pr.state}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#5a5a7a] font-mono">
-                          <span>by @{pr.author_login || "developer"}</span>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-orbit-muted font-mono">
+                          <span className="text-orbit-text font-medium">@{pr.author_login || "developer"}</span>
                           {pr.head_branch && (
                             <>
                               <span>•</span>
@@ -519,7 +518,7 @@ export default function IntegrationsPage() {
                         href={pr.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 font-mono text-[11px] text-[#5a5a7a] group-hover:text-accent bg-[#1e1e2e] px-2.5 py-1 rounded-md border border-[#2a2a3e] transition-colors"
+                        className="flex items-center gap-1 font-mono text-[11px] text-orbit-text group-hover:text-accent bg-surface2 hover:bg-surface2/80 px-2.5 py-1.5 rounded-md border border-orbit-border transition-colors shadow-xs"
                       >
                         <span>View PR</span>
                         <ArrowUpRight className="w-3 h-3" />
@@ -539,42 +538,16 @@ export default function IntegrationsPage() {
         <div className="orbit-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-accent" />
-            <span className="font-semibold text-sm">Since You Were Away</span>
+            <span className="font-semibold text-sm text-orbit-text">Since You Were Away</span>
           </div>
-          <p className="text-xs text-[#5a5a7a] mb-4">
+          <p className="text-xs text-orbit-muted mb-4">
             AI-powered activity synthesis of what changed in your workspace repositories.
           </p>
-          <div className="p-3.5 rounded-lg bg-accent/5 border border-accent/15 text-xs text-[#e8e8f0] leading-relaxed">
+          <div className="p-4 rounded-lg bg-accent-dim border border-accent-border text-xs text-orbit-text leading-relaxed font-normal">
             {digest?.summary ||
               "No new repository changes recorded. Live updates will appear here as webhooks and syncs arrive."}
           </div>
         </div>
-
-        {/* Security & Webhook Gateway */}
-        {/* <div className="orbit-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="w-4 h-4 text-[#5b8aff]" />
-            <span className="font-semibold text-sm">Security & Webhook Gateway</span>
-          </div>
-          <ul className="text-xs text-[#5a5a7a] space-y-2 mb-3">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#7fffb2] mt-0.5 flex-shrink-0" />
-              <span>HMAC-SHA256 signature verification enabled on all webhook deliveries.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#7fffb2] mt-0.5 flex-shrink-0" />
-              <span>Direct GitHub REST API fallback sync enabled — click &quot;Sync Repos&quot; to fetch latest pushes instantly.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#7fffb2] mt-0.5 flex-shrink-0" />
-              <span>Non-destructive AI task suggestions — never modifies tasks without confirmation.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#7fffb2] mt-0.5 flex-shrink-0" />
-              <span>Short-lived installation tokens automatically rotated.</span>
-            </li>
-          </ul>
-        </div> */}
       </div>
     </div>
   );
