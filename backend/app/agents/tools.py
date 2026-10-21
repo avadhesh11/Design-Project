@@ -7,12 +7,25 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
+import uuid
 import os
 import json
 import html
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _to_uuid(val):
+    """Safely convert string or UUID object to a UUID instance."""
+    if val is None:
+        return None
+    if isinstance(val, uuid.UUID):
+        return val
+    try:
+        return uuid.UUID(str(val))
+    except (ValueError, TypeError, AttributeError):
+        return None
 
 
 @tool
@@ -32,7 +45,7 @@ Use this whenever the user asks about:
     return "\n\n".join(chunk["content"] for chunk in chunks)
 
 @tool
-def get_tasks(workspace_id: str, status: str = None) -> str:
+def get_tasks(workspace_id: str, status: str = None, db = None) -> str:
     """Retrieve workspace tasks.
 
 Use this whenever the user asks:
@@ -42,9 +55,16 @@ Use this whenever the user asks:
 - task status
 - assigned work
 """
-    db = SessionLocal()
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+
     try:
-        query = db.query(Task).filter(Task.workspace_id == workspace_id)
+        ws_uuid = _to_uuid(workspace_id)
+        if not ws_uuid:
+            return "No tasks found."
+        query = db.query(Task).filter(Task.workspace_id == ws_uuid)
         if status:
             query = query.filter(Task.status == status)
         tasks = query.all()
@@ -62,7 +82,48 @@ Use this whenever the user asks:
         db.rollback()
         raise
     finally:
-        db.close()
+        if close_db:
+            db.close()
+
+
+def _verify_workspace_admin(db, workspace_id: str, user_id: str) -> tuple[bool, str]:
+    """Helper to verify workspace membership and administrative privileges using database models."""
+    if not workspace_id:
+        return False, "Permission denied: Workspace authorization could not be verified."
+    if not user_id:
+        return False, "Permission denied: User authorization could not be verified."
+
+    ws_uuid = _to_uuid(workspace_id)
+    user_uuid = _to_uuid(user_id)
+    if not ws_uuid:
+        return False, "Permission denied: Workspace authorization could not be verified."
+    if not user_uuid:
+        return False, "Permission denied: User authorization could not be verified."
+
+    try:
+        ws = db.query(Workspace).filter(Workspace.id == ws_uuid).first()
+        if not ws:
+            return False, "Workspace not found."
+
+        member = db.query(WorkspaceMember).filter(
+            WorkspaceMember.workspace_id == ws_uuid,
+            WorkspaceMember.user_id == user_uuid
+        ).first()
+
+        is_owner = (str(ws.owner_id) == str(user_uuid))
+        role_str = (member.role.value if hasattr(member.role, "value") else str(member.role).lower()) if member else None
+        user_is_admin = is_owner or (member is not None and role_str == "admin")
+
+        if not member and not is_owner:
+            return False, "Permission denied: User is not a member of this workspace."
+
+        if not user_is_admin:
+            return False, "Permission denied: Only workspace admins can update tasks."
+
+        return True, ""
+    except Exception as e:
+        logger.error(f"Error checking workspace admin permissions: {e}")
+        return False, "Permission denied: Authorization check failed."
 
 
 @tool
@@ -73,24 +134,32 @@ def create_task(
     description: str = "",
     priority: str = "medium",
     due_date: str = None,
-    is_admin: bool = False
+    is_admin: bool = False,
+    db = None
 ) -> str:
     """
-    Create a new task. ONLY callable if is_admin=True.
+    Create a new task. ONLY callable if is_admin=True and verified in workspace.
     priority: low, medium, high
     due_date: ISO format string e.g. 2026-05-20
     """
-    if not is_admin:
-        return "Permission denied: Only workspace admins can create tasks."
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
 
-    db = SessionLocal()
     try:
+        is_authorized, err_msg = _verify_workspace_admin(db, workspace_id, created_by)
+        if not is_authorized:
+            return err_msg or "Permission denied: Only workspace admins can create tasks."
+
+        ws_uuid = _to_uuid(workspace_id)
+        user_uuid = _to_uuid(created_by)
         task = Task(
             title=title,
             description=description,
             priority=priority,
-            workspace_id=workspace_id,
-            created_by=created_by,
+            workspace_id=ws_uuid,
+            created_by=user_uuid,
             status="todo",
             due_date=datetime.fromisoformat(due_date) if due_date else None
         )
@@ -102,29 +171,51 @@ def create_task(
         db.rollback()
         raise
     finally:
-        db.close()
+        if close_db:
+            db.close()
 
 
 @tool
 def update_task(
     task_id: str,
+    workspace_id: str,
+    user_id: str = None,
     status: str = None,
     priority: str = None,
     title: str = None,
-    is_admin: bool = False
+    is_admin: bool = False,
+    db = None
 ) -> str:
     """
-    Update a task's status, priority or title. ONLY callable if is_admin=True.
-    status: todo, in_progress, done
+    Update a task's status, priority or title.
+    Requires verified workspace membership and admin privileges in the database.
     """
-    if not is_admin:
-        return "Permission denied: Only workspace admins can update tasks."
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
 
-    db = SessionLocal()
     try:
-        task = db.query(Task).filter(Task.id == task_id).first()
+        is_authorized, err_msg = _verify_workspace_admin(db, workspace_id, user_id)
+        if not is_authorized:
+            return err_msg
+
+        task_uuid = _to_uuid(task_id)
+        ws_uuid = _to_uuid(workspace_id)
+        if not task_uuid or not ws_uuid:
+            return "Task not found in the authorized workspace."
+
+        task = (
+            db.query(Task)
+            .filter(
+                Task.id == task_uuid,
+                Task.workspace_id == ws_uuid
+            )
+            .first()
+        )
+
         if not task:
-            return f"Task {task_id} not found."
+            return "Task not found in the authorized workspace."
         if status:
             task.status = status
         if priority:
@@ -133,12 +224,13 @@ def update_task(
             task.title = title
         task.updated_at = datetime.utcnow()
         db.commit()
-        return f" Task '{task.title}' updated successfully."
+        return f"Task '{task.title}' updated successfully."
     except Exception:
         db.rollback()
         raise
     finally:
-        db.close()
+        if close_db:
+            db.close()
 
 
 

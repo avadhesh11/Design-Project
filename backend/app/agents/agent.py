@@ -12,10 +12,28 @@ from .tools import (
     send_important_info_email
 )
 from functools import partial
+from dataclasses import dataclass
+from typing import Optional
 import os
+import json
 
 
-def get_agent_tools(is_admin: bool, workspace_id: str, user_id: str):
+@dataclass
+class EvaluationConfig:
+    """Configuration to control agent tool access and document pre-injection for evaluation."""
+    documents: bool = True
+    tasks: bool = True
+    chat: bool = True
+    preinject_documents: bool = True
+    allow_admin_actions: bool = False
+
+
+def get_agent_tools(
+    is_admin: bool,
+    workspace_id: str,
+    user_id: str,
+    eval_config: Optional[EvaluationConfig] = None
+):
     """Return tools with context baked in via closure functions to preserve schema validation."""
     from langchain_core.tools import tool as make_tool
 
@@ -45,14 +63,25 @@ def get_agent_tools(is_admin: bool, workspace_id: str, user_id: str):
         """Get recent chat messages from the workspace."""
         return get_recent_chat.func(workspace_id=workspace_id, limit=limit)
 
-    tools = [
-        search_workspace_tool,
-        get_tasks_tool,
-        get_recent_chat_tool,
-    ]
+    # Filter base tools based on eval_config if specified
+    if eval_config is not None:
+        tools = []
+        if eval_config.documents:
+            tools.append(search_workspace_tool)
+        if eval_config.tasks:
+            tools.append(get_tasks_tool)
+        if eval_config.chat:
+            tools.append(get_recent_chat_tool)
+    else:
+        tools = [
+            search_workspace_tool,
+            get_tasks_tool,
+            get_recent_chat_tool,
+        ]
 
     # Admin-only tools
-    if is_admin:
+    allow_admin = is_admin and (eval_config is None or eval_config.allow_admin_actions)
+    if allow_admin:
         # 4. create_task
         @make_tool
         def create_task_tool(
@@ -83,6 +112,8 @@ def get_agent_tools(is_admin: bool, workspace_id: str, user_id: str):
             """Update a task's status, priority or title."""
             return update_task.func(
                 task_id=task_id,
+                workspace_id=workspace_id,
+                user_id=user_id,
                 status=status,
                 priority=priority,
                 title=title,
@@ -135,15 +166,25 @@ async def run_agent(
     user_id: str,
     user_email: str,
     is_admin: bool,
-    history: list = None
+    history: list = None,
+    eval_config: Optional[EvaluationConfig] = None,
+    llm_override: Optional[any] = None
 ) -> dict:
     if history is None:
         history = []
 
-    from ..utils.llm_factory import get_chat_llm
-    llm = get_chat_llm(workspace_id=workspace_id, temperature=0.3)
+    if llm_override is not None:
+        llm = llm_override
+    else:
+        from ..utils.llm_factory import get_chat_llm
+        llm = get_chat_llm(workspace_id=workspace_id, temperature=0.3)
 
-    tools = get_agent_tools(is_admin, workspace_id, user_id)
+    tools = get_agent_tools(
+        is_admin=is_admin,
+        workspace_id=workspace_id,
+        user_id=user_id,
+        eval_config=eval_config
+    )
 
     admin_note = """You have ADMIN privileges. You can:
 - Create and update tasks
@@ -155,23 +196,29 @@ async def run_agent(
 - Read recent chat
 Note: Task creation, updates, and emails require admin access."""
 
-    from ..rag.vector_store import search_similar
-    try:
-        matched_chunks = search_similar(workspace_id=workspace_id, query=message, limit=2)
-    except Exception as search_err:
-        matched_chunks = []
+    # Conditional pre-injection of document chunks
+    should_preinject = (eval_config.preinject_documents and eval_config.documents) if eval_config else True
 
     doc_context = ""
-    if matched_chunks:
-        formatted_chunks = []
-        for i, c in enumerate(matched_chunks):
-            content = c.get("content", "").strip()
-            if len(content) > 2000:
-                content = content[:2000] + "..."
-            if content:
-                formatted_chunks.append(f"[Document {i+1}]:\n{content}")
-        if formatted_chunks:
-            doc_context = "\n\nRelevant Workspace Knowledge Base Documents:\n" + "\n\n".join(formatted_chunks)
+    if should_preinject:
+        from ..rag.vector_store import search_similar
+        try:
+            matched_chunks = search_similar(workspace_id=workspace_id, query=message, limit=2)
+        except Exception:
+            matched_chunks = []
+
+        if matched_chunks:
+            formatted_chunks = []
+            for i, c in enumerate(matched_chunks):
+                content = c.get("content", "").strip()
+                if len(content) > 2000:
+                    content = content[:2000] + "..."
+                if content:
+                    formatted_chunks.append(f"[Document {i+1}]:\n{content}")
+            if formatted_chunks:
+                doc_context = "\n\nRelevant Workspace Knowledge Base Documents:\n" + "\n\n".join(formatted_chunks)
+
+    doc_guideline = "1. When answering questions about project architecture, workspace documents, team members, or Orbit, carefully consult the Relevant Workspace Knowledge Base Documents above and answer factually." if doc_context else "1. Answer questions concisely and factually based on available workspace tools and context."
 
     system = f"""You are Orbit AI — an intelligent workspace assistant.
 
@@ -184,7 +231,7 @@ Current session:
 {admin_note}
 
 Guidelines:
-1. When answering questions about project architecture, workspace documents, team members, or Orbit, carefully consult the Relevant Workspace Knowledge Base Documents above and answer factually.
+{doc_guideline}
 2. Context variables like workspace ID, user ID, and administrative permissions are automatically managed. You do not need to provide them as arguments when calling tools.
 3. Be concise and action-oriented.
 4. After taking actions, confirm what was done.
@@ -221,11 +268,30 @@ Security Rules (NEVER VIOLATE):
             if hasattr(m, "name") and m.name
         ]))
 
+        # Capture provider token usage if available
+        token_usage = None
+        if hasattr(final, "usage_metadata") and final.usage_metadata:
+            token_usage = dict(final.usage_metadata)
+        elif hasattr(final, "response_metadata") and isinstance(final.response_metadata, dict):
+            token_usage = final.response_metadata.get("token_usage") or final.response_metadata.get("usage")
+
+        raw_resp = final.content
+        if isinstance(raw_resp, list):
+            resp_text = "".join(
+                (p.get("text", "") or p.get("content", "") if isinstance(p, dict) else str(p))
+                for p in raw_resp
+            )
+        elif isinstance(raw_resp, dict):
+            resp_text = json.dumps(raw_resp)
+        else:
+            resp_text = str(raw_resp or "")
+
         return {
-            "response": final.content,
+            "response": resp_text,
             "tools_used": tools_used,
             "role": "model",
-            "is_admin": is_admin
+            "is_admin": is_admin,
+            "token_usage": token_usage
         }
     except Exception as agent_err:
         err_str = str(agent_err).lower()

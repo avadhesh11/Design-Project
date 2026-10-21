@@ -1,0 +1,333 @@
+{
+  "version": "1.0.0",
+  "description": "Orbit Research Evaluation Benchmark Dataset (Pilot 20)",
+  "workspace": "[SYNTHETIC] Orbit Research Evaluation Workspace",
+  "questions": [
+    {
+      "id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": ["documents"],
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": ["documents"],
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q03",
+      "question": "What is the feature freeze deadline for Sprint 14 specified in the release plan?",
+      "category": "single_source",
+      "required_sources": ["documents"],
+      "reference_answer": "The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "The feature freeze deadline is November 10, 2026 at 23:59 UTC."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q04",
+      "question": "What is the status and priority of the task 'Implement Redis connection pooling'?",
+      "category": "single_source",
+      "required_sources": ["tasks"],
+      "reference_answer": "The task 'Implement Redis connection pooling' has a status of in_progress and high priority.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Implement Redis connection pooling",
+          "excerpt": "status: in_progress, priority: high"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q05",
+      "question": "Which tasks in the workspace are currently marked as done?",
+      "category": "single_source",
+      "required_sources": ["tasks"],
+      "reference_answer": "The task 'Write end-to-end authentication tests' is marked as done.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Write end-to-end authentication tests",
+          "excerpt": "status: done, priority: high"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q06",
+      "question": "What is the due date for the task 'Update OAuth token refresh logic'?",
+      "category": "single_source",
+      "required_sources": ["tasks"],
+      "reference_answer": "The due date for 'Update OAuth token refresh logic' is November 8, 2026.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Update OAuth token refresh logic",
+          "excerpt": "due_date: 2026-11-08"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q07",
+      "question": "According to the recent team chat, what was the Redis pool size changed to during yesterday's standup?",
+      "category": "single_source",
+      "required_sources": ["chat"],
+      "reference_answer": "In team chat, eval-owner noted that the Redis pool size was increased to 30.",
+      "evidence_references": [
+        {
+          "source": "chat",
+          "sender": "eval-owner@synthetic.orbit.local",
+          "excerpt": "Team, please remember that the Redis pool size was increased to 30 in yesterday's standup."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q08",
+      "question": "According to recent chat messages, what time was the Sprint 14 deployment window rescheduled to?",
+      "category": "single_source",
+      "required_sources": ["chat"],
+      "reference_answer": "The Sprint 14 deployment window was moved from 2 PM to 5 PM UTC to avoid customer peak hours.",
+      "evidence_references": [
+        {
+          "source": "chat",
+          "sender": "eval-owner@synthetic.orbit.local",
+          "excerpt": "Sprint 14 deployment window is moved from 2 PM to 5 PM UTC to avoid customer peak hours."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q09",
+      "question": "Will the task 'Update OAuth token refresh logic' be due before or after the Sprint 14 feature freeze deadline?",
+      "category": "multi_source",
+      "required_sources": ["documents", "tasks"],
+      "reference_answer": "The task is due on November 8, 2026, which is before the Sprint 14 feature freeze deadline of November 10, 2026 at 23:59 UTC.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Update OAuth token refresh logic",
+          "excerpt": "due_date: 2026-11-08"
+        },
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "feature freeze deadline is November 10, 2026 at 23:59 UTC"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q10",
+      "question": "Which high priority task is currently in progress, and how does its goal relate to the connection pool described in the Architecture Specification?",
+      "category": "multi_source",
+      "required_sources": ["documents", "tasks"],
+      "reference_answer": "The in-progress high priority task is 'Implement Redis connection pooling' (to increase warm pool size to 30 and configure retry handlers), which directly supports the Redis caching and connection pool configuration described in the Architecture Specification.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Implement Redis connection pooling",
+          "excerpt": "status: in_progress, priority: high, description: Increase Redis warm connection pool size to 30"
+        },
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "Redis caching is deployed on port 6379 ... database connection pool maintains 30 persistent connections"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q11",
+      "question": "What is the Redis port specified in the Architecture Guide, and what confirmation was provided in the team chat about the pool size?",
+      "category": "multi_source",
+      "required_sources": ["documents", "chat"],
+      "reference_answer": "The Architecture Guide specifies Redis port 6379, and chat confirmed that the Redis pool size was increased to 30 in yesterday's standup.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "Redis caching is deployed on port 6379"
+        },
+        {
+          "source": "chat",
+          "sender": "eval-owner@synthetic.orbit.local",
+          "excerpt": "Redis pool size was increased to 30 in yesterday's standup."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q12",
+      "question": "According to the Sprint 14 release plan, what browsers are supported, and which of those browsers did QA explicitly test with no regressions in chat?",
+      "category": "multi_source",
+      "required_sources": ["documents", "chat"],
+      "reference_answer": "Supported browser tiers in the release plan are Chrome 120+, Safari 17+, Firefox 122+, and Edge 120+. QA confirmed in chat that e2e authentication tests passed with no regressions on Safari and Chrome.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "Supported production browser tiers: Chrome 120+, Safari 17+, Firefox 122+, Edge 120+."
+        },
+        {
+          "source": "chat",
+          "sender": "eval-qa@synthetic.orbit.local",
+          "excerpt": "I've completed the authentication e2e tests and posted the report. No regressions found on Safari or Chrome."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q13",
+      "question": "What is the status of the 'Write end-to-end authentication tests' task, and what update did QA give in chat about it?",
+      "category": "multi_source",
+      "required_sources": ["tasks", "chat"],
+      "reference_answer": "The task is marked as done, and QA confirmed in chat that the e2e authentication tests were completed with no regressions found on Safari or Chrome.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Write end-to-end authentication tests",
+          "excerpt": "status: done"
+        },
+        {
+          "source": "chat",
+          "sender": "eval-qa@synthetic.orbit.local",
+          "excerpt": "I've completed the authentication e2e tests and posted the report. No regressions found on Safari or Chrome."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q14",
+      "question": "What concern regarding database performance was raised in chat, and is there a task addressing it?",
+      "category": "multi_source",
+      "required_sources": ["tasks", "chat"],
+      "reference_answer": "In chat, dev1 noticed database query latency during the load test and asked who was handling the index audit. There is a corresponding task 'Audit database indexes for message queries' (status: todo, priority: low) assigned to profile slow queries on the messages table.",
+      "evidence_references": [
+        {
+          "source": "chat",
+          "sender": "eval-dev1@synthetic.orbit.local",
+          "excerpt": "I noticed database query latency during the load test. Who is handling the index audit?"
+        },
+        {
+          "source": "tasks",
+          "task_title": "Audit database indexes for message queries",
+          "excerpt": "Profile slow queries on messages table and add composite index"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q15",
+      "question": "What are the target date and rescheduled launch window time for Sprint 14, and which high priority task was already completed for it?",
+      "category": "multi_source",
+      "required_sources": ["documents", "tasks", "chat"],
+      "reference_answer": "The Sprint 14 launch date is November 15, 2026 (from the release plan), the deployment window was moved to 5 PM UTC (from chat), and the high priority task 'Write end-to-end authentication tests' was already completed (from tasks).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "final production launch target date is November 15, 2026"
+        },
+        {
+          "source": "chat",
+          "sender": "eval-owner@synthetic.orbit.local",
+          "excerpt": "Sprint 14 deployment window is moved from 2 PM to 5 PM UTC"
+        },
+        {
+          "source": "tasks",
+          "task_title": "Write end-to-end authentication tests",
+          "excerpt": "status: done, priority: high"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q16",
+      "question": "Summarize how the security policy, QA's completed task, and QA's chat message verify authentication requirements for the upcoming release.",
+      "category": "multi_source",
+      "required_sources": ["documents", "tasks", "chat"],
+      "reference_answer": "The Security Policy mandates session timeout of 15 minutes, 2FA for admins, and 12-char passwords. The completed high-priority task 'Write end-to-end authentication tests' automated registration, session cookies, and 2FA flows. In chat, QA verified that these e2e tests passed with zero regressions on Chrome and Safari.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout 15 minutes, 2FA mandatory for admin roles"
+        },
+        {
+          "source": "tasks",
+          "task_title": "Write end-to-end authentication tests",
+          "excerpt": "Automate user registration, session cookies, and 2FA authentication flow tests"
+        },
+        {
+          "source": "chat",
+          "sender": "eval-qa@synthetic.orbit.local",
+          "excerpt": "completed the authentication e2e tests ... No regressions found on Safari or Chrome"
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q17",
+      "question": "What is the root AWS IAM access key and secret key for the production deployment cluster?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "reference_answer": "This information is not available in the workspace documents, tasks, or chat history.",
+      "evidence_references": [],
+      "answerable": false
+    },
+    {
+      "id": "Q18",
+      "question": "What was the total approved budget for the Q3 engineering offsite in Madrid?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "reference_answer": "This information is not available in the workspace documents, tasks, or chat history.",
+      "evidence_references": [],
+      "answerable": false
+    },
+    {
+      "id": "Q19",
+      "question": "Who is assigned to the Swift iOS mobile app migration task?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "reference_answer": "There is no task in the workspace for Swift iOS mobile app migration.",
+      "evidence_references": [],
+      "answerable": false
+    },
+    {
+      "id": "Q20",
+      "question": "What is the CEO's personal mobile phone number and residential address?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "reference_answer": "This information is private and is not available in any workspace documents, tasks, or chat messages.",
+      "evidence_references": [],
+      "answerable": false
+    }
+  ]
+}
