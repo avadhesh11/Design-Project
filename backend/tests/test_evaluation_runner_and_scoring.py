@@ -81,38 +81,161 @@ def test_dataset_schema_and_allocation():
 
 
 def test_scoring_rubric_on_known_cases():
-    """Test transparent scoring rubric on known reference cases."""
-    # 1. Answerable - Exact/high overlap -> 1.0
-    res_high = evaluate_answer_correctness(
-        response_text="The session timeout is enforced at exactly 15 minutes of inactivity.",
-        reference_answer="The session timeout is enforced at exactly 15 minutes of inactivity.",
-        evidence_refs=[{"excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."}]
+    """Test transparent, deterministic scoring rubric on known reference cases."""
+    criteria_q1 = {
+        "target_values": ["8000", "3000"],
+        "required_concepts": ["FastAPI", "Next.js"],
+        "forbidden_values": ["8080", "5000"]
+    }
+    rubric_q1 = {"type": "exact_value"}
+    evidence_q1 = [{"excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."}]
+
+    # 1. Exact correct answer -> 1.0
+    res_exact = evaluate_answer_correctness(
+        response_text="The backend API runs on port 8000 with FastAPI and the frontend on port 3000 with Next.js.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
     )
-    assert res_high == 1.0
+    assert res_exact["score"] == 1.0
+    assert len(res_exact["mismatches"]) == 0
 
-    # 2. Answerable - Partial overlap -> 0.5
-    res_partial = evaluate_answer_correctness(
-        response_text="Session timeout is roughly 15 minutes according to policy.",
-        reference_answer="The session timeout is enforced at exactly 15 minutes of inactivity.",
-        evidence_refs=[{"excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."}]
+    # 2. Semantically correct answer with different wording -> 1.0
+    res_wording = evaluate_answer_correctness(
+        response_text="FastAPI serves the backend service over port 8000, while Next.js powers the client application at port 3000.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
     )
-    assert res_partial == 0.5
+    assert res_wording["score"] == 1.0
 
-    # 3. Answerable - Completely wrong -> 0.0
-    res_wrong = evaluate_answer_correctness(
-        response_text="The database runs on port 5432 with default settings.",
-        reference_answer="The session timeout is enforced at exactly 15 minutes of inactivity.",
-        evidence_refs=[{"excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."}]
+    # 3. Correct answer with an irrelevant extra sentence -> 1.0
+    res_extra = evaluate_answer_correctness(
+        response_text="The backend uses port 8000 (FastAPI) and frontend port 3000 (Next.js). Note that our team prefers dark mode.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
     )
-    assert res_wrong == 0.0
+    assert res_extra["score"] == 1.0
 
-    # 4. Unanswerable - Proper refusal -> 1.0
-    refusal_score = evaluate_unanswerable_refusal("This information is not available in the workspace documents.")
-    assert refusal_score == 1.0
+    # 4. Incorrect numerical value -> 0.0
+    res_wrong_num = evaluate_answer_correctness(
+        response_text="The backend API runs on port 8080 using FastAPI, and frontend runs on port 3000.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
+    )
+    assert res_wrong_num["score"] <= 0.5  # Contradiction detected
+    assert any("contradiction: 8080" in m for m in res_wrong_num["mismatches"])
 
-    # 5. Unanswerable - Hallucinated fabrication -> 0.0
-    hallucination_score = evaluate_unanswerable_refusal("The root AWS key is AKIAIOSFODNN7EXAMPLE and secret is wJalrXUtnFEMI.")
-    assert hallucination_score == 0.0
+    # 5. Incorrect date / status -> 0.0
+    criteria_q3 = {
+        "target_values": ["November 10, 2026", "23:59 UTC"],
+        "required_concepts": ["feature freeze"],
+        "forbidden_values": ["November 15, 2026", "December 1, 2026"]
+    }
+    res_wrong_date = evaluate_answer_correctness(
+        response_text="The feature freeze is scheduled for November 15, 2026 at 23:59 UTC.",
+        reference_answer="The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+        criteria=criteria_q3,
+        rubric={"type": "exact_value"},
+        evidence_refs=[{"excerpt": "The feature freeze deadline is November 10, 2026 at 23:59 UTC."}]
+    )
+    assert res_wrong_date["score"] <= 0.5
+    assert any("contradiction: November 15, 2026" in m for m in res_wrong_date["mismatches"])
+
+    # 6. Partially correct list (only 1 of 2 ports) -> 0.5
+    res_partial_list = evaluate_answer_correctness(
+        response_text="The backend API runs on port 8000 using FastAPI.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
+    )
+    assert res_partial_list["score"] == 0.5
+    assert any("missing_target: 3000" in m for m in res_partial_list["mismatches"])
+
+    # 7. Contradictory answer with only wrong values -> 0.0
+    res_pure_contradiction = evaluate_answer_correctness(
+        response_text="The backend runs on port 8080 and frontend runs on port 5000.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
+    )
+    assert res_pure_contradiction["score"] == 0.0
+
+    # 8. Unanswerable - Valid refusal -> 1.0
+    criteria_unans = {
+        "target_values": [],
+        "required_concepts": ["insufficient", "not available"],
+        "forbidden_values": ["AKIAIOSFODNN7EXAMPLE", "wJalrXUtnFEMI"]
+    }
+    res_valid_refusal = evaluate_unanswerable_refusal(
+        response_text="This information is not available in the workspace documents or tasks.",
+        criteria=criteria_unans,
+        rubric={"type": "refusal"}
+    )
+    assert res_valid_refusal["score"] == 1.0
+
+    # 9. Unanswerable - Fabricated answer accompanied by a disclaimer -> 0.0
+    res_fabricated_disclaimer = evaluate_unanswerable_refusal(
+        response_text="I am not entirely sure and this might not be documented, but the AWS root key is AKIAIOSFODNN7EXAMPLE.",
+        criteria=criteria_unans,
+        rubric={"type": "refusal"}
+    )
+    assert res_fabricated_disclaimer["score"] == 0.0
+    assert any("fabricated_fact: AKIAIOSFODNN7EXAMPLE" in m for m in res_fabricated_disclaimer["mismatches"])
+
+    # 10. Unnecessary refusal of an answerable question -> 0.0
+    res_unnecessary_refusal = evaluate_answer_correctness(
+        response_text="I do not have enough information to answer the question about backend ports.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
+    )
+    assert res_unnecessary_refusal["score"] == 0.0
+    assert "unnecessary_refusal" in res_unnecessary_refusal["mismatches"]
+
+    # 11. Evidence Faithfulness - Grounded vs Unsupported
+    faith_grounded = calculate_evidence_faithfulness(
+        response_text="The backend port is 8000 and frontend is 3000.",
+        evidence_refs=evidence_q1,
+        answerable=True,
+        criteria=criteria_q1,
+        available_sources=["documents"],
+        retrieved_evidence=evidence_q1,
+        has_error=False
+    )
+    assert faith_grounded["score"] == 1.0
+
+    faith_no_sources = calculate_evidence_faithfulness(
+        response_text="The backend port is 8000 and frontend is 3000.",
+        evidence_refs=evidence_q1,
+        answerable=True,
+        criteria=criteria_q1,
+        available_sources=[],  # Plain LLM without retrieval access
+        retrieved_evidence=[],
+        has_error=False
+    )
+    assert faith_no_sources["score"] == 0.0
+    assert "No retrieval evidence" in faith_no_sources["rationale"]
+
+    faith_contradiction = calculate_evidence_faithfulness(
+        response_text="The backend port is 8080 and frontend is 5000.",
+        evidence_refs=evidence_q1,
+        answerable=True,
+        criteria=criteria_q1,
+        available_sources=["documents"],
+        retrieved_evidence=evidence_q1,
+        has_error=False
+    )
+    assert faith_contradiction["score"] == 0.0
 
 
 def test_compute_stats():

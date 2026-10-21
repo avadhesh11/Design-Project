@@ -1,0 +1,1449 @@
+{
+  "run_id": "smoke_test_verified",
+  "rubric_version": "2.0-deterministic-factual",
+  "summary": [
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "plain_llm",
+      "category": "ALL",
+      "total_attempted": 7,
+      "successful_attempts": 7,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 3,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 0.11,
+      "median_latency_ms": 0.1,
+      "stddev_latency_ms": 0.03,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 60.0
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "rag_docs_only",
+      "category": "ALL",
+      "total_attempted": 6,
+      "successful_attempts": 2,
+      "failed_attempts": 4,
+      "coverage": 0.3333,
+      "error_rate": 0.6667,
+      "mean_correctness_all": 0.1667,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.25,
+      "mean_faithfulness_successful": 0.75,
+      "mean_latency_ms": 5025.25,
+      "median_latency_ms": 5025.25,
+      "stddev_latency_ms": 332.93,
+      "mean_latency_failed_ms": 3030.77,
+      "mean_tokens": 60.0
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "full_agent",
+      "category": "ALL",
+      "total_attempted": 6,
+      "successful_attempts": 2,
+      "failed_attempts": 4,
+      "coverage": 0.3333,
+      "error_rate": 0.6667,
+      "mean_correctness_all": 0.1667,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.25,
+      "mean_faithfulness_successful": 0.75,
+      "mean_latency_ms": 2878.47,
+      "median_latency_ms": 2878.47,
+      "stddev_latency_ms": 581.8,
+      "mean_latency_failed_ms": 2540.73,
+      "mean_tokens": 60.0
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "plain_llm",
+      "category": "single_source",
+      "total_attempted": 7,
+      "successful_attempts": 7,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 3,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 0.11,
+      "median_latency_ms": 0.1,
+      "stddev_latency_ms": 0.03,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 60.0
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "rag_docs_only",
+      "category": "single_source",
+      "total_attempted": 6,
+      "successful_attempts": 2,
+      "failed_attempts": 4,
+      "coverage": 0.3333,
+      "error_rate": 0.6667,
+      "mean_correctness_all": 0.1667,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.25,
+      "mean_faithfulness_successful": 0.75,
+      "mean_latency_ms": 5025.25,
+      "median_latency_ms": 5025.25,
+      "stddev_latency_ms": 332.93,
+      "mean_latency_failed_ms": 3030.77,
+      "mean_tokens": 60.0
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "full_agent",
+      "category": "single_source",
+      "total_attempted": 6,
+      "successful_attempts": 2,
+      "failed_attempts": 4,
+      "coverage": 0.3333,
+      "error_rate": 0.6667,
+      "mean_correctness_all": 0.1667,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.25,
+      "mean_faithfulness_successful": 0.75,
+      "mean_latency_ms": 2878.47,
+      "median_latency_ms": 2878.47,
+      "stddev_latency_ms": 581.8,
+      "mean_latency_failed_ms": 2540.73,
+      "mean_tokens": 60.0
+    }
+  ],
+  "scored_records": [
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:31:46.678044+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "The session timeout is 15 minutes.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.1,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:31:51.186170+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 3080.08,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:31:55.079567+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2528.63,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:31:56.478280+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 and the frontend on port 3000.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.12,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:01.639849+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 3316.74,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:05.796867+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2755.89,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:07.161578+00:00",
+      "question_id": "Q03",
+      "question": "What is the feature freeze deadline for Sprint 14 specified in the release plan?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "The feature freeze deadline is November 10, 2026 at 23:59 UTC."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "november 10, 2026",
+          "nov 10, 2026",
+          "november 10",
+          "nov 10",
+          "23:59 utc",
+          "23:59"
+        ],
+        "required_concepts": [
+          "feature freeze",
+          "deadline"
+        ],
+        "forbidden_values": [
+          "november 15",
+          "nov 15",
+          "november 5",
+          "november 8",
+          "november 12"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if November 10, 2026 is stated; 0.5 if November 10 is mentioned without year or time; 0.0 if confused with launch date (Nov 15) or incorrect date."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "The feature freeze is November 10, 2026.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.08,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial factual match: matched 2/6 targets and 1/2 concepts",
+      "mismatches": [
+        "missing_target: nov 10, 2026",
+        "missing_target: nov 10",
+        "missing_target: 23:59 utc",
+        "missing_target: 23:59"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:10.750729+00:00",
+      "question_id": "Q03",
+      "question": "What is the feature freeze deadline for Sprint 14 specified in the release plan?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "The feature freeze deadline is November 10, 2026 at 23:59 UTC."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "november 10, 2026",
+          "nov 10, 2026",
+          "november 10",
+          "nov 10",
+          "23:59 utc",
+          "23:59"
+        ],
+        "required_concepts": [
+          "feature freeze",
+          "deadline"
+        ],
+        "forbidden_values": [
+          "november 15",
+          "nov 15",
+          "november 5",
+          "november 8",
+          "november 12"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if November 10, 2026 is stated; 0.5 if November 10 is mentioned without year or time; 0.0 if confused with launch date (Nov 15) or incorrect date."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2219.49,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:15.423254+00:00",
+      "question_id": "Q03",
+      "question": "What is the feature freeze deadline for Sprint 14 specified in the release plan?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Sprint 14 Release Plan",
+          "excerpt": "The feature freeze deadline is November 10, 2026 at 23:59 UTC."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "november 10, 2026",
+          "nov 10, 2026",
+          "november 10",
+          "nov 10",
+          "23:59 utc",
+          "23:59"
+        ],
+        "required_concepts": [
+          "feature freeze",
+          "deadline"
+        ],
+        "forbidden_values": [
+          "november 15",
+          "nov 15",
+          "november 5",
+          "november 8",
+          "november 12"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if November 10, 2026 is stated; 0.5 if November 10 is mentioned without year or time; 0.0 if confused with launch date (Nov 15) or incorrect date."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2214.45,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:17.987068+00:00",
+      "question_id": "Q04",
+      "question": "What is the status and priority of the task 'Implement Redis connection pooling'?",
+      "category": "single_source",
+      "required_sources": [
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The task 'Implement Redis connection pooling' has a status of in_progress and high priority.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Implement Redis connection pooling",
+          "excerpt": "status: in_progress, priority: high"
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "in_progress",
+          "in progress",
+          "high"
+        ],
+        "required_concepts": [
+          "status",
+          "priority"
+        ],
+        "forbidden_values": [
+          "done",
+          "todo",
+          "low",
+          "medium"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both in_progress and high priority are identified; 0.5 if only one attribute is correct; 0.0 if incorrect or missing."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "Synthetic offline evaluation answer for research verification.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.09,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Incorrect: failed to match required target values (['in_progress', 'in progress', 'high'])",
+      "mismatches": [
+        "missing_target: in_progress",
+        "missing_target: in progress",
+        "missing_target: high"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:22.897850+00:00",
+      "question_id": "Q04",
+      "question": "What is the status and priority of the task 'Implement Redis connection pooling'?",
+      "category": "single_source",
+      "required_sources": [
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The task 'Implement Redis connection pooling' has a status of in_progress and high priority.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Implement Redis connection pooling",
+          "excerpt": "status: in_progress, priority: high"
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "in_progress",
+          "in progress",
+          "high"
+        ],
+        "required_concepts": [
+          "status",
+          "priority"
+        ],
+        "forbidden_values": [
+          "done",
+          "todo",
+          "low",
+          "medium"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both in_progress and high priority are identified; 0.5 if only one attribute is correct; 0.0 if incorrect or missing."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 3506.78,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:26.923444+00:00",
+      "question_id": "Q04",
+      "question": "What is the status and priority of the task 'Implement Redis connection pooling'?",
+      "category": "single_source",
+      "required_sources": [
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The task 'Implement Redis connection pooling' has a status of in_progress and high priority.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Implement Redis connection pooling",
+          "excerpt": "status: in_progress, priority: high"
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "in_progress",
+          "in progress",
+          "high"
+        ],
+        "required_concepts": [
+          "status",
+          "priority"
+        ],
+        "forbidden_values": [
+          "done",
+          "todo",
+          "low",
+          "medium"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both in_progress and high priority are identified; 0.5 if only one attribute is correct; 0.0 if incorrect or missing."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "failed",
+      "response": "Evaluation error: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2663.97,
+      "token_usage": null,
+      "error": "Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Execution failed: Expected a Runnable, callable or dict.Instead got an unsupported type: <class '__main__.MockEvaluationLLM'>",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:32:29.041717+00:00",
+      "question_id": "Q05",
+      "question": "Which tasks in the workspace are currently marked as done?",
+      "category": "single_source",
+      "required_sources": [
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The task 'Write end-to-end authentication tests' is marked as done.",
+      "evidence_references": [
+        {
+          "source": "tasks",
+          "task_title": "Write end-to-end authentication tests",
+          "excerpt": "status: done, priority: high"
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "write end-to-end authentication tests",
+          "authentication tests"
+        ],
+        "required_concepts": [
+          "done",
+          "completed"
+        ],
+        "forbidden_values": [
+          "redis connection pooling",
+          "oauth token refresh",
+          "audit database indexes"
+        ]
+      },
+      "rubric": {
+        "type": "list",
+        "description": "1.0 if 'Write end-to-end authentication tests' is named as the only completed task; 0.5 if mentioned among incorrect tasks; 0.0 if incorrect."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "Synthetic offline evaluation answer for research verification.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.15,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Incorrect: failed to match required target values (['write end-to-end authentication tests', 'authentication tests'])",
+      "mismatches": [
+        "missing_target: write end-to-end authentication tests",
+        "missing_target: authentication tests"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:18.644309+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.14,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:25.706770+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Workspace Security & Compliance Policy:\n- Session timeout is enforced at exactly 15 minutes of inactivity.\n- Two-factor authentication (2FA) is mandatory for all members with administrative roles.\n- Passwords must contain a minimum of 12 characters including uppercase, lowercase, numbers, and symbols.\n- Cross-origin resource sharing (CORS) strictly prohibits wildcard origins in production environments.",
+          "similarity": 0.78215362972479
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.617598983287662
+        }
+      ],
+      "latency_ms": 5260.67,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Incorrect: failed to match required target values (['15 minutes', '15 min', 'fifteen minutes'])",
+      "mismatches": [
+        "missing_target: 15 minutes",
+        "missing_target: 15 min",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.5,
+      "faithfulness_rationale": "Response contains general statements without explicit grounded targets"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:30.381297+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Workspace Security & Compliance Policy:\n- Session timeout is enforced at exactly 15 minutes of inactivity.\n- Two-factor authentication (2FA) is mandatory for all members with administrative roles.\n- Passwords must contain a minimum of 12 characters including uppercase, lowercase, numbers, and symbols.\n- Cross-origin resource sharing (CORS) strictly prohibits wildcard origins in production environments.",
+          "similarity": 0.78215362972479
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.617598983287662
+        }
+      ],
+      "latency_ms": 3289.86,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Incorrect: failed to match required target values (['15 minutes', '15 min', 'fifteen minutes'])",
+      "mismatches": [
+        "missing_target: 15 minutes",
+        "missing_target: 15 min",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.5,
+      "faithfulness_rationale": "Response contains general statements without explicit grounded targets"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:32.770619+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 0.09,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:38.920214+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.767874034389744
+        },
+        {
+          "source": "documents",
+          "content": "Sprint 14 Production Release Schedule:\n- The final production launch target date is November 15, 2026.\n- The feature freeze deadline is November 10, 2026 at 23:59 UTC.\n- All pull requests must pass end-to-end integration testing before merge.\n- Supported production browser tiers: Chrome 120+, Safari 17+, Firefox 122+, Edge 120+.",
+          "similarity": 0.620410286163672
+        }
+      ],
+      "latency_ms": 4789.83,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_rationale": "All stated factual targets (['8000', '3000']) are grounded in retrieved evidence"
+    },
+    {
+      "run_id": "smoke_test_verified",
+      "timestamp": "2026-10-21T14:33:42.806544+00:00",
+      "question_id": "Q02",
+      "question": "What is the backend API port and frontend client port specified in the Architecture and Deployment Specification?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture and Deployment Specification",
+          "excerpt": "The backend API runs on port 8000 using FastAPI. The frontend web client runs on port 3000 using Next.js."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "8000",
+          "3000"
+        ],
+        "required_concepts": [
+          "backend",
+          "frontend",
+          "port"
+        ],
+        "forbidden_values": [
+          "8080",
+          "5000",
+          "4000",
+          "5432"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-2.5-flash",
+      "resolved_model": "mock-eval-model",
+      "model_parameters": {},
+      "provider": "mock",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.767874034389744
+        },
+        {
+          "source": "documents",
+          "content": "Sprint 14 Production Release Schedule:\n- The final production launch target date is November 15, 2026.\n- The feature freeze deadline is November 10, 2026 at 23:59 UTC.\n- All pull requests must pass end-to-end integration testing before merge.\n- Supported production browser tiers: Chrome 120+, Safari 17+, Firefox 122+, Edge 120+.",
+          "similarity": 0.620410286163672
+        }
+      ],
+      "latency_ms": 2467.07,
+      "token_usage": {
+        "input_tokens": 42,
+        "output_tokens": 18,
+        "total_tokens": 60
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_rationale": "All stated factual targets (['8000', '3000']) are grounded in retrieved evidence"
+    }
+  ]
+}

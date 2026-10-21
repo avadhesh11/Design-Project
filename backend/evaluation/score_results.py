@@ -13,104 +13,280 @@ BACKEND_ROOT = CURRENT_DIR.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
+RUBRIC_VERSION = "2.0-deterministic-factual"
 
-def evaluate_unanswerable_refusal(response_text: str) -> float:
+REFUSAL_SIGNALS = [
+    "not available",
+    "no information",
+    "not provided",
+    "cannot be answered",
+    "not found",
+    "does not contain",
+    "not mentioned",
+    "lack sufficient",
+    "no such task",
+    "not listed",
+    "unknown",
+    "do not have enough information",
+    "no relevant information",
+    "not found in the workspace",
+    "no record",
+    "insufficient evidence",
+    "not documented",
+    "i do not have access"
+]
+
+
+def load_dataset_lookup(questions_file: Optional[Path] = None) -> Dict[str, Dict[str, Any]]:
+    """Load questions.json into a dictionary keyed by question_id for metadata enrichment."""
+    q_file = questions_file or (CURRENT_DIR / "questions.json")
+    if not q_file.exists():
+        return {}
+    try:
+        with open(q_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {q["id"]: q for q in data.get("questions", [])}
+    except Exception:
+        return {}
+
+
+def _to_text_string(val: Any) -> str:
+    """Safely convert any response type (str, list, dict) to a string."""
+    if val is None:
+        return ""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, list):
+        parts = []
+        for p in val:
+            if isinstance(p, dict):
+                parts.append(p.get("text", "") or p.get("content", "") or str(p))
+            else:
+                parts.append(str(p))
+        return " ".join(parts)
+    if isinstance(val, dict):
+        return json.dumps(val)
+    return str(val)
+
+
+def evaluate_unanswerable_refusal(
+    response_text: str,
+    criteria: Dict[str, Any],
+    rubric: Dict[str, Any]
+) -> Dict[str, Any]:
     """
-    Rubric for unanswerable questions:
-    Returns 1.0 if the response correctly acknowledges lack of information / refuses hallucination.
-    Returns 0.0 if the response attempts to fabricate false facts.
+    Deterministic scoring for unanswerable questions:
+    - 1.0: Valid refusal identifying lack of workspace evidence, with NO forbidden fabricated facts.
+    - 0.0: Failed refusal or fabricated facts (even if accompanied by a disclaimer).
     """
-    lower = response_text.lower()
-    refusal_signals = [
-        "not available",
-        "no information",
-        "not provided",
-        "cannot be answered",
-        "not found",
-        "does not contain",
-        "not mentioned",
-        "lack sufficient",
-        "no such task",
-        "not listed",
-        "private",
-        "unknown",
-        "do not have enough information",
-        "no relevant information",
-    ]
-    if any(sig in lower for sig in refusal_signals):
-        return 1.0
+    lower = response_text.lower().strip()
+    forbidden_values = criteria.get("forbidden_values", [])
 
-    # If the response is an error or short refusal
-    if "error" in lower or len(lower.strip()) < 10:
-        return 0.5
+    # Check for fabricated forbidden values (e.g. AWS access keys, €45,000, Madrid team member)
+    detected_fabricated = [fv for fv in forbidden_values if fv.lower() in lower]
+    if detected_fabricated:
+        return {
+            "score": 0.0,
+            "rationale": f"Fabricated facts detected despite question being unanswerable: {detected_fabricated}",
+            "mismatches": [f"fabricated_fact: {fv}" for fv in detected_fabricated]
+        }
 
-    return 0.0
+    # Check for valid refusal signals
+    has_refusal = any(sig in lower for sig in REFUSAL_SIGNALS)
+    if has_refusal:
+        return {
+            "score": 1.0,
+            "rationale": "Valid refusal: correctly identified insufficient workspace information without hallucinating forbidden facts",
+            "mismatches": []
+        }
+
+    # Missing refusal signal
+    return {
+        "score": 0.0,
+        "rationale": "Failed refusal: did not acknowledge lack of information for unanswerable question",
+        "mismatches": ["missing_refusal_signal"]
+    }
 
 
-def evaluate_answer_correctness(response_text: str, reference_answer: str, evidence_refs: List[Dict[str, Any]]) -> float:
+def evaluate_answer_correctness(
+    response_text: str,
+    reference_answer: str,
+    criteria: Dict[str, Any],
+    rubric: Dict[str, Any],
+    evidence_refs: List[Dict[str, Any]]
+) -> Dict[str, Any]:
     """
-    Transparent scoring rubric for answerable questions based on key factual coverage.
-    - 1.0: Full factual match
-    - 0.5: Partial factual match
-    - 0.0: Incorrect or missing critical facts
+    Transparent, deterministic factual scoring rubric for answerable questions:
+    - 1.0: Full factual match of all target values and key concepts, no contradictions.
+    - 0.5: Partial factual match (at least 50% target values matched) or partial match with minor contradiction.
+    - 0.0: Incorrect values, missing critical facts, or contradictions.
     """
-    lower_resp = response_text.lower()
-    lower_ref = reference_answer.lower()
+    lower_resp = response_text.lower().strip()
+    target_values = criteria.get("target_values", [])
+    required_concepts = criteria.get("required_concepts", [])
+    forbidden_values = criteria.get("forbidden_values", [])
 
-    # Extract keywords/entities (excluding stopwords)
-    stopwords = {"the", "a", "an", "is", "are", "was", "were", "to", "in", "on", "at", "by", "for", "with", "about", "and", "or", "of", "that", "this", "from"}
-    
-    # Collect key terms from reference answer and evidence excerpts
-    raw_terms = []
-    for word in lower_ref.replace(",", " ").replace(".", " ").replace(":", " ").replace(";", " ").replace("(", " ").replace(")", " ").split():
-        cleaned = word.strip()
-        if len(cleaned) > 2 and cleaned not in stopwords:
-            raw_terms.append(cleaned)
+    # 1. Check for unnecessary refusal on answerable question
+    has_refusal = any(sig in lower_resp for sig in REFUSAL_SIGNALS)
+    matched_targets = [tv for tv in target_values if tv.lower() in lower_resp]
 
-    for ev in evidence_refs:
-        excerpt = ev.get("excerpt", "").lower()
-        for word in excerpt.replace(",", " ").replace(".", " ").replace(":", " ").split():
-            cleaned = word.strip()
-            if len(cleaned) > 2 and cleaned not in stopwords:
-                raw_terms.append(cleaned)
+    if has_refusal and len(matched_targets) == 0:
+        return {
+            "score": 0.0,
+            "rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+            "mismatches": ["unnecessary_refusal"]
+        }
 
-    unique_terms = list(dict.fromkeys(raw_terms))
-    if not unique_terms:
-        return 1.0 if lower_ref in lower_resp else 0.0
+    # 2. Check for contradictions / forbidden incorrect values
+    detected_contradictions = [fv for fv in forbidden_values if fv.lower() in lower_resp]
+    mismatches = [f"contradiction: {fv}" for fv in detected_contradictions]
 
-    matched_count = sum(1 for term in unique_terms if term in lower_resp)
-    overlap_ratio = matched_count / len(unique_terms)
+    # 3. Check target values and concepts
+    target_ratio = len(matched_targets) / len(target_values) if target_values else 1.0
+    matched_concepts = [c for c in required_concepts if c.lower() in lower_resp]
+    concept_ratio = len(matched_concepts) / len(required_concepts) if required_concepts else 1.0
 
-    if overlap_ratio >= 0.65:
-        return 1.0
-    elif overlap_ratio >= 0.35:
-        return 0.5
+    for tv in target_values:
+        if tv not in matched_targets:
+            mismatches.append(f"missing_target: {tv}")
+
+    # 4. Rubric decision
+    if detected_contradictions:
+        if target_ratio >= 0.5 and len(detected_contradictions) == 1:
+            return {
+                "score": 0.5,
+                "rationale": f"Partial match with contradiction: matched {len(matched_targets)}/{len(target_values)} targets but contained contradiction ({detected_contradictions})",
+                "mismatches": mismatches
+            }
+        else:
+            return {
+                "score": 0.0,
+                "rationale": f"Incorrect due to contradictory facts: {detected_contradictions}",
+                "mismatches": mismatches
+            }
+
+    if not target_values:
+        # Fallback to keyword overlap if no target values defined
+        lower_ref = reference_answer.lower()
+        stopwords = {"the", "a", "an", "is", "are", "was", "were", "to", "in", "on", "at", "by", "for", "with", "and", "or", "of", "that", "this"}
+        ref_words = [w.strip() for w in lower_ref.split() if len(w.strip()) > 2 and w.strip() not in stopwords]
+        if not ref_words:
+            return {"score": 1.0 if lower_ref in lower_resp else 0.0, "rationale": "Exact match fallback", "mismatches": []}
+        match_c = sum(1 for w in ref_words if w in lower_resp)
+        ratio = match_c / len(ref_words)
+        if ratio >= 0.65:
+            return {"score": 1.0, "rationale": f"Factual overlap {ratio:.2f}", "mismatches": []}
+        elif ratio >= 0.35:
+            return {"score": 0.5, "rationale": f"Partial factual overlap {ratio:.2f}", "mismatches": ["low_overlap"]}
+        return {"score": 0.0, "rationale": f"Insufficient overlap {ratio:.2f}", "mismatches": ["insufficient_overlap"]}
+
+    if target_ratio == 1.0 and concept_ratio >= 0.5:
+        return {
+            "score": 1.0,
+            "rationale": f"Complete factual match: all target values ({matched_targets}) and key concepts verified",
+            "mismatches": []
+        }
+    elif target_ratio >= 0.5 or (target_ratio > 0 and concept_ratio >= 0.5):
+        return {
+            "score": 0.5,
+            "rationale": f"Partial factual match: matched {len(matched_targets)}/{len(target_values)} targets and {len(matched_concepts)}/{len(required_concepts)} concepts",
+            "mismatches": mismatches
+        }
     else:
-        return 0.0
+        return {
+            "score": 0.0,
+            "rationale": f"Incorrect: failed to match required target values ({[tv for tv in target_values if tv not in matched_targets]})",
+            "mismatches": mismatches
+        }
 
 
-def calculate_evidence_faithfulness(response_text: str, evidence_refs: List[Dict[str, Any]], answerable: bool) -> float:
+def calculate_evidence_faithfulness(
+    response_text: str,
+    evidence_refs: List[Dict[str, Any]],
+    answerable: bool,
+    criteria: Dict[str, Any],
+    available_sources: List[str],
+    retrieved_evidence: List[Dict[str, Any]],
+    has_error: bool
+) -> Dict[str, Any]:
     """
-    Measures evidence faithfulness: checks if the response reflects provided evidence
-    without contradicting referenced excerpts.
+    Evaluates evidence faithfulness:
+    - Checks whether claims in response are supported by retrieved/referenced evidence.
+    - Distinguishes missing evidence from false claims.
+    - If available_sources is empty (plain LLM), records 0.0 for answerable questions because claims are ungrounded.
     """
+    if has_error:
+        return {"score": 0.0, "rationale": "Execution error; no response to evaluate faithfulness"}
+
     if not answerable:
-        # For unanswerable questions, refusal is completely faithful
-        return evaluate_unanswerable_refusal(response_text)
+        # For unanswerable questions, valid refusal is faithful to workspace state
+        lower = response_text.lower()
+        forbidden_values = criteria.get("forbidden_values", [])
+        if any(fv.lower() in lower for fv in forbidden_values):
+            return {"score": 0.0, "rationale": "Fabricated unsupported claims on unanswerable question"}
+        if any(sig in lower for sig in REFUSAL_SIGNALS):
+            return {"score": 1.0, "rationale": "Faithfully acknowledged lack of workspace evidence"}
+        return {"score": 0.0, "rationale": "Did not faithfully refuse unanswerable question"}
 
-    if not evidence_refs:
-        return 1.0
+    # If configuration has no access to sources (e.g. plain_llm)
+    if not available_sources:
+        return {
+            "score": 0.0,
+            "rationale": "No retrieval evidence available in this configuration to ground response"
+        }
+
+    # Aggregate text of available evidence
+    evidence_corpus = []
+    for ev in (retrieved_evidence or evidence_refs):
+        if isinstance(ev, dict):
+            text = ev.get("excerpt", "") or ev.get("content", "") or ev.get("snippet", "")
+            if text:
+                evidence_corpus.append(text)
+        elif isinstance(ev, str):
+            evidence_corpus.append(ev)
+
+    all_evidence_text = " ".join(evidence_corpus).lower()
+    if not all_evidence_text:
+        return {
+            "score": 0.0,
+            "rationale": "No evidence was retrieved by tools for this attempt"
+        }
 
     lower_resp = response_text.lower()
-    matches = 0
-    for ev in evidence_refs:
-        excerpt = ev.get("excerpt", "").lower()
-        # Check if excerpt fragment or key entity appears
-        terms = [w.strip() for w in excerpt.split() if len(w.strip()) > 3]
-        if any(t in lower_resp for t in terms):
-            matches += 1
+    target_values = criteria.get("target_values", [])
+    resp_targets = [tv for tv in target_values if tv.lower() in lower_resp]
 
-    return round(matches / len(evidence_refs), 2)
+    # Check if target values in response are grounded in retrieved evidence
+    if resp_targets:
+        grounded = [tv for tv in resp_targets if tv.lower() in all_evidence_text]
+        if len(grounded) == len(resp_targets):
+            return {
+                "score": 1.0,
+                "rationale": f"All stated factual targets ({grounded}) are grounded in retrieved evidence"
+            }
+        elif len(grounded) > 0:
+            return {
+                "score": 0.5,
+                "rationale": f"Partially grounded: {len(grounded)}/{len(resp_targets)} stated targets found in evidence"
+            }
+        else:
+            return {
+                "score": 0.0,
+                "rationale": "Stated targets are absent from retrieved evidence"
+            }
+
+    # Check for contradictions
+    forbidden_values = criteria.get("forbidden_values", [])
+    if any(fv.lower() in lower_resp for fv in forbidden_values):
+        return {
+            "score": 0.0,
+            "rationale": "Response claims contradict retrieved workspace evidence"
+        }
+
+    return {
+        "score": 0.5,
+        "rationale": "Response contains general statements without explicit grounded targets"
+    }
 
 
 def compute_stats(values: List[float]) -> Dict[str, Optional[float]]:
@@ -142,27 +318,12 @@ def compute_stats(values: List[float]) -> Dict[str, Optional[float]]:
     }
 
 
-def _to_text_string(val: Any) -> str:
-    """Safely convert any response type (str, list, dict) to a string."""
-    if val is None:
-        return ""
-    if isinstance(val, str):
-        return val
-    if isinstance(val, list):
-        parts = []
-        for p in val:
-            if isinstance(p, dict):
-                parts.append(p.get("text", "") or p.get("content", "") or str(p))
-            else:
-                parts.append(str(p))
-        return "".join(parts)
-    if isinstance(val, dict):
-        return json.dumps(val)
-    return str(val)
-
-
-def score_results(input_file: Path, output_dir: Optional[Path] = None) -> Dict[str, Any]:
-    """Score evaluation results from a JSONL file."""
+def score_results(
+    input_file: Path,
+    output_dir: Optional[Path] = None,
+    questions_file: Optional[Path] = None
+) -> Dict[str, Any]:
+    """Score evaluation results from a JSONL file using deterministic rubrics."""
     if not input_file.exists():
         raise FileNotFoundError(f"Result file not found: {input_file}")
 
@@ -176,6 +337,7 @@ def score_results(input_file: Path, output_dir: Optional[Path] = None) -> Dict[s
     if not records:
         raise ValueError(f"No records found in {input_file}")
 
+    dataset_lookup = load_dataset_lookup(questions_file)
     run_id = records[0].get("run_id", "unknown_run")
     output_dir = output_dir or (CURRENT_DIR / "reports")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -185,111 +347,131 @@ def score_results(input_file: Path, output_dir: Optional[Path] = None) -> Dict[s
     grouped_by_config_and_cat: Dict[tuple, List[Dict[str, Any]]] = {}
 
     for r in records:
-        q_text = r["question"]
-        ref_ans = r["reference_answer"]
+        q_id = r["question_id"]
+        # Enrich from questions.json if missing from record
+        dataset_meta = dataset_lookup.get(q_id, {})
+        criteria = r.get("evaluation_criteria") or dataset_meta.get("evaluation_criteria", {})
+        rubric = r.get("rubric") or dataset_meta.get("rubric", {})
+        ref_ans = r.get("reference_answer") or dataset_meta.get("reference_answer", "")
+        answerable = r.get("answerable") if "answerable" in r else dataset_meta.get("answerable", True)
+        evidence_refs = r.get("evidence_references") or dataset_meta.get("evidence_references", [])
+
         ans = _to_text_string(r.get("response", ""))
-        answerable = r.get("answerable", True)
-        evidence_refs = r.get("evidence_references", [])
         cfg = r.get("configuration", "unknown")
-        cat = r.get("category", "unknown")
+        cat = r.get("category", dataset_meta.get("category", "unknown"))
+        has_error = bool(r.get("error")) or (r.get("execution_status") == "failed")
+        available_sources = r.get("available_sources", [])
+        retrieved_evidence = r.get("retrieved_evidence", [])
 
-        if not answerable:
-            correctness = evaluate_unanswerable_refusal(ans)
+        if has_error:
+            correctness = {
+                "score": 0.0,
+                "rationale": f"Execution failed: {r.get('error')}",
+                "mismatches": ["execution_error"]
+            }
+            faithfulness = {
+                "score": 0.0,
+                "rationale": "Execution failed"
+            }
+        elif not answerable:
+            correctness = evaluate_unanswerable_refusal(ans, criteria, rubric)
+            faithfulness = calculate_evidence_faithfulness(
+                ans, evidence_refs, answerable, criteria, available_sources, retrieved_evidence, has_error
+            )
         else:
-            correctness = evaluate_answer_correctness(ans, ref_ans, evidence_refs)
-
-        faithfulness = calculate_evidence_faithfulness(ans, evidence_refs, answerable)
+            correctness = evaluate_answer_correctness(ans, ref_ans, criteria, rubric, evidence_refs)
+            faithfulness = calculate_evidence_faithfulness(
+                ans, evidence_refs, answerable, criteria, available_sources, retrieved_evidence, has_error
+            )
 
         scored_item = dict(r)
-        scored_item["score_correctness"] = correctness
-        scored_item["score_faithfulness"] = faithfulness
-        scored_records.append(scored_item)
+        scored_item["rubric_version"] = RUBRIC_VERSION
+        scored_item["score_correctness"] = correctness["score"]
+        scored_item["scoring_rationale"] = correctness["rationale"]
+        scored_item["mismatches"] = correctness.get("mismatches", [])
+        scored_item["score_faithfulness"] = faithfulness["score"]
+        scored_item["faithfulness_rationale"] = faithfulness["rationale"]
 
+        scored_records.append(scored_item)
         grouped_by_config.setdefault(cfg, []).append(scored_item)
         grouped_by_config_and_cat.setdefault((cfg, cat), []).append(scored_item)
 
-    # Aggregate by configuration
-    summary_rows = []
-    print("\n" + "=" * 80)
-    print(f" ORBIT EVALUATION SCORING REPORT (Run ID: {run_id})")
-    print("=" * 80)
+    # Aggregate summaries
+    def _aggregate_group(items: List[Dict[str, Any]], cfg_name: str, cat_name: str) -> Dict[str, Any]:
+        total_attempts = len(items)
+        successful_items = [it for it in items if not it.get("error") and it.get("execution_status") != "failed"]
+        failed_items = [it for it in items if it.get("error") or it.get("execution_status") == "failed"]
 
-    for cfg, items in grouped_by_config.items():
-        total_items = len(items)
-        successful_items = [it for it in items if not it.get("error")]
-        coverage = round(len(successful_items) / total_items, 4) if total_items else 0.0
-        error_rate = round((total_items - len(successful_items)) / total_items, 4) if total_items else 0.0
+        coverage = round(len(successful_items) / total_attempts, 4) if total_attempts else 0.0
+        error_rate = round(len(failed_items) / total_attempts, 4) if total_attempts else 0.0
 
-        correctness_scores = [it["score_correctness"] for it in items]
-        faithfulness_scores = [it["score_faithfulness"] for it in items]
-        latencies = [it["latency_ms"] for it in items if it.get("latency_ms") is not None]
+        all_correctness = [it["score_correctness"] for it in items]
+        succ_correctness = [it["score_correctness"] for it in successful_items]
+        partial_credits = sum(1 for it in items if it["score_correctness"] == 0.5)
+
+        all_faithfulness = [it["score_faithfulness"] for it in items if it.get("score_faithfulness") is not None]
+        succ_faithfulness = [it["score_faithfulness"] for it in successful_items if it.get("score_faithfulness") is not None]
+
+        succ_latencies = [it["latency_ms"] for it in successful_items if it.get("latency_ms") is not None]
+        fail_latencies = [it["latency_ms"] for it in failed_items if it.get("latency_ms") is not None]
+
+        succ_lat_stats = compute_stats(succ_latencies)
+        fail_lat_stats = compute_stats(fail_latencies)
 
         token_counts = []
-        for it in items:
+        for it in successful_items:
             t_use = it.get("token_usage")
             if isinstance(t_use, dict):
                 total_t = t_use.get("total_tokens") or t_use.get("total_token_count")
                 if total_t is not None:
                     token_counts.append(total_t)
-
-        lat_stats = compute_stats(latencies)
         tok_stats = compute_stats(token_counts) if token_counts else None
 
-        mean_correctness = round(sum(correctness_scores) / len(correctness_scores), 4) if correctness_scores else 0.0
-        mean_faithfulness = round(sum(faithfulness_scores) / len(faithfulness_scores), 4) if faithfulness_scores else 0.0
+        mean_corr_all = round(sum(all_correctness) / len(all_correctness), 4) if all_correctness else 0.0
+        mean_corr_succ = round(sum(succ_correctness) / len(succ_correctness), 4) if succ_correctness else 0.0
 
-        summary_rows.append({
+        mean_faith_all = round(sum(all_faithfulness) / len(all_faithfulness), 4) if all_faithfulness else 0.0
+        mean_faith_succ = round(sum(succ_faithfulness) / len(succ_faithfulness), 4) if succ_faithfulness else 0.0
+
+        return {
             "run_id": run_id,
-            "configuration": cfg,
-            "category": "ALL",
-            "total_questions": total_items,
+            "rubric_version": RUBRIC_VERSION,
+            "configuration": cfg_name,
+            "category": cat_name,
+            "total_attempted": total_attempts,
+            "successful_attempts": len(successful_items),
+            "failed_attempts": len(failed_items),
             "coverage": coverage,
             "error_rate": error_rate,
-            "mean_correctness": mean_correctness,
-            "mean_faithfulness": mean_faithfulness,
-            "mean_latency_ms": lat_stats["mean"],
-            "median_latency_ms": lat_stats["median"],
-            "stddev_latency_ms": lat_stats["stddev"],
+            "mean_correctness_all": mean_corr_all,
+            "mean_correctness_successful": mean_corr_succ,
+            "partial_credit_count": partial_credits,
+            "mean_faithfulness_all": mean_faith_all,
+            "mean_faithfulness_successful": mean_faith_succ,
+            "mean_latency_ms": succ_lat_stats["mean"],
+            "median_latency_ms": succ_lat_stats["median"],
+            "stddev_latency_ms": succ_lat_stats["stddev"],
+            "mean_latency_failed_ms": fail_lat_stats["mean"],
             "mean_tokens": tok_stats["mean"] if tok_stats else None
-        })
+        }
 
-    # Aggregate by configuration + category
+    summary_rows = []
+    for cfg, items in grouped_by_config.items():
+        summary_rows.append(_aggregate_group(items, cfg, "ALL"))
+
     for (cfg, cat), items in grouped_by_config_and_cat.items():
-        total_items = len(items)
-        successful_items = [it for it in items if not it.get("error")]
-        coverage = round(len(successful_items) / total_items, 4) if total_items else 0.0
-        error_rate = round((total_items - len(successful_items)) / total_items, 4) if total_items else 0.0
-
-        correctness_scores = [it["score_correctness"] for it in items]
-        faithfulness_scores = [it["score_faithfulness"] for it in items]
-        latencies = [it["latency_ms"] for it in items if it.get("latency_ms") is not None]
-
-        lat_stats = compute_stats(latencies)
-        mean_correctness = round(sum(correctness_scores) / len(correctness_scores), 4) if correctness_scores else 0.0
-        mean_faithfulness = round(sum(faithfulness_scores) / len(faithfulness_scores), 4) if faithfulness_scores else 0.0
-
-        summary_rows.append({
-            "run_id": run_id,
-            "configuration": cfg,
-            "category": cat,
-            "total_questions": total_items,
-            "coverage": coverage,
-            "error_rate": error_rate,
-            "mean_correctness": mean_correctness,
-            "mean_faithfulness": mean_faithfulness,
-            "mean_latency_ms": lat_stats["mean"],
-            "median_latency_ms": lat_stats["median"],
-            "stddev_latency_ms": lat_stats["stddev"],
-            "mean_tokens": None
-        })
+        summary_rows.append(_aggregate_group(items, cfg, cat))
 
     # Print summary table
-    headers = ["Configuration", "Category", "Questions", "Correctness", "Faithfulness", "Latency (ms)", "Errors"]
-    print(f"\n{headers[0]:15s} | {headers[1]:15s} | {headers[2]:9s} | {headers[3]:11s} | {headers[4]:12s} | {headers[5]:12s} | {headers[6]:6s}")
-    print("-" * 90)
+    print("\n" + "=" * 105)
+    print(f" ORBIT EVALUATION SCORING REPORT (Run ID: {run_id} | Rubric: {RUBRIC_VERSION})")
+    print("=" * 105)
+    headers = ["Configuration", "Category", "Attempts", "Succ", "Fail", "Corr(All)", "Corr(Succ)", "Faith(Succ)", "Latency(ms)"]
+    print(f"{headers[0]:15s} | {headers[1]:15s} | {headers[2]:8s} | {headers[3]:4s} | {headers[4]:4s} | {headers[5]:9s} | {headers[6]:10s} | {headers[7]:11s} | {headers[8]:11s}")
+    print("-" * 105)
     for row in summary_rows:
         lat_str = f"{row['mean_latency_ms']}ms" if row['mean_latency_ms'] is not None else "N/A"
-        print(f"{row['configuration']:15s} | {row['category']:15s} | {row['total_questions']:9d} | {row['mean_correctness']:11.2f} | {row['mean_faithfulness']:12.2f} | {lat_str:12s} | {row['error_rate']:6.2f}")
+        print(f"{row['configuration']:15s} | {row['category']:15s} | {row['total_attempted']:8d} | {row['successful_attempts']:4d} | {row['failed_attempts']:4d} | {row['mean_correctness_all']:9.2f} | {row['mean_correctness_successful']:10.2f} | {row['mean_faithfulness_successful']:11.2f} | {lat_str:11s}")
 
     # Export to CSV
     csv_file = output_dir / f"summary_{run_id}.csv"
@@ -301,15 +483,21 @@ def score_results(input_file: Path, output_dir: Optional[Path] = None) -> Dict[s
     # Export scored JSON
     scored_json_file = output_dir / f"scored_{run_id}.json"
     with open(scored_json_file, "w", encoding="utf-8") as fp:
-        json.dump({"run_id": run_id, "summary": summary_rows, "scored_records": scored_records}, fp, indent=2, ensure_ascii=False)
+        json.dump({
+            "run_id": run_id,
+            "rubric_version": RUBRIC_VERSION,
+            "summary": summary_rows,
+            "scored_records": scored_records
+        }, fp, indent=2, ensure_ascii=False)
 
-    print("\n" + "=" * 80)
+    print("\n" + "=" * 105)
     print(f" Summary CSV exported to  : {csv_file}")
     print(f" Detailed JSON exported to: {scored_json_file}")
-    print("=" * 80 + "\n")
+    print("=" * 105 + "\n")
 
     return {
         "run_id": run_id,
+        "rubric_version": RUBRIC_VERSION,
         "summary_csv": str(csv_file),
         "scored_json": str(scored_json_file),
         "summary": summary_rows
@@ -330,9 +518,15 @@ def main():
         default=str(CURRENT_DIR / "reports"),
         help="Directory to save summary CSV and scored JSON reports"
     )
+    parser.add_argument(
+        "--questions-file", "-q",
+        type=str,
+        default=str(CURRENT_DIR / "questions.json"),
+        help="Path to questions.json for criteria and rubric enrichment"
+    )
 
     args = parser.parse_args()
-    score_results(Path(args.input_file), Path(args.output_dir))
+    score_results(Path(args.input_file), Path(args.output_dir), Path(args.questions_file))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,9 @@
 import time
+import uuid
 import logging
 from ..utils.supabase_client import supabase
+from ..database import SessionLocal
+from ..models import Document
 from .embedder import get_embedding, get_query_embedding
 from .chunker import chunk_text
 
@@ -58,13 +61,28 @@ def search_similar(
     limit: int = 5,
     min_similarity: float = 0.55
 ) -> list[dict]:
-    """Find most relevant chunks for a query using cosine similarity, strictly from active documents."""
-    query_embedding = get_query_embedding(query)
+    """
+    Find most relevant chunks for a query using cosine similarity, strictly from active documents
+    in the specified workspace.
+    Fails closed: If active document validation fails, returns an empty list to prevent data leakage.
+    """
+    import uuid
+
+    if not workspace_id:
+        logger.warning("search_similar called without workspace_id; failing closed.")
+        return []
+
+    ws_str = str(workspace_id)
+    try:
+        query_embedding = get_query_embedding(query)
+    except Exception as emb_err:
+        logger.warning(f"Error generating query embedding for search: {emb_err}")
+        return []
 
     try:
         result = supabase.rpc("match_embeddings", {
             "query_embedding": query_embedding,
-            "match_workspace_id": workspace_id,
+            "match_workspace_id": ws_str,
             "match_count": limit * 2
         }).execute()
         raw_chunks = result.data or []
@@ -75,20 +93,32 @@ def search_similar(
     if not raw_chunks:
         return []
 
-    # Validate against PostgreSQL documents table to ensure deleted docs are never returned
+    # Validate against PostgreSQL documents table to ensure deleted or foreign docs are never returned.
+    # Security: If validation fails, FAIL CLOSED and return an empty list rather than unvalidated chunks.
     try:
-        from ..database import SessionLocal
-        from ..models import Document
+        try:
+            ws_uuid = uuid.UUID(ws_str)
+        except (ValueError, TypeError, AttributeError):
+            ws_uuid = ws_str
+
         db = SessionLocal()
-        active_doc_ids = {str(d.id) for d in db.query(Document.id).filter(Document.workspace_id == workspace_id).all()}
-        db.close()
+        try:
+            active_docs = db.query(Document.id).filter(Document.workspace_id == ws_uuid).all()
+            active_doc_ids = {str(d.id) for d in active_docs}
+        finally:
+            db.close()
 
         filtered = [
             c for c in raw_chunks
-            if (c.get("source_type") != "document" or c.get("source_id") in active_doc_ids)
-            and c.get("similarity", 1.0) >= min_similarity
+            if (
+                # Must match target workspace
+                (not c.get("workspace_id") or str(c.get("workspace_id")) == ws_str)
+                # Must be an active, non-deleted document in this workspace
+                and (c.get("source_type") != "document" or str(c.get("source_id")) in active_doc_ids)
+                and c.get("similarity", 1.0) >= min_similarity
+            )
         ]
         return filtered[:limit]
     except Exception as filter_err:
-        logger.warning(f"Error filtering active document chunks: {filter_err}")
-        return raw_chunks[:limit]
+        logger.error(f"Security: Failed to validate active documents in database; failing closed: {filter_err}")
+        return []

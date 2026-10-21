@@ -1,7 +1,7 @@
-run_id,configuration,category,total_questions,coverage,error_rate,mean_correctness,mean_faithfulness,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_tokens
-run_20261021_135109_129c49,plain_llm,ALL,5,1.0,0.0,0.4,0.6,5046.09,4808.57,908.59,298.4
-run_20261021_135109_129c49,rag_docs_only,ALL,5,1.0,0.0,0.8,0.6,22180.69,13547.8,15927.84,1020.0
-run_20261021_135109_129c49,full_agent,ALL,5,0.8,0.2,0.6,0.6,23791.23,12177.4,17369.39,1179.25
-run_20261021_135109_129c49,plain_llm,single_source,5,1.0,0.0,0.4,0.6,5046.09,4808.57,908.59,
-run_20261021_135109_129c49,rag_docs_only,single_source,5,1.0,0.0,0.8,0.6,22180.69,13547.8,15927.84,
-run_20261021_135109_129c49,full_agent,single_source,5,0.8,0.2,0.6,0.6,23791.23,12177.4,17369.39,
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+run_20261021_135109_129c49,2.0-deterministic-factual,plain_llm,ALL,5,5,0,1.0,0.0,0.0,0.0,0,0.0,0.0,5046.09,4808.57,908.59,,298.4
+run_20261021_135109_129c49,2.0-deterministic-factual,rag_docs_only,ALL,5,5,0,1.0,0.0,0.4,0.4,2,0.0,0.0,22180.69,13547.8,15927.84,,1020.0
+run_20261021_135109_129c49,2.0-deterministic-factual,full_agent,ALL,5,4,1,0.8,0.2,0.4,0.5,2,0.0,0.0,19439.21,11831.74,16613.05,41199.32,1179.25
+run_20261021_135109_129c49,2.0-deterministic-factual,plain_llm,single_source,5,5,0,1.0,0.0,0.0,0.0,0,0.0,0.0,5046.09,4808.57,908.59,,298.4
+run_20261021_135109_129c49,2.0-deterministic-factual,rag_docs_only,single_source,5,5,0,1.0,0.0,0.4,0.4,2,0.0,0.0,22180.69,13547.8,15927.84,,1020.0
+run_20261021_135109_129c49,2.0-deterministic-factual,full_agent,single_source,5,4,1,0.8,0.2,0.4,0.5,2,0.0,0.0,19439.21,11831.74,16613.05,41199.32,1179.25

@@ -1,89 +1,132 @@
 {
   "run_id": "run_20261021_135109_129c49",
+  "rubric_version": "2.0-deterministic-factual",
   "summary": [
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "plain_llm",
       "category": "ALL",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 5,
+      "failed_attempts": 0,
       "coverage": 1.0,
       "error_rate": 0.0,
-      "mean_correctness": 0.4,
-      "mean_faithfulness": 0.6,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
       "mean_latency_ms": 5046.09,
       "median_latency_ms": 4808.57,
       "stddev_latency_ms": 908.59,
+      "mean_latency_failed_ms": null,
       "mean_tokens": 298.4
     },
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "rag_docs_only",
       "category": "ALL",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 5,
+      "failed_attempts": 0,
       "coverage": 1.0,
       "error_rate": 0.0,
-      "mean_correctness": 0.8,
-      "mean_faithfulness": 0.6,
+      "mean_correctness_all": 0.4,
+      "mean_correctness_successful": 0.4,
+      "partial_credit_count": 2,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
       "mean_latency_ms": 22180.69,
       "median_latency_ms": 13547.8,
       "stddev_latency_ms": 15927.84,
+      "mean_latency_failed_ms": null,
       "mean_tokens": 1020.0
     },
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "full_agent",
       "category": "ALL",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 4,
+      "failed_attempts": 1,
       "coverage": 0.8,
       "error_rate": 0.2,
-      "mean_correctness": 0.6,
-      "mean_faithfulness": 0.6,
-      "mean_latency_ms": 23791.23,
-      "median_latency_ms": 12177.4,
-      "stddev_latency_ms": 17369.39,
+      "mean_correctness_all": 0.4,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 2,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 19439.21,
+      "median_latency_ms": 11831.74,
+      "stddev_latency_ms": 16613.05,
+      "mean_latency_failed_ms": 41199.32,
       "mean_tokens": 1179.25
     },
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "plain_llm",
       "category": "single_source",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 5,
+      "failed_attempts": 0,
       "coverage": 1.0,
       "error_rate": 0.0,
-      "mean_correctness": 0.4,
-      "mean_faithfulness": 0.6,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
       "mean_latency_ms": 5046.09,
       "median_latency_ms": 4808.57,
       "stddev_latency_ms": 908.59,
-      "mean_tokens": null
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 298.4
     },
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "rag_docs_only",
       "category": "single_source",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 5,
+      "failed_attempts": 0,
       "coverage": 1.0,
       "error_rate": 0.0,
-      "mean_correctness": 0.8,
-      "mean_faithfulness": 0.6,
+      "mean_correctness_all": 0.4,
+      "mean_correctness_successful": 0.4,
+      "partial_credit_count": 2,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
       "mean_latency_ms": 22180.69,
       "median_latency_ms": 13547.8,
       "stddev_latency_ms": 15927.84,
-      "mean_tokens": null
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 1020.0
     },
     {
       "run_id": "run_20261021_135109_129c49",
+      "rubric_version": "2.0-deterministic-factual",
       "configuration": "full_agent",
       "category": "single_source",
-      "total_questions": 5,
+      "total_attempted": 5,
+      "successful_attempts": 4,
+      "failed_attempts": 1,
       "coverage": 0.8,
       "error_rate": 0.2,
-      "mean_correctness": 0.6,
-      "mean_faithfulness": 0.6,
-      "mean_latency_ms": 23791.23,
-      "median_latency_ms": 12177.4,
-      "stddev_latency_ms": 17369.39,
-      "mean_tokens": null
+      "mean_correctness_all": 0.4,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 2,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 19439.21,
+      "median_latency_ms": 11831.74,
+      "stddev_latency_ms": 16613.05,
+      "mean_latency_failed_ms": 41199.32,
+      "mean_tokens": 1179.25
     }
   ],
   "scored_records": [
@@ -122,8 +165,14 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 0.0,
-      "score_faithfulness": 1.0
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -170,8 +219,15 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -218,8 +274,15 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -256,8 +319,14 @@
         }
       },
       "error": null,
-      "score_correctness": 0.5,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -304,8 +373,12 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -352,8 +425,12 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "scoring_rationale": "Complete factual match: all target values (['8000', '3000']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -390,8 +467,14 @@
         }
       },
       "error": null,
-      "score_correctness": 0.5,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -438,8 +521,15 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial factual match: matched 4/6 targets and 2/2 concepts",
+      "mismatches": [
+        "missing_target: nov 10, 2026",
+        "missing_target: nov 10"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -486,8 +576,15 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 1.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial factual match: matched 4/6 targets and 2/2 concepts",
+      "mismatches": [
+        "missing_target: nov 10, 2026",
+        "missing_target: nov 10"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -524,8 +621,14 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 0.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -572,8 +675,16 @@
         }
       },
       "error": null,
-      "score_correctness": 1.0,
-      "score_faithfulness": 0.0
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Incorrect: failed to match required target values (['in_progress', 'in progress', 'high'])",
+      "mismatches": [
+        "missing_target: in_progress",
+        "missing_target: in progress",
+        "missing_target: high"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -618,8 +729,16 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 0.0,
-      "score_faithfulness": 0.0
+      "scoring_rationale": "Incorrect: failed to match required target values (['in_progress', 'in progress', 'high'])",
+      "mismatches": [
+        "missing_target: in_progress",
+        "missing_target: in progress",
+        "missing_target: high"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -656,8 +775,14 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 0.0,
-      "score_faithfulness": 0.0
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -702,8 +827,15 @@
         }
       },
       "error": null,
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 0.0,
-      "score_faithfulness": 0.0
+      "scoring_rationale": "Incorrect: failed to match required target values (['write end-to-end authentication tests', 'authentication tests'])",
+      "mismatches": [
+        "missing_target: write end-to-end authentication tests",
+        "missing_target: authentication tests"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "No retrieval evidence available in this configuration to ground response"
     },
     {
       "run_id": "run_20261021_135109_129c49",
@@ -730,8 +862,14 @@
       "latency_ms": 41199.32,
       "token_usage": null,
       "error": "Error calling model 'gemini-2.5-flash' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 17h4m35.193865982s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.5-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '61475s'}]}}",
+      "rubric_version": "2.0-deterministic-factual",
       "score_correctness": 0.0,
-      "score_faithfulness": 0.0
+      "scoring_rationale": "Execution failed: Error calling model 'gemini-2.5-flash' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 17h4m35.193865982s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.5-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '61475s'}]}}",
+      "mismatches": [
+        "execution_error"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_rationale": "Execution failed"
     }
   ]
 }

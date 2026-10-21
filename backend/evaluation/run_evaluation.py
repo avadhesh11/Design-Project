@@ -24,46 +24,63 @@ from evaluation.seed_synthetic_workspace import (
     SYNTHETIC_WORKSPACE_ID,
     SYNTHETIC_DEV1_ID
 )
+import re
 
 
-class MockEvaluationLLM:
+def sanitize_secret(text: Optional[str]) -> Optional[str]:
+    """Sanitize API keys, tokens, and DB passwords from log strings and error messages."""
+    if not text:
+        return text
+    text = re.sub(r"AIza[A-Za-z0-9_-]{30,45}", "[REDACTED_API_KEY]", text)
+    text = re.sub(r"Bearer\s+[A-Za-z0-9_.-]+", "Bearer [REDACTED_TOKEN]", text)
+    text = re.sub(r"postgresql://([^:]+):([^@]+)@", r"postgresql://\1:[REDACTED_PASSWORD]@", text)
+    return text
+
+
+from langchain_core.runnables import Runnable
+from langchain_core.messages import AIMessage
+
+
+class MockEvaluationLLM(Runnable):
     """Mock LLM for offline tests and smoke checks without external API dependencies."""
     def __init__(self, model_name: str = "mock-eval-model"):
         self.model_name = model_name
+        self.model = model_name
 
-    async def ainvoke(self, messages: Any) -> Any:
-        class MockAIMessage:
-            def __init__(self, content: str):
-                self.content = content
-                self.name = None
-                self.usage_metadata = {
-                    "input_tokens": 42,
-                    "output_tokens": 18,
-                    "total_tokens": 60
-                }
-                self.response_metadata = {
-                    "token_usage": self.usage_metadata
-                }
-
-        # Generate a predictable offline response
+    def _generate_response(self, messages: Any) -> AIMessage:
         query_text = ""
-        for m in (messages if isinstance(messages, list) else []):
+        msg_list = messages
+        if isinstance(messages, dict):
+            msg_list = messages.get("messages", [])
+        for m in (msg_list if isinstance(msg_list, list) else []):
             content = getattr(m, "content", "")
             if isinstance(content, str):
                 query_text += " " + content
+            elif isinstance(content, list):
+                for p in content:
+                    query_text += " " + str(p)
 
         if "port" in query_text.lower():
-            text = "The backend API runs on port 8000 and the frontend on port 3000."
+            text = "The backend API runs on port 8000 using FastAPI and the frontend web client on port 3000 using Next.js."
         elif "timeout" in query_text.lower():
-            text = "The session timeout is 15 minutes."
+            text = "The session timeout is enforced at exactly 15 minutes of inactivity."
         elif "freeze" in query_text.lower():
-            text = "The feature freeze is November 10, 2026."
-        elif "aws" in query_text.lower() or "madrid" in query_text.lower():
-            text = "I do not have enough information in the workspace to answer this question."
+            text = "The feature freeze deadline is November 10, 2026 at 23:59 UTC."
+        elif "aws" in query_text.lower() or "madrid" in query_text.lower() or "budget" in query_text.lower():
+            text = "This information is not available in the workspace documents or tasks."
         else:
             text = "Synthetic offline evaluation answer for research verification."
 
-        return MockAIMessage(content=text)
+        msg = AIMessage(content=text)
+        msg.usage_metadata = {"input_tokens": 42, "output_tokens": 18, "total_tokens": 60}
+        msg.response_metadata = {"token_usage": msg.usage_metadata}
+        return msg
+
+    def invoke(self, input: Any, config: Optional[Any] = None, **kwargs: Any) -> Any:
+        return self._generate_response(input)
+
+    async def ainvoke(self, input: Any, config: Optional[Any] = None, **kwargs: Any) -> Any:
+        return self._generate_response(input)
 
     def bind_tools(self, tools: Any, **kwargs: Any) -> Any:
         return self
@@ -173,6 +190,9 @@ async def run_evaluation(
                     llm=llm_instance
                 )
 
+                sanitized_error = sanitize_secret(eval_result.get("error"))
+                exec_status = "failed" if sanitized_error else eval_result.get("execution_status", "success")
+
                 record = {
                     "run_id": run_id,
                     "timestamp": datetime.now(UTC).isoformat(),
@@ -183,23 +203,31 @@ async def run_evaluation(
                     "answerable": answerable,
                     "reference_answer": ref_ans,
                     "evidence_references": evidence_refs,
+                    "evaluation_criteria": q.get("evaluation_criteria", {}),
+                    "rubric": q.get("rubric", {}),
                     "configuration": cfg_name,
-                    "model": model_name,
+                    "configured_model": eval_result.get("configured_model", model_name),
+                    "resolved_model": eval_result.get("resolved_model", model_name),
+                    "model_parameters": eval_result.get("model_parameters", {}),
+                    "provider": eval_result.get("provider", "gemini"),
+                    "available_sources": eval_result.get("available_sources", []),
+                    "execution_status": exec_status,
                     "response": eval_result.get("response", ""),
                     "tools_used": eval_result.get("tools_used", []),
+                    "retrieved_evidence": eval_result.get("retrieved_evidence", []),
                     "latency_ms": eval_result.get("latency_ms"),
                     "token_usage": eval_result.get("token_usage"),
-                    "error": eval_result.get("error")
+                    "error": sanitized_error
                 }
 
                 out_fp.write(json.dumps(record, ensure_ascii=False) + "\n")
                 out_fp.flush()
 
-                if eval_result.get("error"):
-                    print(f"FAILED ({eval_result['latency_ms']}ms) -> {eval_result['error']}")
+                if sanitized_error:
+                    print(f"FAILED ({eval_result.get('latency_ms')}ms) -> {sanitized_error}")
                 else:
-                    tools_str = f"tools={len(eval_result['tools_used'])}"
-                    print(f"DONE ({eval_result['latency_ms']}ms, {tools_str})")
+                    tools_str = f"tools={len(eval_result.get('tools_used', []))}"
+                    print(f"DONE ({eval_result.get('latency_ms')}ms, {tools_str})")
 
     print(f"\nEvaluation run finished successfully!")
     print(f"Results recorded at: {output_file}")

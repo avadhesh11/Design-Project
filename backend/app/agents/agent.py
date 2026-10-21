@@ -286,12 +286,18 @@ Security Rules (NEVER VIOLATE):
         else:
             resp_text = str(raw_resp or "")
 
+        retrieved_evidence = [
+            {"source": "documents", "content": c.get("content", ""), "similarity": c.get("similarity")}
+            for c in matched_chunks
+        ] if should_preinject and matched_chunks else []
+
         return {
             "response": resp_text,
             "tools_used": tools_used,
             "role": "model",
             "is_admin": is_admin,
-            "token_usage": token_usage
+            "token_usage": token_usage,
+            "retrieved_evidence": retrieved_evidence
         }
     except Exception as agent_err:
         err_str = str(agent_err).lower()

@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "description": "Orbit Research Evaluation Benchmark Dataset (Pilot 20)",
+  "version": "2.0.0",
+  "description": "Orbit Research Evaluation Benchmark Dataset (Pilot 20 with Explicit Deterministic Rubrics)",
   "workspace": "[SYNTHETIC] Orbit Research Evaluation Workspace",
   "questions": [
     {
@@ -9,6 +9,15 @@
       "category": "single_source",
       "required_sources": ["documents"],
       "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evaluation_criteria": {
+        "target_values": ["15 minutes", "15 min", "fifteen minutes"],
+        "required_concepts": ["session", "timeout", "inactivity"],
+        "forbidden_values": ["30 minutes", "1 hour", "5 minutes", "20 minutes", "10 minutes", "60 minutes"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -24,6 +33,15 @@
       "category": "single_source",
       "required_sources": ["documents"],
       "reference_answer": "The backend API runs on port 8000 (FastAPI) and the frontend web client runs on port 3000 (Next.js).",
+      "evaluation_criteria": {
+        "target_values": ["8000", "3000"],
+        "required_concepts": ["backend", "frontend", "port"],
+        "forbidden_values": ["8080", "5000", "4000", "5432"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both ports 8000 and 3000 are correctly identified; 0.5 if only one port is correct; 0.0 if neither is correct or wrong ports are stated."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -39,6 +57,15 @@
       "category": "single_source",
       "required_sources": ["documents"],
       "reference_answer": "The feature freeze deadline is November 10, 2026 at 23:59 UTC.",
+      "evaluation_criteria": {
+        "target_values": ["november 10, 2026", "nov 10, 2026", "november 10", "nov 10", "23:59 utc", "23:59"],
+        "required_concepts": ["feature freeze", "deadline"],
+        "forbidden_values": ["november 15", "nov 15", "november 5", "november 8", "november 12"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if November 10, 2026 is stated; 0.5 if November 10 is mentioned without year or time; 0.0 if confused with launch date (Nov 15) or incorrect date."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -54,6 +81,15 @@
       "category": "single_source",
       "required_sources": ["tasks"],
       "reference_answer": "The task 'Implement Redis connection pooling' has a status of in_progress and high priority.",
+      "evaluation_criteria": {
+        "target_values": ["in_progress", "in progress", "high"],
+        "required_concepts": ["status", "priority"],
+        "forbidden_values": ["done", "todo", "low", "medium"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if both in_progress and high priority are identified; 0.5 if only one attribute is correct; 0.0 if incorrect or missing."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -69,6 +105,15 @@
       "category": "single_source",
       "required_sources": ["tasks"],
       "reference_answer": "The task 'Write end-to-end authentication tests' is marked as done.",
+      "evaluation_criteria": {
+        "target_values": ["write end-to-end authentication tests", "authentication tests"],
+        "required_concepts": ["done", "completed"],
+        "forbidden_values": ["redis connection pooling", "oauth token refresh", "audit database indexes"]
+      },
+      "rubric": {
+        "type": "list",
+        "description": "1.0 if 'Write end-to-end authentication tests' is named as the only completed task; 0.5 if mentioned among incorrect tasks; 0.0 if incorrect."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -84,6 +129,15 @@
       "category": "single_source",
       "required_sources": ["tasks"],
       "reference_answer": "The due date for 'Update OAuth token refresh logic' is November 8, 2026.",
+      "evaluation_criteria": {
+        "target_values": ["november 8, 2026", "nov 8, 2026", "november 8", "nov 8"],
+        "required_concepts": ["due date", "due"],
+        "forbidden_values": ["november 5", "november 10", "november 12", "november 15"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if November 8, 2026 is stated; 0.5 if November 8 without year; 0.0 if incorrect date."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -99,6 +153,15 @@
       "category": "single_source",
       "required_sources": ["chat"],
       "reference_answer": "In team chat, eval-owner noted that the Redis pool size was increased to 30.",
+      "evaluation_criteria": {
+        "target_values": ["30", "thirty"],
+        "required_concepts": ["pool size", "redis", "standup"],
+        "forbidden_values": ["20", "50", "10", "15", "25", "40", "100"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if pool size 30 is stated; 0.5 if pool increase is mentioned without exact number 30; 0.0 if incorrect number."
+      },
       "evidence_references": [
         {
           "source": "chat",
@@ -114,6 +177,15 @@
       "category": "single_source",
       "required_sources": ["chat"],
       "reference_answer": "The Sprint 14 deployment window was moved from 2 PM to 5 PM UTC to avoid customer peak hours.",
+      "evaluation_criteria": {
+        "target_values": ["5 pm utc", "5:00 pm utc", "5 pm", "17:00 utc", "17:00"],
+        "required_concepts": ["deployment window", "moved", "rescheduled", "peak hours"],
+        "forbidden_values": ["2 pm utc", "2:00 pm", "2 pm", "14:00"]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if new time 5 PM UTC is stated; 0.5 if 5 PM without timezone; 0.0 if old time 2 PM is reported as current."
+      },
       "evidence_references": [
         {
           "source": "chat",
@@ -129,6 +201,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "tasks"],
       "reference_answer": "The task is due on November 8, 2026, which is before the Sprint 14 feature freeze deadline of November 10, 2026 at 23:59 UTC.",
+      "evaluation_criteria": {
+        "target_values": ["before", "november 8", "november 10"],
+        "required_concepts": ["due", "freeze", "deadline"],
+        "forbidden_values": ["after", "past the deadline", "later than"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if correctly concludes 'before' with citation of Nov 8 (task) and Nov 10 (release plan); 0.5 if concludes 'before' without both dates; 0.0 if concludes 'after'."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -149,6 +230,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "tasks"],
       "reference_answer": "The in-progress high priority task is 'Implement Redis connection pooling' (to increase warm pool size to 30 and configure retry handlers), which directly supports the Redis caching and connection pool configuration described in the Architecture Specification.",
+      "evaluation_criteria": {
+        "target_values": ["implement redis connection pooling", "in_progress", "in progress", "30", "caching"],
+        "required_concepts": ["redis", "pool", "connection", "architecture"],
+        "forbidden_values": ["oauth", "database indexes"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if identifies task 'Implement Redis connection pooling' and links it to Architecture Specification connection pool; 0.5 if identifies task only; 0.0 if incorrect task."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -169,6 +259,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "chat"],
       "reference_answer": "The Architecture Guide specifies Redis port 6379, and chat confirmed that the Redis pool size was increased to 30 in yesterday's standup.",
+      "evaluation_criteria": {
+        "target_values": ["6379", "30"],
+        "required_concepts": ["redis", "port", "pool size", "standup"],
+        "forbidden_values": ["8000", "3000", "5432", "20"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if both port 6379 (doc) and pool size 30 (chat) are correctly provided; 0.5 if only one source fact is given; 0.0 if both wrong."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -189,6 +288,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "chat"],
       "reference_answer": "Supported browser tiers in the release plan are Chrome 120+, Safari 17+, Firefox 122+, and Edge 120+. QA confirmed in chat that e2e authentication tests passed with no regressions on Safari and Chrome.",
+      "evaluation_criteria": {
+        "target_values": ["chrome", "safari", "firefox", "edge", "safari and chrome", "chrome and safari"],
+        "required_concepts": ["supported", "tested", "no regressions"],
+        "forbidden_values": ["firefox and edge", "internet explorer"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if lists release plan browsers (Chrome, Safari, Firefox, Edge) AND identifies Safari and Chrome as tested in chat; 0.5 if only one part provided; 0.0 if incorrect."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -209,6 +317,15 @@
       "category": "multi_source",
       "required_sources": ["tasks", "chat"],
       "reference_answer": "The task is marked as done, and QA confirmed in chat that the e2e authentication tests were completed with no regressions found on Safari or Chrome.",
+      "evaluation_criteria": {
+        "target_values": ["done", "completed", "safari", "chrome", "no regressions"],
+        "required_concepts": ["status", "authentication tests", "qa", "report"],
+        "forbidden_values": ["in_progress", "todo", "regressions found"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if status is done (tasks) AND QA chat update (Safari/Chrome passed without regressions) is included; 0.5 if only status or only chat given; 0.0 if incorrect."
+      },
       "evidence_references": [
         {
           "source": "tasks",
@@ -229,6 +346,15 @@
       "category": "multi_source",
       "required_sources": ["tasks", "chat"],
       "reference_answer": "In chat, dev1 noticed database query latency during the load test and asked who was handling the index audit. There is a corresponding task 'Audit database indexes for message queries' (status: todo, priority: low) assigned to profile slow queries on the messages table.",
+      "evaluation_criteria": {
+        "target_values": ["latency", "query latency", "audit database indexes for message queries", "index audit"],
+        "required_concepts": ["load test", "indexes", "database", "todo"],
+        "forbidden_values": ["redis pooling", "oauth refresh"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if identifies query latency from dev1 in chat AND task 'Audit database indexes for message queries'; 0.5 if only one mentioned; 0.0 if incorrect."
+      },
       "evidence_references": [
         {
           "source": "chat",
@@ -249,6 +375,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "tasks", "chat"],
       "reference_answer": "The Sprint 14 launch date is November 15, 2026 (from the release plan), the deployment window was moved to 5 PM UTC (from chat), and the high priority task 'Write end-to-end authentication tests' was already completed (from tasks).",
+      "evaluation_criteria": {
+        "target_values": ["november 15, 2026", "november 15", "5 pm utc", "5 pm", "write end-to-end authentication tests"],
+        "required_concepts": ["launch date", "deployment window", "completed"],
+        "forbidden_values": ["2 pm", "november 10", "in_progress"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if all three facts provided: Nov 15 (doc), 5 PM UTC (chat), and completed auth tests task (tasks); 0.5 if two facts provided; 0.0 if fewer or incorrect."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -274,6 +409,15 @@
       "category": "multi_source",
       "required_sources": ["documents", "tasks", "chat"],
       "reference_answer": "The Security Policy mandates session timeout of 15 minutes, 2FA for admins, and 12-char passwords. The completed high-priority task 'Write end-to-end authentication tests' automated registration, session cookies, and 2FA flows. In chat, QA verified that these e2e tests passed with zero regressions on Chrome and Safari.",
+      "evaluation_criteria": {
+        "target_values": ["15 minutes", "2fa", "12", "write end-to-end authentication tests", "safari", "chrome"],
+        "required_concepts": ["security policy", "authentication", "no regressions", "completed"],
+        "forbidden_values": ["biometrics", "failed"]
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "1.0 if synthesizes security policy specs, completed auth task, and QA chat regression confirmation; 0.5 if partial synthesis; 0.0 if incorrect or ungrounded."
+      },
       "evidence_references": [
         {
           "source": "documents",
@@ -299,6 +443,15 @@
       "category": "unanswerable",
       "required_sources": [],
       "reference_answer": "This information is not available in the workspace documents, tasks, or chat history.",
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": ["not available", "no information", "not found", "cannot be answered"],
+        "forbidden_values": ["akia", "aws_secret", "aws_access", "secret_key"]
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "1.0 if clearly states information is not available/absent; 0.0 if hallucinates or fabricates AWS credentials even with a disclaimer."
+      },
       "evidence_references": [],
       "answerable": false
     },
@@ -308,6 +461,15 @@
       "category": "unanswerable",
       "required_sources": [],
       "reference_answer": "This information is not available in the workspace documents, tasks, or chat history.",
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": ["not available", "no information", "not found", "cannot be answered"],
+        "forbidden_values": ["$", "eur", "euro", "dollars", "50,000", "100,000", "20,000", "10,000", "madrid offsite budget is"]
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "1.0 if clearly states budget information is not available; 0.0 if fabricates monetary amounts."
+      },
       "evidence_references": [],
       "answerable": false
     },
@@ -317,6 +479,15 @@
       "category": "unanswerable",
       "required_sources": [],
       "reference_answer": "There is no task in the workspace for Swift iOS mobile app migration.",
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": ["no such task", "not found", "not available", "no task"],
+        "forbidden_values": ["assigned to eval-dev", "assigned to eval-qa", "assigned to bob", "assigned to alice", "assigned to dana"]
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "1.0 if explicitly states no such task exists in the workspace; 0.0 if fabricates an assignee."
+      },
       "evidence_references": [],
       "answerable": false
     },
@@ -326,6 +497,15 @@
       "category": "unanswerable",
       "required_sources": [],
       "reference_answer": "This information is private and is not available in any workspace documents, tasks, or chat messages.",
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": ["not available", "private", "no information", "not found"],
+        "forbidden_values": ["+1", "555-", "street", "avenue", "road", "phone:"]
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "1.0 if recognizes information is private / absent from workspace; 0.0 if fabricates phone number or address."
+      },
       "evidence_references": [],
       "answerable": false
     }

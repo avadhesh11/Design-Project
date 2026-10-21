@@ -40,6 +40,8 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
     Only touches records associated with SYNTHETIC_WORKSPACE_ID and synthetic users.
     """
     db = SessionLocal()
+    embedding_failures = []
+    embeddings_stored_count = 0
     try:
         # 1. Clean existing synthetic tasks, documents, memberships, and workspace
         db.query(Task).filter(Task.workspace_id == SYNTHETIC_WORKSPACE_ID).delete()
@@ -47,6 +49,12 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == SYNTHETIC_WORKSPACE_ID).delete()
         db.query(Workspace).filter(Workspace.id == SYNTHETIC_WORKSPACE_ID).delete()
         db.commit()
+
+        # Clean stale synthetic vector records in Supabase to prevent chunk contamination
+        try:
+            supabase.table("embeddings").delete().eq("workspace_id", str(SYNTHETIC_WORKSPACE_ID)).execute()
+        except Exception as emb_del_err:
+            logger.warning(f"Supabase vector embeddings purge skipped/failed: {emb_del_err}")
 
         # 2. Ensure synthetic users exist
         users_data = [
@@ -58,7 +66,6 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         for uid, email in users_data:
             existing = db.query(User).filter(User.id == uid).first()
             if not existing:
-                # Also check by email to avoid unique constraint violations
                 by_email = db.query(User).filter(User.email == email).first()
                 if by_email:
                     by_email.id = uid
@@ -147,8 +154,11 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
                         source_id=str(d.id),
                         content=d.content
                     )
+                    embeddings_stored_count += 1
                 except Exception as emb_err:
-                    logger.warning(f"Embedding generation skipped/failed for document {d.id}: {emb_err}")
+                    err_msg = f"Embedding generation failed for document {d.id} ({d.title}): {emb_err}"
+                    logger.warning(err_msg)
+                    embedding_failures.append(err_msg)
 
         # 6. Add synthetic tasks
         tasks = [
@@ -201,6 +211,7 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         db.commit()
 
         # 7. Seed synthetic chat messages in Supabase
+        chat_seeded = 0
         try:
             supabase.table("messages").delete().eq("workspace_id", str(SYNTHETIC_WORKSPACE_ID)).execute()
             messages_payload = [
@@ -230,6 +241,7 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
                 }
             ]
             supabase.table("messages").insert(messages_payload).execute()
+            chat_seeded = len(messages_payload)
         except Exception as chat_err:
             logger.warning(f"Supabase chat message seeding skipped/failed: {chat_err}")
 
@@ -242,7 +254,9 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
             "dev_user_email": "eval-dev1@synthetic.orbit.local",
             "documents_count": 3,
             "tasks_count": 4,
-            "chat_messages_count": 4
+            "chat_messages_count": chat_seeded,
+            "embeddings_stored_count": embeddings_stored_count,
+            "embedding_failures": embedding_failures
         }
     except Exception:
         db.rollback()
@@ -251,8 +265,86 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         db.close()
 
 
+def verify_synthetic_workspace_integrity() -> dict:
+    """
+    Verify the relational and vector integrity of the synthetic evaluation workspace.
+    Returns a structured status report with verification checks.
+    """
+    db = SessionLocal()
+    checks = {}
+    try:
+        # Check workspace
+        ws = db.query(Workspace).filter(Workspace.id == SYNTHETIC_WORKSPACE_ID).first()
+        checks["workspace_exists"] = ws is not None
+        if ws:
+            checks["workspace_ai_model"] = ws.ai_model
+            checks["workspace_ai_provider"] = ws.ai_provider
+
+        # Check members
+        members_count = db.query(WorkspaceMember).filter(WorkspaceMember.workspace_id == SYNTHETIC_WORKSPACE_ID).count()
+        checks["members_count"] = members_count
+        checks["members_valid"] = members_count == 4
+
+        # Check documents
+        docs = db.query(Document).filter(Document.workspace_id == SYNTHETIC_WORKSPACE_ID).all()
+        checks["documents_count"] = len(docs)
+        doc_ids = {d.id for d in docs}
+        expected_doc_ids = {SYNTHETIC_DOC1_ID, SYNTHETIC_DOC2_ID, SYNTHETIC_DOC3_ID}
+        checks["documents_ids_match"] = (doc_ids == expected_doc_ids)
+
+        # Check tasks
+        tasks = db.query(Task).filter(Task.workspace_id == SYNTHETIC_WORKSPACE_ID).all()
+        checks["tasks_count"] = len(tasks)
+        task_ids = {t.id for t in tasks}
+        expected_task_ids = {SYNTHETIC_TASK1_ID, SYNTHETIC_TASK2_ID, SYNTHETIC_TASK3_ID, SYNTHETIC_TASK4_ID}
+        checks["tasks_ids_match"] = (task_ids == expected_task_ids)
+
+        # Check Supabase messages
+        try:
+            msg_res = supabase.table("messages").select("id", count="exact").eq("workspace_id", str(SYNTHETIC_WORKSPACE_ID)).execute()
+            checks["chat_messages_count"] = len(msg_res.data) if msg_res.data else 0
+            checks["chat_messages_accessible"] = True
+        except Exception as e:
+            checks["chat_messages_count"] = 0
+            checks["chat_messages_accessible"] = False
+            checks["chat_error"] = str(e)
+
+        # Check Supabase vector embeddings
+        try:
+            emb_res = supabase.table("embeddings").select("id", count="exact").eq("workspace_id", str(SYNTHETIC_WORKSPACE_ID)).execute()
+            checks["vector_embeddings_count"] = len(emb_res.data) if emb_res.data else 0
+            checks["vector_embeddings_accessible"] = True
+        except Exception as e:
+            checks["vector_embeddings_count"] = 0
+            checks["vector_embeddings_accessible"] = False
+            checks["vector_error"] = str(e)
+
+        all_ok = (
+            checks.get("workspace_exists", False) and
+            checks.get("members_valid", False) and
+            checks.get("documents_ids_match", False) and
+            checks.get("tasks_ids_match", False)
+        )
+        return {
+            "status": "healthy" if all_ok else "unhealthy",
+            "checks": checks
+        }
+    finally:
+        db.close()
+
+
 if __name__ == "__main__":
-    result = seed_synthetic_workspace()
-    print("Synthetic workspace seeded successfully:")
-    for k, v in result.items():
-        print(f"  {k}: {v}")
+    import sys
+    if "--verify" in sys.argv:
+        print("Verifying synthetic workspace integrity...")
+        integrity = verify_synthetic_workspace_integrity()
+        print(f"Status: {integrity['status']}")
+        for k, v in integrity["checks"].items():
+            print(f"  {k}: {v}")
+    else:
+        skip_emb = "--skip-embeddings" in sys.argv
+        result = seed_synthetic_workspace(skip_embeddings=skip_emb)
+        print("Synthetic workspace seeded successfully:")
+        for k, v in result.items():
+            print(f"  {k}: {v}")
+
