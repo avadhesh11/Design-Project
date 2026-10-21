@@ -51,10 +51,12 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         db.commit()
 
         # Clean stale synthetic vector records in Supabase to prevent chunk contamination
+        vector_cleanup_error = None
         try:
             supabase.table("embeddings").delete().eq("workspace_id", str(SYNTHETIC_WORKSPACE_ID)).execute()
         except Exception as emb_del_err:
-            logger.warning(f"Supabase vector embeddings purge skipped/failed: {emb_del_err}")
+            vector_cleanup_error = f"Supabase vector embeddings purge failed: {emb_del_err}"
+            logger.error(vector_cleanup_error)
 
         # 2. Ensure synthetic users exist
         users_data = [
@@ -245,8 +247,15 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
         except Exception as chat_err:
             logger.warning(f"Supabase chat message seeding skipped/failed: {chat_err}")
 
+        failed = bool(vector_cleanup_error) or (not skip_embeddings and bool(embedding_failures))
+        status = "failed" if failed else "success"
+        all_errors = []
+        if vector_cleanup_error:
+            all_errors.append(vector_cleanup_error)
+        all_errors.extend(embedding_failures)
+
         return {
-            "status": "success",
+            "status": status,
             "workspace_id": str(SYNTHETIC_WORKSPACE_ID),
             "owner_id": str(SYNTHETIC_OWNER_ID),
             "owner_email": "eval-owner@synthetic.orbit.local",
@@ -256,7 +265,9 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
             "tasks_count": 4,
             "chat_messages_count": chat_seeded,
             "embeddings_stored_count": embeddings_stored_count,
-            "embedding_failures": embedding_failures
+            "embedding_failures": embedding_failures,
+            "vector_cleanup_error": vector_cleanup_error,
+            "errors": all_errors
         }
     except Exception:
         db.rollback()
@@ -344,7 +355,13 @@ if __name__ == "__main__":
     else:
         skip_emb = "--skip-embeddings" in sys.argv
         result = seed_synthetic_workspace(skip_embeddings=skip_emb)
-        print("Synthetic workspace seeded successfully:")
-        for k, v in result.items():
-            print(f"  {k}: {v}")
+        if result["status"] == "failed":
+            print("ERROR: Synthetic workspace seeding encountered failures:")
+            for k, v in result.items():
+                print(f"  {k}: {v}")
+            sys.exit(1)
+        else:
+            print("Synthetic workspace seeded successfully:")
+            for k, v in result.items():
+                print(f"  {k}: {v}")
 

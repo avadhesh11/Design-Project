@@ -202,10 +202,21 @@ def test_scoring_rubric_on_known_cases():
     assert res_unnecessary_refusal["score"] == 0.0
     assert "unnecessary_refusal" in res_unnecessary_refusal["mismatches"]
 
-    # 11. Evidence Faithfulness - Grounded vs Unsupported
+    # 11. Misleading substring match prevention: '8000' must NOT match inside '18000' or '80000'
+    res_misleading_substring = evaluate_answer_correctness(
+        response_text="The backend API runs on port 18000 using FastAPI, and frontend runs on port 80000.",
+        reference_answer="The backend API runs on port 8000 using FastAPI, and the frontend web client runs on port 3000 using Next.js.",
+        criteria=criteria_q1,
+        rubric=rubric_q1,
+        evidence_refs=evidence_q1
+    )
+    assert res_misleading_substring["score"] == 0.0
+    assert any("missing_target: 8000" in m for m in res_misleading_substring["mismatches"])
+    assert any("missing_target: 3000" in m for m in res_misleading_substring["mismatches"])
+
+    # 12. Evidence Faithfulness - Grounded vs Missing Evidence vs Unsupported
     faith_grounded = calculate_evidence_faithfulness(
         response_text="The backend port is 8000 and frontend is 3000.",
-        evidence_refs=evidence_q1,
         answerable=True,
         criteria=criteria_q1,
         available_sources=["documents"],
@@ -213,22 +224,49 @@ def test_scoring_rubric_on_known_cases():
         has_error=False
     )
     assert faith_grounded["score"] == 1.0
+    assert faith_grounded["status"] == "faithful"
 
+    # Missing Evidence / Plain LLM: Faithfulness must be marked NOT EVALUABLE (score=None), never fabricated
     faith_no_sources = calculate_evidence_faithfulness(
         response_text="The backend port is 8000 and frontend is 3000.",
-        evidence_refs=evidence_q1,
         answerable=True,
         criteria=criteria_q1,
         available_sources=[],  # Plain LLM without retrieval access
         retrieved_evidence=[],
         has_error=False
     )
-    assert faith_no_sources["score"] == 0.0
-    assert "No retrieval evidence" in faith_no_sources["rationale"]
+    assert faith_no_sources["score"] is None
+    assert faith_no_sources["status"] == "not_evaluable"
+    assert "not evaluable" in faith_no_sources["rationale"]
 
+    # Model had retrieval access, but tool returned no chunks -> Faithfulness is NOT EVALUABLE
+    faith_missing_chunks = calculate_evidence_faithfulness(
+        response_text="The backend port is 8000 and frontend is 3000.",
+        answerable=True,
+        criteria=criteria_q1,
+        available_sources=["documents"],
+        retrieved_evidence=[],  # Tool retrieved zero evidence
+        has_error=False
+    )
+    assert faith_missing_chunks["score"] is None
+    assert faith_missing_chunks["status"] == "not_evaluable"
+    assert "No evidence was retrieved" in faith_missing_chunks["rationale"]
+
+    # Retrieved evidence does not support claims
+    faith_unsupported = calculate_evidence_faithfulness(
+        response_text="The backend port is 8000 and frontend is 3000.",
+        answerable=True,
+        criteria=criteria_q1,
+        available_sources=["documents"],
+        retrieved_evidence=[{"excerpt": "Orbit is deployed on port 9090."}],
+        has_error=False
+    )
+    assert faith_unsupported["score"] == 0.0
+    assert faith_unsupported["status"] == "unsupported"
+
+    # Retrieved evidence contradicted by response
     faith_contradiction = calculate_evidence_faithfulness(
         response_text="The backend port is 8080 and frontend is 5000.",
-        evidence_refs=evidence_q1,
         answerable=True,
         criteria=criteria_q1,
         available_sources=["documents"],
@@ -236,6 +274,7 @@ def test_scoring_rubric_on_known_cases():
         has_error=False
     )
     assert faith_contradiction["score"] == 0.0
+    assert faith_contradiction["status"] == "contradiction"
 
 
 def test_compute_stats():

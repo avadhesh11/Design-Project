@@ -69,6 +69,25 @@ def _to_text_string(val: Any) -> str:
     return str(val)
 
 
+import re
+
+
+def _contains_fact(target: str, text: str) -> bool:
+    """
+    Check if target fact is contained in text, using word boundaries for tokens and numbers
+    to prevent misleading substring matches (e.g. '8000' matching inside '18000' or '80000').
+    """
+    target_clean = target.strip().lower()
+    text_clean = text.lower()
+    if not target_clean:
+        return False
+    # If target is alphanumeric token, word, or number, use word boundary regex to avoid false substring matches
+    if re.match(r"^[\w\.-]+$", target_clean):
+        pattern = r"\b" + re.escape(target_clean) + r"\b"
+        return bool(re.search(pattern, text_clean))
+    return target_clean in text_clean
+
+
 def evaluate_unanswerable_refusal(
     response_text: str,
     criteria: Dict[str, Any],
@@ -83,7 +102,7 @@ def evaluate_unanswerable_refusal(
     forbidden_values = criteria.get("forbidden_values", [])
 
     # Check for fabricated forbidden values (e.g. AWS access keys, €45,000, Madrid team member)
-    detected_fabricated = [fv for fv in forbidden_values if fv.lower() in lower]
+    detected_fabricated = [fv for fv in forbidden_values if _contains_fact(fv, lower)]
     if detected_fabricated:
         return {
             "score": 0.0,
@@ -113,13 +132,17 @@ def evaluate_answer_correctness(
     reference_answer: str,
     criteria: Dict[str, Any],
     rubric: Dict[str, Any],
-    evidence_refs: List[Dict[str, Any]]
+    evidence_refs: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
     """
     Transparent, deterministic factual scoring rubric for answerable questions:
     - 1.0: Full factual match of all target values and key concepts, no contradictions.
     - 0.5: Partial factual match (at least 50% target values matched) or partial match with minor contradiction.
     - 0.0: Incorrect values, missing critical facts, or contradictions.
+
+    Limitations:
+    Evaluates presence of factual tokens, numbers, and absence of known contradictions.
+    Does not evaluate deep semantic syntax or stylistic quality.
     """
     lower_resp = response_text.lower().strip()
     target_values = criteria.get("target_values", [])
@@ -128,7 +151,7 @@ def evaluate_answer_correctness(
 
     # 1. Check for unnecessary refusal on answerable question
     has_refusal = any(sig in lower_resp for sig in REFUSAL_SIGNALS)
-    matched_targets = [tv for tv in target_values if tv.lower() in lower_resp]
+    matched_targets = [tv for tv in target_values if _contains_fact(tv, lower_resp)]
 
     if has_refusal and len(matched_targets) == 0:
         return {
@@ -138,12 +161,12 @@ def evaluate_answer_correctness(
         }
 
     # 2. Check for contradictions / forbidden incorrect values
-    detected_contradictions = [fv for fv in forbidden_values if fv.lower() in lower_resp]
+    detected_contradictions = [fv for fv in forbidden_values if _contains_fact(fv, lower_resp)]
     mismatches = [f"contradiction: {fv}" for fv in detected_contradictions]
 
     # 3. Check target values and concepts
     target_ratio = len(matched_targets) / len(target_values) if target_values else 1.0
-    matched_concepts = [c for c in required_concepts if c.lower() in lower_resp]
+    matched_concepts = [c for c in required_concepts if _contains_fact(c, lower_resp)]
     concept_ratio = len(matched_concepts) / len(required_concepts) if required_concepts else 1.0
 
     for tv in target_values:
@@ -166,13 +189,13 @@ def evaluate_answer_correctness(
             }
 
     if not target_values:
-        # Fallback to keyword overlap if no target values defined
+        # Fallback to token overlap if no target values defined
         lower_ref = reference_answer.lower()
         stopwords = {"the", "a", "an", "is", "are", "was", "were", "to", "in", "on", "at", "by", "for", "with", "and", "or", "of", "that", "this"}
         ref_words = [w.strip() for w in lower_ref.split() if len(w.strip()) > 2 and w.strip() not in stopwords]
         if not ref_words:
             return {"score": 1.0 if lower_ref in lower_resp else 0.0, "rationale": "Exact match fallback", "mismatches": []}
-        match_c = sum(1 for w in ref_words if w in lower_resp)
+        match_c = sum(1 for w in ref_words if _contains_fact(w, lower_resp))
         ratio = match_c / len(ref_words)
         if ratio >= 0.65:
             return {"score": 1.0, "rationale": f"Factual overlap {ratio:.2f}", "mismatches": []}
@@ -202,7 +225,6 @@ def evaluate_answer_correctness(
 
 def calculate_evidence_faithfulness(
     response_text: str,
-    evidence_refs: List[Dict[str, Any]],
     answerable: bool,
     criteria: Dict[str, Any],
     available_sources: List[str],
@@ -211,33 +233,60 @@ def calculate_evidence_faithfulness(
 ) -> Dict[str, Any]:
     """
     Evaluates evidence faithfulness:
-    - Checks whether claims in response are supported by retrieved/referenced evidence.
-    - Distinguishes missing evidence from false claims.
-    - If available_sources is empty (plain LLM), records 0.0 for answerable questions because claims are ungrounded.
+    - Assesses whether factual claims in the response are grounded in the evidence ACTUALLY retrieved or supplied.
+    - NEVER substitutes expected benchmark evidence for evidence actually retrieved or supplied to the model.
+    - If grounding evidence is unavailable, marks faithfulness as NOT EVALUABLE (score=None) and explains why.
+    - Keeps correctness separate from faithfulness.
+    - Distinguishes missing evidence from contradictions/unfaithful claims.
     """
     if has_error:
-        return {"score": 0.0, "rationale": "Execution error; no response to evaluate faithfulness"}
-
-    if not answerable:
-        # For unanswerable questions, valid refusal is faithful to workspace state
-        lower = response_text.lower()
-        forbidden_values = criteria.get("forbidden_values", [])
-        if any(fv.lower() in lower for fv in forbidden_values):
-            return {"score": 0.0, "rationale": "Fabricated unsupported claims on unanswerable question"}
-        if any(sig in lower for sig in REFUSAL_SIGNALS):
-            return {"score": 1.0, "rationale": "Faithfully acknowledged lack of workspace evidence"}
-        return {"score": 0.0, "rationale": "Did not faithfully refuse unanswerable question"}
-
-    # If configuration has no access to sources (e.g. plain_llm)
-    if not available_sources:
         return {
-            "score": 0.0,
-            "rationale": "No retrieval evidence available in this configuration to ground response"
+            "score": None,
+            "status": "not_evaluable",
+            "rationale": "Execution error; no model response to evaluate faithfulness"
         }
 
-    # Aggregate text of available evidence
+    if not answerable:
+        # For unanswerable questions: if model refused without fabricating forbidden facts, it faithfully reflects lack of workspace evidence
+        lower = response_text.lower()
+        forbidden_values = criteria.get("forbidden_values", [])
+        if any(_contains_fact(fv, lower) for fv in forbidden_values):
+            return {
+                "score": 0.0,
+                "status": "unfaithful",
+                "rationale": "Fabricated unsupported claims on an unanswerable question"
+            }
+        if any(sig in lower for sig in REFUSAL_SIGNALS):
+            return {
+                "score": 1.0,
+                "status": "faithful",
+                "rationale": "Faithfully acknowledged lack of workspace evidence"
+            }
+        return {
+            "score": 0.0,
+            "status": "unfaithful",
+            "rationale": "Did not faithfully refuse unanswerable question"
+        }
+
+    # Configuration has no source access (e.g. plain_llm)
+    if not available_sources:
+        return {
+            "score": None,
+            "status": "not_evaluable",
+            "rationale": "No retrieval or context sources were available to the model in this configuration (faithfulness is not evaluable)"
+        }
+
+    # Model had source access, but no evidence was actually retrieved or supplied
+    if not retrieved_evidence:
+        return {
+            "score": None,
+            "status": "not_evaluable",
+            "rationale": "No evidence was retrieved or supplied by tools for this attempt (faithfulness is not evaluable)"
+        }
+
+    # Aggregate text ONLY from actually retrieved or supplied evidence
     evidence_corpus = []
-    for ev in (retrieved_evidence or evidence_refs):
+    for ev in retrieved_evidence:
         if isinstance(ev, dict):
             text = ev.get("excerpt", "") or ev.get("content", "") or ev.get("snippet", "")
             if text:
@@ -245,46 +294,52 @@ def calculate_evidence_faithfulness(
         elif isinstance(ev, str):
             evidence_corpus.append(ev)
 
-    all_evidence_text = " ".join(evidence_corpus).lower()
-    if not all_evidence_text:
+    actual_evidence_text = " ".join(evidence_corpus).lower()
+    if not actual_evidence_text.strip():
         return {
-            "score": 0.0,
-            "rationale": "No evidence was retrieved by tools for this attempt"
+            "score": None,
+            "status": "not_evaluable",
+            "rationale": "Retrieved evidence contained no textual content"
         }
 
     lower_resp = response_text.lower()
     target_values = criteria.get("target_values", [])
-    resp_targets = [tv for tv in target_values if tv.lower() in lower_resp]
+    forbidden_values = criteria.get("forbidden_values", [])
 
-    # Check if target values in response are grounded in retrieved evidence
+    # Check if response directly contradicts the retrieved evidence with forbidden values
+    detected_forbidden = [fv for fv in forbidden_values if _contains_fact(fv, lower_resp)]
+    if detected_forbidden:
+        return {
+            "score": 0.0,
+            "status": "contradiction",
+            "rationale": f"Response contradicts retrieved evidence with forbidden values: {detected_forbidden}"
+        }
+
+    resp_targets = [tv for tv in target_values if _contains_fact(tv, lower_resp)]
     if resp_targets:
-        grounded = [tv for tv in resp_targets if tv.lower() in all_evidence_text]
+        grounded = [tv for tv in resp_targets if _contains_fact(tv, actual_evidence_text)]
         if len(grounded) == len(resp_targets):
             return {
                 "score": 1.0,
+                "status": "faithful",
                 "rationale": f"All stated factual targets ({grounded}) are grounded in retrieved evidence"
             }
         elif len(grounded) > 0:
             return {
                 "score": 0.5,
-                "rationale": f"Partially grounded: {len(grounded)}/{len(resp_targets)} stated targets found in evidence"
+                "status": "partially_faithful",
+                "rationale": f"Partially grounded: {len(grounded)}/{len(resp_targets)} stated targets found in retrieved evidence"
             }
         else:
             return {
                 "score": 0.0,
-                "rationale": "Stated targets are absent from retrieved evidence"
+                "status": "unsupported",
+                "rationale": f"Stated targets ({resp_targets}) are absent from actually retrieved evidence"
             }
-
-    # Check for contradictions
-    forbidden_values = criteria.get("forbidden_values", [])
-    if any(fv.lower() in lower_resp for fv in forbidden_values):
-        return {
-            "score": 0.0,
-            "rationale": "Response claims contradict retrieved workspace evidence"
-        }
 
     return {
         "score": 0.5,
+        "status": "partially_faithful",
         "rationale": "Response contains general statements without explicit grounded targets"
     }
 
@@ -370,18 +425,19 @@ def score_results(
                 "mismatches": ["execution_error"]
             }
             faithfulness = {
-                "score": 0.0,
-                "rationale": "Execution failed"
+                "score": None,
+                "status": "not_evaluable",
+                "rationale": "Execution error; faithfulness cannot be evaluated"
             }
         elif not answerable:
             correctness = evaluate_unanswerable_refusal(ans, criteria, rubric)
             faithfulness = calculate_evidence_faithfulness(
-                ans, evidence_refs, answerable, criteria, available_sources, retrieved_evidence, has_error
+                ans, answerable, criteria, available_sources, retrieved_evidence, has_error
             )
         else:
             correctness = evaluate_answer_correctness(ans, ref_ans, criteria, rubric, evidence_refs)
             faithfulness = calculate_evidence_faithfulness(
-                ans, evidence_refs, answerable, criteria, available_sources, retrieved_evidence, has_error
+                ans, answerable, criteria, available_sources, retrieved_evidence, has_error
             )
 
         scored_item = dict(r)
@@ -390,6 +446,7 @@ def score_results(
         scored_item["scoring_rationale"] = correctness["rationale"]
         scored_item["mismatches"] = correctness.get("mismatches", [])
         scored_item["score_faithfulness"] = faithfulness["score"]
+        scored_item["faithfulness_status"] = faithfulness.get("status", "evaluable")
         scored_item["faithfulness_rationale"] = faithfulness["rationale"]
 
         scored_records.append(scored_item)
@@ -430,8 +487,8 @@ def score_results(
         mean_corr_all = round(sum(all_correctness) / len(all_correctness), 4) if all_correctness else 0.0
         mean_corr_succ = round(sum(succ_correctness) / len(succ_correctness), 4) if succ_correctness else 0.0
 
-        mean_faith_all = round(sum(all_faithfulness) / len(all_faithfulness), 4) if all_faithfulness else 0.0
-        mean_faith_succ = round(sum(succ_faithfulness) / len(succ_faithfulness), 4) if succ_faithfulness else 0.0
+        mean_faith_all = round(sum(all_faithfulness) / len(all_faithfulness), 4) if all_faithfulness else None
+        mean_faith_succ = round(sum(succ_faithfulness) / len(succ_faithfulness), 4) if succ_faithfulness else None
 
         return {
             "run_id": run_id,
@@ -471,7 +528,8 @@ def score_results(
     print("-" * 105)
     for row in summary_rows:
         lat_str = f"{row['mean_latency_ms']}ms" if row['mean_latency_ms'] is not None else "N/A"
-        print(f"{row['configuration']:15s} | {row['category']:15s} | {row['total_attempted']:8d} | {row['successful_attempts']:4d} | {row['failed_attempts']:4d} | {row['mean_correctness_all']:9.2f} | {row['mean_correctness_successful']:10.2f} | {row['mean_faithfulness_successful']:11.2f} | {lat_str:11s}")
+        faith_str = f"{row['mean_faithfulness_successful']:11.2f}" if row['mean_faithfulness_successful'] is not None else f"{'N/A':>11s}"
+        print(f"{row['configuration']:15s} | {row['category']:15s} | {row['total_attempted']:8d} | {row['successful_attempts']:4d} | {row['failed_attempts']:4d} | {row['mean_correctness_all']:9.2f} | {row['mean_correctness_successful']:10.2f} | {faith_str} | {lat_str:11s}")
 
     # Export to CSV
     csv_file = output_dir / f"summary_{run_id}.csv"

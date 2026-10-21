@@ -58,24 +58,34 @@ def get_llm_metadata(
     configured_model: Optional[str] = None,
     provider: Optional[str] = None
 ) -> dict:
-    """Extract resolved model identifier, configured model, provider, and parameters."""
+    """
+    Extract and distinguish configured, runtime-resolved, and default model metadata.
+    Never fabricates fallback or default values as independently verified runtime metadata.
+    """
     resolved = getattr(llm, "model", None) or getattr(llm, "model_name", None)
     temp = getattr(llm, "temperature", None)
+    is_runtime_verified = resolved is not None
 
     # Detect provider if not explicitly given
-    if not provider:
-        llm_type_name = type(llm).__name__.lower()
-        if "mock" in llm_type_name:
-            provider = "mock"
-        elif "gemini" in llm_type_name or "google" in llm_type_name:
-            provider = "gemini"
-        elif "ollama" in llm_type_name:
-            provider = "ollama"
+    resolved_provider = provider
+    if not resolved_provider:
+        if llm is not None:
+            llm_type_name = type(llm).__name__.lower()
+            if "mock" in llm_type_name:
+                resolved_provider = "mock"
+            elif "gemini" in llm_type_name or "google" in llm_type_name:
+                resolved_provider = "gemini"
+            elif "ollama" in llm_type_name:
+                resolved_provider = "ollama"
+            else:
+                resolved_provider = getattr(llm, "provider", None) or "custom"
         else:
-            provider = "custom"
+            resolved_provider = "unknown"
 
-    # Configured model from parameter, workspace DB, or env
+    # Configured model resolution with source tracking
     configured = configured_model
+    model_source = "explicit_config" if configured else None
+
     if not configured and workspace_id:
         try:
             from app.database import SessionLocal
@@ -87,21 +97,37 @@ def get_llm_metadata(
                 ws = db.query(Workspace).filter(Workspace.id == ws_uuid).first()
                 if ws and ws.ai_model:
                     configured = ws.ai_model
+                    model_source = "workspace_database"
             finally:
                 db.close()
         except Exception:
             pass
 
     if not configured:
-        configured = os.getenv("GEMINI_MODEL") or os.getenv("OLLAMA_MODEL") or str(resolved or "unknown")
+        env_model = os.getenv("GEMINI_MODEL") or os.getenv("OLLAMA_MODEL")
+        if env_model:
+            configured = env_model
+            model_source = "environment_variable"
+        elif is_runtime_verified:
+            configured = str(resolved)
+            model_source = "runtime_instance"
+        else:
+            configured = "unknown"
+            model_source = "unknown"
+
+    # Only report temperature if actually present on the LLM instance; never fabricate 0.3 as verified metadata
+    verified_temp = temp if isinstance(temp, (int, float)) else None
 
     return {
         "resolved_model": str(resolved or "unknown"),
+        "runtime_resolved_model": str(resolved) if resolved is not None else None,
+        "is_runtime_verified": is_runtime_verified,
         "configured_model": str(configured),
-        "provider": provider,
-        "temperature": temp if temp is not None else 0.3,
+        "model_source": model_source,
+        "provider": resolved_provider,
+        "temperature": verified_temp,
         "parameters": {
-            "temperature": temp if temp is not None else 0.3
+            "temperature": verified_temp
         }
     }
 

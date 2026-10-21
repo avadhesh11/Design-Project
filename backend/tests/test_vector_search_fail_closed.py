@@ -120,3 +120,87 @@ def test_vector_search_query_embedding_failure():
     with patch("app.rag.vector_store.get_query_embedding", side_effect=Exception("Embedding API 503")):
         results = search_similar(workspace_id=ws_id, query="failing query")
         assert results == []
+
+
+def test_vector_search_rejects_mismatched_workspace_metadata():
+    """Test that chunks containing a different workspace_id are strictly rejected."""
+    ws_id = str(uuid.uuid4())
+    other_ws_id = str(uuid.uuid4())
+    doc_id = uuid.uuid4()
+
+    fake_raw_chunks = [
+        {
+            "content": "Foreign chunk",
+            "source_id": str(doc_id),
+            "workspace_id": other_ws_id,  # Mismatched!
+            "source_type": "document",
+            "similarity": 0.95
+        }
+    ]
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = fake_raw_chunks
+
+        mock_db = MagicMock()
+        active_doc = MagicMock()
+        active_doc.id = doc_id
+        active_doc.workspace_id = uuid.UUID(ws_id)
+        mock_db.query.return_value.filter.return_value.all.return_value = [active_doc]
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="test query")
+        assert results == [], "Expected chunk with foreign workspace_id to be rejected"
+
+
+def test_vector_search_rejects_missing_or_malformed_source_id():
+    """Test that chunks with missing or non-UUID source_id are rejected."""
+    ws_id = str(uuid.uuid4())
+
+    fake_raw_chunks = [
+        {"content": "Missing source id", "source_id": None, "workspace_id": ws_id, "similarity": 0.9},
+        {"content": "Malformed source id", "source_id": "not-a-valid-uuid", "workspace_id": ws_id, "similarity": 0.9},
+        {"content": "Empty source id", "source_id": "", "workspace_id": ws_id, "similarity": 0.9}
+    ]
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = fake_raw_chunks
+        mock_db = MagicMock()
+        mock_db.query.return_value.filter.return_value.all.return_value = []
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="test query")
+        assert results == [], "Expected all malformed source_id chunks to be rejected"
+
+
+def test_vector_search_ensures_explicit_workspace_id_on_returned_chunks():
+    """Test that every returned chunk has explicit, valid workspace_id matching the requested workspace."""
+    ws_id = str(uuid.uuid4())
+    doc_id = uuid.uuid4()
+
+    fake_raw_chunks = [
+        {"content": "Valid chunk", "source_id": str(doc_id), "source_type": "document", "similarity": 0.92}
+    ]
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = fake_raw_chunks
+        mock_db = MagicMock()
+        active_doc = MagicMock()
+        active_doc.id = doc_id
+        active_doc.workspace_id = uuid.UUID(ws_id)
+        mock_db.query.return_value.filter.return_value.all.return_value = [active_doc]
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="test query")
+        assert len(results) == 1
+        assert results[0]["workspace_id"] == ws_id
+        assert results[0]["source_id"] == str(doc_id)
+

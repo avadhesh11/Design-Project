@@ -51,3 +51,30 @@ def test_sanitize_secret_removes_sensitive_tokens():
     assert "SecretPassword123" not in sanitized
     assert "[REDACTED_TOKEN]" in sanitized
     assert "eyJhbGciOiJIUzI1Ni" not in sanitized
+
+
+def test_get_llm_metadata_missing_attributes_marked_unknown():
+    """
+    CRITICAL ATTRIBUTION TEST:
+    When an LLM instance lacks model or temperature attributes,
+    metadata MUST be recorded as unknown/None, never fabricated as verified runtime metadata.
+    """
+    uninstrumented_llm = object()  # Bare object with no model attributes
+    meta = get_llm_metadata(uninstrumented_llm)
+
+    assert meta["resolved_model"] == "unknown"
+    assert meta["runtime_resolved_model"] is None
+    assert meta["is_runtime_verified"] is False
+    assert meta["temperature"] is None, "Must not fabricate a default temperature as verified runtime metadata"
+    assert meta["parameters"]["temperature"] is None
+
+
+def test_get_llm_metadata_distinguishes_sources():
+    """Verify tracking of model_source across explicit config, DB, or env."""
+    mock_llm = MockEvaluationLLM(model_name="gemini-2.5-flash")
+
+    # Explicit config source
+    meta_explicit = get_llm_metadata(mock_llm, configured_model="gemini-2.5-flash")
+    assert meta_explicit["model_source"] == "explicit_config"
+    assert meta_explicit["is_runtime_verified"] is True
+

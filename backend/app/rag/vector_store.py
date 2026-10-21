@@ -108,16 +108,54 @@ def search_similar(
         finally:
             db.close()
 
-        filtered = [
-            c for c in raw_chunks
-            if (
-                # Must match target workspace
-                (not c.get("workspace_id") or str(c.get("workspace_id")) == ws_str)
-                # Must be an active, non-deleted document in this workspace
-                and (c.get("source_type") != "document" or str(c.get("source_id")) in active_doc_ids)
-                and c.get("similarity", 1.0) >= min_similarity
-            )
-        ]
+        filtered = []
+        for c in raw_chunks:
+            if not isinstance(c, dict):
+                continue
+
+            # 1. Workspace metadata validation: if present, must match requested workspace
+            chunk_ws = c.get("workspace_id")
+            if chunk_ws is not None:
+                try:
+                    if str(uuid.UUID(str(chunk_ws))) != str(uuid.UUID(ws_str)):
+                        logger.warning(f"Security: Rejecting vector chunk from foreign workspace: {chunk_ws}")
+                        continue
+                except (ValueError, TypeError):
+                    if str(chunk_ws).strip() != ws_str:
+                        logger.warning(f"Security: Rejecting vector chunk with malformed/mismatched workspace: {chunk_ws}")
+                        continue
+
+            # 2. Source ID validation: must be present and valid UUID
+            source_id = c.get("source_id")
+            if not source_id:
+                logger.warning("Security: Rejecting vector chunk with missing source_id")
+                continue
+
+            source_id_str = str(source_id).strip()
+            try:
+                source_uuid_str = str(uuid.UUID(source_id_str))
+            except (ValueError, TypeError):
+                logger.warning(f"Security: Rejecting vector chunk with malformed source_id: {source_id}")
+                continue
+
+            # 3. Document authorization & visibility: must exist in active documents for this workspace
+            source_type = c.get("source_type", "document")
+            if source_type == "document":
+                if source_uuid_str not in active_doc_ids:
+                    logger.debug(f"Security: Rejecting chunk for deleted/foreign document: {source_uuid_str}")
+                    continue
+
+            # 4. Similarity threshold check
+            similarity = c.get("similarity", 1.0)
+            if similarity is None or similarity < min_similarity:
+                continue
+
+            # Ensure every returned chunk has valid, explicitly matching workspace metadata
+            chunk_out = dict(c)
+            chunk_out["workspace_id"] = ws_str
+            chunk_out["source_id"] = source_uuid_str
+            filtered.append(chunk_out)
+
         return filtered[:limit]
     except Exception as filter_err:
         logger.error(f"Security: Failed to validate active documents in database; failing closed: {filter_err}")
