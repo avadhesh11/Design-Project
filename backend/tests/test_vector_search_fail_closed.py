@@ -161,9 +161,9 @@ def test_vector_search_rejects_missing_or_malformed_source_id():
     ws_id = str(uuid.uuid4())
 
     fake_raw_chunks = [
-        {"content": "Missing source id", "source_id": None, "workspace_id": ws_id, "similarity": 0.9},
-        {"content": "Malformed source id", "source_id": "not-a-valid-uuid", "workspace_id": ws_id, "similarity": 0.9},
-        {"content": "Empty source id", "source_id": "", "workspace_id": ws_id, "similarity": 0.9}
+        {"content": "Missing source id", "source_id": None, "workspace_id": ws_id, "source_type": "document", "similarity": 0.9},
+        {"content": "Malformed source id", "source_id": "not-a-valid-uuid", "workspace_id": ws_id, "source_type": "document", "similarity": 0.9},
+        {"content": "Empty source id", "source_id": "", "workspace_id": ws_id, "source_type": "document", "similarity": 0.9}
     ]
 
     with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
@@ -177,6 +177,40 @@ def test_vector_search_rejects_missing_or_malformed_source_id():
 
         results = search_similar(workspace_id=ws_id, query="test query")
         assert results == [], "Expected all malformed source_id chunks to be rejected"
+
+
+def test_vector_search_rejects_missing_or_unsupported_source_type():
+    """
+    Test that chunks with missing, empty, or unsupported source_type
+    (e.g. 'task', 'chat', 'unknown') are strictly rejected.
+    Only 'document' source_type is supported by the current vector store schema.
+    """
+    ws_id = str(uuid.uuid4())
+    doc_id = uuid.uuid4()
+
+    fake_raw_chunks = [
+        {"content": "Missing source_type", "source_id": str(doc_id), "workspace_id": ws_id, "similarity": 0.92},
+        {"content": "None source_type", "source_id": str(doc_id), "workspace_id": ws_id, "source_type": None, "similarity": 0.92},
+        {"content": "Empty source_type", "source_id": str(doc_id), "workspace_id": ws_id, "source_type": "", "similarity": 0.92},
+        {"content": "Task source_type", "source_id": str(doc_id), "workspace_id": ws_id, "source_type": "task", "similarity": 0.92},
+        {"content": "Chat source_type", "source_id": str(doc_id), "workspace_id": ws_id, "source_type": "chat", "similarity": 0.92},
+        {"content": "Unknown source_type", "source_id": str(doc_id), "workspace_id": ws_id, "source_type": "unknown", "similarity": 0.92},
+    ]
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = fake_raw_chunks
+        mock_db = MagicMock()
+        active_doc = MagicMock()
+        active_doc.id = doc_id
+        active_doc.workspace_id = uuid.UUID(ws_id)
+        mock_db.query.return_value.filter.return_value.all.return_value = [active_doc]
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="test query")
+        assert results == [], "Expected all chunks with missing or unsupported source_type to be rejected"
 
 
 def test_vector_search_ensures_explicit_workspace_id_on_returned_chunks():
@@ -244,5 +278,6 @@ def test_vector_search_accepts_valid_matching_workspace_metadata():
         assert len(results) == 1
         assert results[0]["workspace_id"] == ws_id
         assert results[0]["source_id"] == str(doc_id)
+        assert results[0]["source_type"] == "document"
         assert results[0]["content"] == "Valid chunk"
 

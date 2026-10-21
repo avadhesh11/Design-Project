@@ -143,19 +143,23 @@ def search_similar(
                 logger.warning(f"Security: Rejecting vector chunk with malformed source_id: {source_id}")
                 continue
 
-            # 3. Document authorization & visibility: must exist in active documents for this workspace
-            source_type = c.get("source_type", "document")
-            if source_type == "document":
-                if source_uuid_str not in active_doc_ids:
-                    logger.debug(f"Security: Rejecting chunk for deleted/foreign document: {source_uuid_str}")
-                    continue
+            # 3. Source type validation: only "document" is supported by current vector store schema
+            source_type = c.get("source_type")
+            if not source_type or str(source_type).strip().lower() != "document":
+                logger.warning(f"Security: Rejecting vector chunk with missing or unsupported source_type: {source_type}")
+                continue
 
-            # 4. Similarity threshold check
+            # 4. Document authorization & visibility: must exist in active documents for this workspace
+            if source_uuid_str not in active_doc_ids:
+                logger.debug(f"Security: Rejecting chunk for deleted/foreign document: {source_uuid_str}")
+                continue
+
+            # 5. Similarity threshold check
             similarity = c.get("similarity", 1.0)
             if similarity is None or similarity < min_similarity:
                 continue
 
-            # Valid chunk with verified workspace_id and document.
+            # Valid chunk with verified workspace_id, source_type, and active document.
             # Never manufacture workspace metadata; preserve original validated chunk data.
             chunk_out = dict(c)
             chunk_out["source_id"] = source_uuid_str
