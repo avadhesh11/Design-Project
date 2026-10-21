@@ -98,8 +98,10 @@ def search_similar(
     try:
         try:
             ws_uuid = uuid.UUID(ws_str)
+            ws_canonical_str = str(ws_uuid)
         except (ValueError, TypeError, AttributeError):
             ws_uuid = ws_str
+            ws_canonical_str = ws_str
 
         db = SessionLocal()
         try:
@@ -113,17 +115,20 @@ def search_similar(
             if not isinstance(c, dict):
                 continue
 
-            # 1. Workspace metadata validation: if present, must match requested workspace
+            # 1. Workspace metadata validation: must be present, non-empty, valid UUID, and explicitly match requested workspace
             chunk_ws = c.get("workspace_id")
-            if chunk_ws is not None:
-                try:
-                    if str(uuid.UUID(str(chunk_ws))) != str(uuid.UUID(ws_str)):
-                        logger.warning(f"Security: Rejecting vector chunk from foreign workspace: {chunk_ws}")
-                        continue
-                except (ValueError, TypeError):
-                    if str(chunk_ws).strip() != ws_str:
-                        logger.warning(f"Security: Rejecting vector chunk with malformed/mismatched workspace: {chunk_ws}")
-                        continue
+            if not chunk_ws:
+                logger.warning("Security: Rejecting vector chunk with missing or empty workspace_id")
+                continue
+
+            try:
+                chunk_ws_str = str(uuid.UUID(str(chunk_ws).strip()))
+                if chunk_ws_str != ws_canonical_str:
+                    logger.warning(f"Security: Rejecting vector chunk from foreign workspace: {chunk_ws}")
+                    continue
+            except (ValueError, TypeError):
+                logger.warning(f"Security: Rejecting vector chunk with malformed workspace_id: {chunk_ws}")
+                continue
 
             # 2. Source ID validation: must be present and valid UUID
             source_id = c.get("source_id")
@@ -150,9 +155,9 @@ def search_similar(
             if similarity is None or similarity < min_similarity:
                 continue
 
-            # Ensure every returned chunk has valid, explicitly matching workspace metadata
+            # Valid chunk with verified workspace_id and document.
+            # Never manufacture workspace metadata; preserve original validated chunk data.
             chunk_out = dict(c)
-            chunk_out["workspace_id"] = ws_str
             chunk_out["source_id"] = source_uuid_str
             filtered.append(chunk_out)
 

@@ -17,6 +17,7 @@ def test_vector_search_fail_closed_on_db_error():
         {
             "content": "Secret unverified document chunk",
             "source_id": str(uuid.uuid4()),
+            "workspace_id": ws_id,
             "source_type": "document",
             "similarity": 0.88
         }
@@ -49,8 +50,8 @@ def test_vector_search_excludes_deleted_documents():
     doc_deleted_id = uuid.uuid4()
 
     fake_raw_chunks = [
-        {"content": "Active doc chunk", "source_id": str(doc_active_id), "source_type": "document", "similarity": 0.9},
-        {"content": "Deleted doc chunk", "source_id": str(doc_deleted_id), "source_type": "document", "similarity": 0.85}
+        {"content": "Active doc chunk", "source_id": str(doc_active_id), "workspace_id": ws_id, "source_type": "document", "similarity": 0.9},
+        {"content": "Deleted doc chunk", "source_id": str(doc_deleted_id), "workspace_id": ws_id, "source_type": "document", "similarity": 0.85}
     ]
 
     with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
@@ -83,7 +84,7 @@ def test_vector_search_excludes_documents_from_other_workspace():
     doc_other_id = uuid.uuid4()
 
     fake_raw_chunks = [
-        {"content": "Other workspace chunk", "source_id": str(doc_other_id), "source_type": "document", "similarity": 0.95}
+        {"content": "Other workspace chunk", "source_id": str(doc_other_id), "workspace_id": ws_target_id, "source_type": "document", "similarity": 0.95}
     ]
 
     with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
@@ -179,12 +180,52 @@ def test_vector_search_rejects_missing_or_malformed_source_id():
 
 
 def test_vector_search_ensures_explicit_workspace_id_on_returned_chunks():
-    """Test that every returned chunk has explicit, valid workspace_id matching the requested workspace."""
+    """
+    Test that a chunk missing workspace metadata (or having empty/malformed workspace_id)
+    is strictly rejected and NEVER stamped with manufactured workspace metadata.
+    """
     ws_id = str(uuid.uuid4())
     doc_id = uuid.uuid4()
 
     fake_raw_chunks = [
-        {"content": "Valid chunk", "source_id": str(doc_id), "source_type": "document", "similarity": 0.92}
+        {"content": "Missing ws_id", "source_id": str(doc_id), "source_type": "document", "similarity": 0.92},
+        {"content": "None ws_id", "source_id": str(doc_id), "workspace_id": None, "source_type": "document", "similarity": 0.92},
+        {"content": "Empty ws_id", "source_id": str(doc_id), "workspace_id": "", "source_type": "document", "similarity": 0.92},
+        {"content": "Malformed ws_id", "source_id": str(doc_id), "workspace_id": "not-a-uuid", "source_type": "document", "similarity": 0.92},
+    ]
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = fake_raw_chunks
+        mock_db = MagicMock()
+        active_doc = MagicMock()
+        active_doc.id = doc_id
+        active_doc.workspace_id = uuid.UUID(ws_id)
+        mock_db.query.return_value.filter.return_value.all.return_value = [active_doc]
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="test query")
+        assert results == [], "Expected all chunks with missing, empty, or malformed workspace_id to be rejected"
+
+
+def test_vector_search_accepts_valid_matching_workspace_metadata():
+    """
+    Positive test proving that a chunk with valid, matching workspace metadata
+    can still be returned after document validation.
+    """
+    ws_id = str(uuid.uuid4())
+    doc_id = uuid.uuid4()
+
+    fake_raw_chunks = [
+        {
+            "content": "Valid chunk",
+            "source_id": str(doc_id),
+            "workspace_id": ws_id,
+            "source_type": "document",
+            "similarity": 0.92
+        }
     ]
 
     with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
@@ -203,4 +244,5 @@ def test_vector_search_ensures_explicit_workspace_id_on_returned_chunks():
         assert len(results) == 1
         assert results[0]["workspace_id"] == ws_id
         assert results[0]["source_id"] == str(doc_id)
+        assert results[0]["content"] == "Valid chunk"
 
