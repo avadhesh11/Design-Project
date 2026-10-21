@@ -35,7 +35,7 @@ class Workspace(Base):
     
     # AI Provider & Model Config (Gemini vs Local Ollama/Llama)
     ai_provider = Column(String, default="gemini", nullable=False)
-    ai_model = Column(String, default="gemini-2.5-flash", nullable=False)
+    ai_model = Column(String, default="gemini-3.5-flash-lite", nullable=False)
     ai_ollama_url = Column(String, default="http://localhost:11434", nullable=False)
     
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))

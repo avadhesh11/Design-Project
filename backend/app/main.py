@@ -12,22 +12,14 @@ logger = logging.getLogger(__name__)
 
 from sqlalchemy import text
 
-# Create tables & ensure new columns exist
+from .migrations import apply_migrations
+
+# Create tables & ensure new columns and RPC functions exist
 try:
     Base.metadata.create_all(bind=engine)
-    with engine.begin() as conn:
-        for col_sql in [
-            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_provider VARCHAR DEFAULT 'gemini'",
-            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_model VARCHAR DEFAULT 'gemini-2.5-flash'",
-            "ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS ai_ollama_url VARCHAR DEFAULT 'http://localhost:11434'",
-            "ALTER TABLE users ALTER COLUMN password DROP NOT NULL",
-        ]:
-            try:
-                conn.execute(text(col_sql))
-            except Exception as migrate_err:
-                logger.debug(f"Migration notice: {migrate_err}")
+    apply_migrations(engine)
 except Exception as e:
-    logger.warning(f"Could not initialize or migrate tables: {e}")
+    logger.warning(f"Could not initialize or migrate database: {e}")
 
 app = FastAPI(title="Orbit AI API")
 

@@ -281,3 +281,47 @@ def test_vector_search_accepts_valid_matching_workspace_metadata():
         assert results[0]["source_type"] == "document"
         assert results[0]["content"] == "Valid chunk"
 
+
+def test_vector_search_actual_rpc_contract_includes_workspace_id():
+    """
+    REGRESSION TEST:
+    Verifies that chunks matching the actual PostgreSQL match_embeddings RPC contract
+    (including 'id', 'workspace_id', 'content', 'source_type', 'source_id', 'similarity')
+    are accepted and validated without missing-workspace_id rejections.
+    """
+    ws_id = str(uuid.uuid4())
+    doc_id = uuid.uuid4()
+    chunk_id = str(uuid.uuid4())
+
+    # Actual contract returned by match_embeddings RPC:
+    # TABLE (id uuid, workspace_id uuid, content text, source_type text, source_id uuid, similarity double precision)
+    rpc_chunk = {
+        "id": chunk_id,
+        "workspace_id": ws_id,
+        "content": "Orbit Workspace Security Policy: Session timeout is 15 minutes.",
+        "source_type": "document",
+        "source_id": str(doc_id),
+        "similarity": 0.85
+    }
+
+    with patch("app.rag.vector_store.get_query_embedding", return_value=[0.1] * 768), \
+         patch("app.rag.vector_store.supabase") as mock_sb, \
+         patch("app.rag.vector_store.SessionLocal") as mock_session:
+
+        mock_sb.rpc.return_value.execute.return_value.data = [rpc_chunk]
+        mock_db = MagicMock()
+        active_doc = MagicMock()
+        active_doc.id = doc_id
+        active_doc.workspace_id = uuid.UUID(ws_id)
+        mock_db.query.return_value.filter.return_value.all.return_value = [active_doc]
+        mock_session.return_value = mock_db
+
+        results = search_similar(workspace_id=ws_id, query="What is the session timeout?")
+        assert len(results) == 1
+        assert results[0]["id"] == chunk_id
+        assert results[0]["workspace_id"] == ws_id
+        assert results[0]["source_id"] == str(doc_id)
+        assert results[0]["source_type"] == "document"
+        assert "Session timeout is 15 minutes" in results[0]["content"]
+
+

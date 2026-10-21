@@ -367,7 +367,7 @@ def get_workspace_settings(
         settings_allow_file_uploads=ws.settings_allow_file_uploads,
         settings_restrict_invites=ws.settings_restrict_invites,
         ai_provider=getattr(ws, "ai_provider", "gemini") or "gemini",
-        ai_model=getattr(ws, "ai_model", "gemini-2.5-flash") or "gemini-2.5-flash",
+        ai_model=getattr(ws, "ai_model", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite",
         ai_ollama_url=getattr(ws, "ai_ollama_url", "http://localhost:11434") or "http://localhost:11434",
         ai_today_usage=used_today,
         ai_daily_limit=ws.settings_ai_daily_limit
@@ -420,7 +420,7 @@ def update_workspace_settings(
         settings_allow_file_uploads=ws.settings_allow_file_uploads,
         settings_restrict_invites=ws.settings_restrict_invites,
         ai_provider=getattr(ws, "ai_provider", "gemini") or "gemini",
-        ai_model=getattr(ws, "ai_model", "gemini-2.5-flash") or "gemini-2.5-flash",
+        ai_model=getattr(ws, "ai_model", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite",
         ai_ollama_url=getattr(ws, "ai_ollama_url", "http://localhost:11434") or "http://localhost:11434",
         ai_today_usage=used_today,
         ai_daily_limit=ws.settings_ai_daily_limit

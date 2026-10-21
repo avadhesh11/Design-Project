@@ -1,7 +1,7 @@
 from langchain.tools import tool
 from app.rag.vector_store import search_similar
 from app.database import SessionLocal
-from app.models import Task, WorkspaceMember, Document, User, RoleEnum,Workspace
+from app.models import Task, TaskStatus, WorkspaceMember, Document, User, RoleEnum, Workspace
 from app.utils.supabase_client import supabase
 import smtplib
 from email.mime.text import MIMEText
@@ -14,6 +14,24 @@ import html
 import logging
 
 logger = logging.getLogger(__name__)
+
+TASK_STATUS_SYNONYMS = {
+    "todo": TaskStatus.todo,
+    "to_do": TaskStatus.todo,
+    "to-do": TaskStatus.todo,
+    "pending": TaskStatus.todo,
+    "open": TaskStatus.todo,
+    "in_progress": TaskStatus.in_progress,
+    "in-progress": TaskStatus.in_progress,
+    "inprogress": TaskStatus.in_progress,
+    "in progress": TaskStatus.in_progress,
+    "doing": TaskStatus.in_progress,
+    "done": TaskStatus.done,
+    "completed": TaskStatus.done,
+    "complete": TaskStatus.done,
+    "finished": TaskStatus.done,
+    "closed": TaskStatus.done,
+}
 
 
 def _to_uuid(val):
@@ -66,7 +84,12 @@ Use this whenever the user asks:
             return "No tasks found."
         query = db.query(Task).filter(Task.workspace_id == ws_uuid)
         if status:
-            query = query.filter(Task.status == status)
+            clean_status = str(status).strip().lower()
+            target_status = TASK_STATUS_SYNONYMS.get(clean_status)
+            if target_status is not None:
+                query = query.filter(Task.status == target_status)
+            else:
+                return "No tasks found."
         tasks = query.all()
         if not tasks:
             return "No tasks found."
@@ -217,7 +240,12 @@ def update_task(
         if not task:
             return "Task not found in the authorized workspace."
         if status:
-            task.status = status
+            clean_status = str(status).strip().lower()
+            target_status = TASK_STATUS_SYNONYMS.get(clean_status)
+            if target_status is not None:
+                task.status = target_status
+            else:
+                return f"Invalid task status: '{status}'. Allowed statuses are: todo, in_progress, done."
         if priority:
             task.priority = priority
         if title:

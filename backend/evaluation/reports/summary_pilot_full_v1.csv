@@ -1,0 +1,13 @@
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+pilot_full_v1,2.0-deterministic-factual,plain_llm,ALL,20,20,0,1.0,0.0,0.2,0.2,0,1.0,1.0,3981.78,3200.61,1839.16,,96.7
+pilot_full_v1,2.0-deterministic-factual,rag_docs_only,ALL,20,20,0,1.0,0.0,0.325,0.325,5,0.55,0.55,13575.8,13543.83,6470.25,,1156.35
+pilot_full_v1,2.0-deterministic-factual,full_agent,ALL,20,17,3,0.85,0.15,0.625,0.7353,3,0.5,0.5,11359.45,8225.97,9100.65,8595.53,1213.47
+pilot_full_v1,2.0-deterministic-factual,plain_llm,single_source,8,8,0,1.0,0.0,0.0,0.0,0,,,3168.67,3016.11,534.71,,92.38
+pilot_full_v1,2.0-deterministic-factual,rag_docs_only,single_source,8,8,0,1.0,0.0,0.375,0.375,0,0.6875,0.6875,10361.85,10187.43,3918.48,,1031.0
+pilot_full_v1,2.0-deterministic-factual,full_agent,single_source,8,7,1,0.875,0.125,0.8125,0.9286,1,0.5714,0.5714,6843.79,6270.45,1198.92,7359.01,1010.0
+pilot_full_v1,2.0-deterministic-factual,plain_llm,multi_source,8,8,0,1.0,0.0,0.0,0.0,0,,,3965.18,3258.87,1519.14,,106.25
+pilot_full_v1,2.0-deterministic-factual,rag_docs_only,multi_source,8,8,0,1.0,0.0,0.3125,0.3125,5,0.5625,0.5625,14742.92,15368.85,4853.54,,1343.38
+pilot_full_v1,2.0-deterministic-factual,full_agent,multi_source,8,6,2,0.75,0.25,0.625,0.8333,2,0.5833,0.5833,9957.74,8447.22,2891.75,9213.78,1436.0
+pilot_full_v1,2.0-deterministic-factual,plain_llm,unanswerable,4,4,0,1.0,0.0,1.0,1.0,0,1.0,1.0,5641.19,5002.72,3152.01,,86.25
+pilot_full_v1,2.0-deterministic-factual,rag_docs_only,unanswerable,4,4,0,1.0,0.0,0.25,0.25,0,0.25,0.25,17669.45,15668.41,10992.05,,1033.0
+pilot_full_v1,2.0-deterministic-factual,full_agent,unanswerable,4,4,0,1.0,0.0,0.25,0.25,0,0.25,0.25,21364.4,17121.68,15489.67,,1235.75

@@ -6,22 +6,22 @@ from evaluation.run_evaluation import sanitize_secret, MockEvaluationLLM
 def test_get_llm_metadata_from_mock():
     """Verify metadata extraction from MockEvaluationLLM."""
     mock_llm = MockEvaluationLLM(model_name="test-mock-3.5")
-    meta = get_llm_metadata(mock_llm, configured_model="gemini-2.5-flash", provider="gemini")
+    meta = get_llm_metadata(mock_llm, configured_model="gemini-3.5-flash-lite", provider="gemini")
 
     assert meta["resolved_model"] == "test-mock-3.5"
-    assert meta["configured_model"] == "gemini-2.5-flash"
+    assert meta["configured_model"] == "gemini-3.5-flash-lite"
     assert meta["provider"] == "gemini"
 
 
 def test_get_llm_metadata_from_langchain_object():
     """Verify metadata extraction from a LangChain chat model instance."""
     fake_llm = MagicMock()
-    fake_llm.model = "gemini-2.5-flash"
+    fake_llm.model = "gemini-3.5-flash-lite"
     fake_llm.temperature = 0.2
 
-    meta = get_llm_metadata(fake_llm, configured_model="gemini-2.5-flash", provider="gemini")
-    assert meta["resolved_model"] == "gemini-2.5-flash"
-    assert meta["configured_model"] == "gemini-2.5-flash"
+    meta = get_llm_metadata(fake_llm, configured_model="gemini-3.5-flash-lite", provider="gemini")
+    assert meta["resolved_model"] == "gemini-3.5-flash-lite"
+    assert meta["configured_model"] == "gemini-3.5-flash-lite"
     assert meta["parameters"]["temperature"] == 0.2
 
 
@@ -34,8 +34,8 @@ def test_get_llm_metadata_preserves_discrepancy():
     fake_llm.model = "gemini-2.5-pro"  # Different from configured!
     fake_llm.temperature = 0.0
 
-    meta = get_llm_metadata(fake_llm, configured_model="gemini-2.5-flash", provider="gemini")
-    assert meta["configured_model"] == "gemini-2.5-flash"
+    meta = get_llm_metadata(fake_llm, configured_model="gemini-3.5-flash-lite", provider="gemini")
+    assert meta["configured_model"] == "gemini-3.5-flash-lite"
     assert meta["resolved_model"] == "gemini-2.5-pro"
     assert meta["configured_model"] != meta["resolved_model"]
 
@@ -71,10 +71,10 @@ def test_get_llm_metadata_missing_attributes_marked_unknown():
 
 def test_get_llm_metadata_distinguishes_sources():
     """Verify tracking of model_source across explicit config, DB, or env."""
-    mock_llm = MockEvaluationLLM(model_name="gemini-2.5-flash")
+    mock_llm = MockEvaluationLLM(model_name="gemini-3.5-flash-lite")
 
     # Explicit config source
-    meta_explicit = get_llm_metadata(mock_llm, configured_model="gemini-2.5-flash")
+    meta_explicit = get_llm_metadata(mock_llm, configured_model="gemini-3.5-flash-lite")
     assert meta_explicit["model_source"] == "explicit_config"
     assert meta_explicit["is_runtime_verified"] is True
 

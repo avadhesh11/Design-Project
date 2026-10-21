@@ -1,0 +1,380 @@
+{
+  "run_id": "pilot_live_v2",
+  "rubric_version": "2.0-deterministic-factual",
+  "summary": [
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "plain_llm",
+      "category": "ALL",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": null,
+      "mean_faithfulness_successful": null,
+      "mean_latency_ms": 5243.92,
+      "median_latency_ms": 5243.92,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 80.0
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "rag_docs_only",
+      "category": "ALL",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 6971.99,
+      "median_latency_ms": 6971.99,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 694.0
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "full_agent",
+      "category": "ALL",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 6869.62,
+      "median_latency_ms": 6869.62,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 807.0
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "plain_llm",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": null,
+      "mean_faithfulness_successful": null,
+      "mean_latency_ms": 5243.92,
+      "median_latency_ms": 5243.92,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 80.0
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "rag_docs_only",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 6971.99,
+      "median_latency_ms": 6971.99,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 694.0
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "rubric_version": "2.0-deterministic-factual",
+      "configuration": "full_agent",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 0.0,
+      "mean_faithfulness_successful": 0.0,
+      "mean_latency_ms": 6869.62,
+      "median_latency_ms": 6869.62,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 807.0
+    }
+  ],
+  "scored_records": [
+    {
+      "run_id": "pilot_live_v2",
+      "timestamp": "2026-10-21T17:20:14.291822+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {},
+      "provider": "gemini",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "I do not have enough information to answer this question, as I do not have access to your workspace security policy.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 5243.92,
+      "token_usage": {
+        "input_tokens": 57,
+        "output_tokens": 23,
+        "total_tokens": 80,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": null,
+      "faithfulness_status": "not_evaluable",
+      "faithfulness_rationale": "No retrieval or context sources were available to the model in this configuration (faithfulness is not evaluable)"
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "timestamp": "2026-10-21T17:20:22.651432+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {},
+      "provider": "gemini",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "According to the Orbit Workspace Security & Compliance Policy, the required session timeout length is enforced at exactly 15 minutes of inactivity.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Workspace Security & Compliance Policy:\n- Session timeout is enforced at exactly 15 minutes of inactivity.\n- Two-factor authentication (2FA) is mandatory for all members with administrative roles.\n- Passwords must contain a minimum of 12 characters including uppercase, lowercase, numbers, and symbols.\n- Cross-origin resource sharing (CORS) strictly prohibits wildcard origins in production environments.",
+          "similarity": 0.78215362972479
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.617598983287662
+        }
+      ],
+      "latency_ms": 6971.99,
+      "token_usage": {
+        "input_tokens": 668,
+        "output_tokens": 26,
+        "total_tokens": 694,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_status": "contradiction",
+      "faithfulness_rationale": "Response contradicts retrieved evidence with forbidden values: ['5 minutes']"
+    },
+    {
+      "run_id": "pilot_live_v2",
+      "timestamp": "2026-10-21T17:20:30.873474+00:00",
+      "question_id": "Q01",
+      "question": "According to the workspace security policy, what is the required session timeout length?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The session timeout is enforced at exactly 15 minutes of inactivity.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Workspace Security Policy",
+          "excerpt": "Session timeout is enforced at exactly 15 minutes of inactivity."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "15 minutes",
+          "15 min",
+          "fifteen minutes"
+        ],
+        "required_concepts": [
+          "session",
+          "timeout",
+          "inactivity"
+        ],
+        "forbidden_values": [
+          "30 minutes",
+          "1 hour",
+          "5 minutes",
+          "20 minutes",
+          "10 minutes",
+          "60 minutes"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "1.0 if states 15 minutes of inactivity without contradictory durations; 0.5 if mentions 15 minutes without specifying inactivity; 0.0 otherwise."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {},
+      "provider": "gemini",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "According to the Orbit Workspace Security & Compliance Policy, the session timeout is enforced at exactly 15 minutes of inactivity.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Workspace Security & Compliance Policy:\n- Session timeout is enforced at exactly 15 minutes of inactivity.\n- Two-factor authentication (2FA) is mandatory for all members with administrative roles.\n- Passwords must contain a minimum of 12 characters including uppercase, lowercase, numbers, and symbols.\n- Cross-origin resource sharing (CORS) strictly prohibits wildcard origins in production environments.",
+          "similarity": 0.78215362972479
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Backend Architecture Specification:\n- The backend API runs on port 8000 using FastAPI.\n- The frontend web client runs on port 3000 using Next.js.\n- Redis caching is deployed on port 6379 for real-time pub/sub and distributed rate limiting.\n- Distributed rate limiting is enforced at 50 requests per minute per IP address.\n- The database connection pool maintains 30 persistent connections with an overflow limit of 20 connections.\n- SSL/TLS encryption is strictly enforced for all public HTTP and WebSocket traffic.",
+          "similarity": 0.617598983287662
+        }
+      ],
+      "latency_ms": 6869.62,
+      "token_usage": {
+        "input_tokens": 783,
+        "output_tokens": 24,
+        "total_tokens": 807,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.0-deterministic-factual",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial match with contradiction: matched 2/3 targets but contained contradiction (['5 minutes'])",
+      "mismatches": [
+        "contradiction: 5 minutes",
+        "missing_target: fifteen minutes"
+      ],
+      "score_faithfulness": 0.0,
+      "faithfulness_status": "contradiction",
+      "faithfulness_rationale": "Response contradicts retrieved evidence with forbidden values: ['5 minutes']"
+    }
+  ]
+}

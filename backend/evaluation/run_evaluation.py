@@ -151,7 +151,7 @@ async def run_evaluation(
     target_email = user_email or "eval-dev1@synthetic.orbit.local"
 
     llm_instance = MockEvaluationLLM() if mock_mode else None
-    model_name = "mock-eval-model" if mock_mode else os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model_name = "mock-eval-model" if mock_mode else os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
     print(f"\n=======================================================")
     print(f" ORBIT RESEARCH EVALUATION RUNNER")

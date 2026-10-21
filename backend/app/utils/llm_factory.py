@@ -104,7 +104,7 @@ def get_chat_llm(
         # Default: Google Gemini Cloud
         model = getattr(ws, "ai_model", None)
         if not model or "gemini" not in model:
-            model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+            model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
         api_key = os.getenv("GEMINI_API_KEY")
         print(f"\n[AI ENGINE] ==> Active Provider: GOOGLE GEMINI (Cloud) | Model: '{model}'\n", flush=True)

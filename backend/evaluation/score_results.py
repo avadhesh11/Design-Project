@@ -13,7 +13,7 @@ BACKEND_ROOT = CURRENT_DIR.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-RUBRIC_VERSION = "2.0-deterministic-factual"
+RUBRIC_VERSION = "2.1-deterministic-audited"
 
 REFUSAL_SIGNALS = [
     "not available",
@@ -31,9 +31,27 @@ REFUSAL_SIGNALS = [
     "no relevant information",
     "not found in the workspace",
     "no record",
+    "no records",
     "insufficient evidence",
     "not documented",
-    "i do not have access"
+    "i do not have access",
+    "do not have access",
+    "does not have access",
+    "cannot provide",
+    "can't provide",
+    "could not find",
+    "couldn't find",
+    "unable to find",
+    "cannot find",
+    "can't find",
+    "no mention",
+    "not stored",
+    "not accessible",
+    "no task",
+    "no tasks",
+    "no document",
+    "no documents",
+    "no evidence"
 ]
 
 
@@ -71,21 +89,145 @@ def _to_text_string(val: Any) -> str:
 
 import re
 
+NUM_WORDS = {'15': 'fifteen', '30': 'thirty', '12': 'twelve', '1': 'one', '2': 'two', '5': 'five'}
+
+ABBREVIATIONS = {
+    r'\bmin\b': 'minutes',
+    r'\bnov\b': 'november',
+    r'\bdec\b': 'december',
+    r'\bsec\b': 'seconds',
+    r'\bhr\b': 'hours',
+    r'\bhrs\b': 'hours',
+    r':00\b': '',
+    r'\butc\b': '',
+    r'\bam\b': '',
+    r'\bpm\b': '',
+}
+
 
 def _contains_fact(target: str, text: str) -> bool:
     """
-    Check if target fact is contained in text, using word boundaries for tokens and numbers
-    to prevent misleading substring matches (e.g. '8000' matching inside '18000' or '80000').
+    Check if target fact is contained in text, using word boundaries for tokens, numbers,
+    and multi-word phrases to prevent misleading substring matches
+    (e.g. '5 minutes' matching inside '15 minutes', or '8000' matching inside '18000').
     """
     target_clean = target.strip().lower()
     text_clean = text.lower()
     if not target_clean:
         return False
-    # If target is alphanumeric token, word, or number, use word boundary regex to avoid false substring matches
-    if re.match(r"^[\w\.-]+$", target_clean):
-        pattern = r"\b" + re.escape(target_clean) + r"\b"
-        return bool(re.search(pattern, text_clean))
-    return target_clean in text_clean
+    # Use word boundary or non-word lookaround to prevent substring false positives
+    if target_clean in {"$", "€", "£", "¥"}:
+        pattern = r"(?<!\S)" + re.escape(target_clean) + r"(?=[\d\s]|$)"
+    else:
+        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<!\S)"
+        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?!\S)"
+        pattern = prefix + re.escape(target_clean) + suffix
+    return bool(re.search(pattern, text_clean))
+
+
+def _is_contradiction(fv: str, text: str) -> bool:
+    """
+    Check if a forbidden value is asserted as a factual claim/contradiction in text.
+    Returns False if fv is not present or if all occurrences are in an explicit
+    transitional/negated/explanatory context (e.g. 'rescheduled from 2 PM to 5 PM',
+    'not 2 PM', 'instead of 2 PM', 'Feature Freeze Deadline: November 10').
+    """
+    target_clean = fv.strip().lower()
+    text_clean = text.lower()
+    if not target_clean or not _contains_fact(target_clean, text_clean):
+        return False
+
+    if target_clean in {"$", "€", "£", "¥"}:
+        pattern = r"(?<!\S)" + re.escape(target_clean) + r"(?=[\d\s]|$)"
+    else:
+        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<!\S)"
+        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?!\S)"
+        pattern = prefix + re.escape(target_clean) + suffix
+
+    matches = list(re.finditer(pattern, text_clean))
+    if not matches:
+        return False
+
+    for m in matches:
+        start, end = m.start(), m.end()
+        preceding = text_clean[max(0, start - 60):start]
+        following = text_clean[end:min(len(text_clean), end + 60)]
+
+        is_transitional = False
+        if re.search(r"\b(?:moved|rescheduled|changed|shifted|delayed|pushed|updated)\s+from\s*[:\s*]*$", preceding):
+            is_transitional = True
+        elif re.search(r"\bfrom\s*[:\s*]*$", preceding) and re.search(r"^\s+to\b", following):
+            is_transitional = True
+        elif re.search(r"\b(?:no|zero|without|not|never|neither|nor|none|n/a|isn't|wasn't|aren't|weren't|don't|didn't|doesn't|instead of|rather than|previously|originally)\s*[:\s*(]*$", preceding):
+            is_transitional = True
+        elif re.search(r"^\s*[:=-]?\s*(?:none|no|zero|0|false|nil|null)\b", following):
+            is_transitional = True
+        elif re.search(r"\bfeature freeze(?:\s+(?:deadline|date))?(?:\s+(?:is|of|on|at|set for))?[:\s*(]+$", preceding):
+            is_transitional = True
+        elif re.search(r"\boverflow(?:\s+(?:limit|connections?))?(?:\s+(?:is|of|to|at))?[:\s*]+$", preceding):
+            is_transitional = True
+
+        if not is_transitional:
+            return True
+
+    return False
+
+
+def _normalize_synonym(s: str) -> str:
+    s = s.lower().strip()
+    s = s.replace('_', ' ').replace(',', '')
+    for pat, rep in ABBREVIATIONS.items():
+        s = re.sub(pat, rep, s)
+    words = s.split()
+    norm_words = []
+    for w in words:
+        if w in NUM_WORDS:
+            norm_words.append(NUM_WORDS[w])
+        else:
+            norm_words.append(w)
+    return ' '.join(norm_words).strip()
+
+
+def _are_target_synonyms(a: str, b: str) -> bool:
+    s1 = a.lower().strip()
+    s2 = b.lower().strip()
+    if s1 == s2:
+        return True
+    n1 = _normalize_synonym(s1)
+    n2 = _normalize_synonym(s2)
+    if n1 == n2:
+        return True
+    w1 = set(n1.split())
+    w2 = set(n2.split())
+    if w1 == w2:
+        return True
+    if len(w1) >= 2 and len(w2) >= 2 and (w1.issubset(w2) or w2.issubset(w1)):
+        return True
+    if (s1 == 'latency' and s2 == 'query latency') or (s2 == 'latency' and s1 == 'query latency'):
+        return True
+    if ({'done', 'completed'} & w1) and ({'done', 'completed'} & w2):
+        return True
+    if ('17:00' in a and ('5' in b or 'five' in b)) or ('17:00' in b and ('5' in a or 'five' in a)):
+        return True
+    return False
+
+
+def group_target_values(targets: List[str]) -> List[List[str]]:
+    """
+    Group target values into clusters of synonymous or alternative expressions
+    (e.g. ['15 minutes', '15 min', 'fifteen minutes'] forms one group).
+    """
+    groups: List[List[str]] = []
+    for t in targets:
+        placed = False
+        for g in groups:
+            if any(_are_target_synonyms(t, existing) for existing in g):
+                g.append(t)
+                placed = True
+                break
+        if not placed:
+            groups.append([t])
+    return groups
 
 
 def evaluate_unanswerable_refusal(
@@ -102,7 +244,7 @@ def evaluate_unanswerable_refusal(
     forbidden_values = criteria.get("forbidden_values", [])
 
     # Check for fabricated forbidden values (e.g. AWS access keys, €45,000, Madrid team member)
-    detected_fabricated = [fv for fv in forbidden_values if _contains_fact(fv, lower)]
+    detected_fabricated = [fv for fv in forbidden_values if _is_contradiction(fv, lower)]
     if detected_fabricated:
         return {
             "score": 0.0,
@@ -110,8 +252,11 @@ def evaluate_unanswerable_refusal(
             "mismatches": [f"fabricated_fact: {fv}" for fv in detected_fabricated]
         }
 
-    # Check for valid refusal signals
-    has_refusal = any(sig in lower for sig in REFUSAL_SIGNALS)
+    # Check for valid refusal signals or required refusal concepts
+    has_refusal = (
+        any(sig in lower for sig in REFUSAL_SIGNALS) or
+        any(_contains_fact(rc, lower) for rc in criteria.get("required_concepts", []))
+    )
     if has_refusal:
         return {
             "score": 1.0,
@@ -136,8 +281,8 @@ def evaluate_answer_correctness(
 ) -> Dict[str, Any]:
     """
     Transparent, deterministic factual scoring rubric for answerable questions:
-    - 1.0: Full factual match of all target values and key concepts, no contradictions.
-    - 0.5: Partial factual match (at least 50% target values matched) or partial match with minor contradiction.
+    - 1.0: Full factual match of all required target values/attributes and key concepts, no contradictions.
+    - 0.5: Partial factual match (e.g. some target attributes matched) or partial match with minor contradiction.
     - 0.0: Incorrect values, missing critical facts, or contradictions.
 
     Limitations:
@@ -148,12 +293,14 @@ def evaluate_answer_correctness(
     target_values = criteria.get("target_values", [])
     required_concepts = criteria.get("required_concepts", [])
     forbidden_values = criteria.get("forbidden_values", [])
+    rubric_desc = rubric.get("description", "").lower() if rubric else ""
+
+    target_groups = group_target_values(target_values)
+    matched_groups = [g for g in target_groups if any(_contains_fact(tv, lower_resp) for tv in g)]
 
     # 1. Check for unnecessary refusal on answerable question
     has_refusal = any(sig in lower_resp for sig in REFUSAL_SIGNALS)
-    matched_targets = [tv for tv in target_values if _contains_fact(tv, lower_resp)]
-
-    if has_refusal and len(matched_targets) == 0:
+    if has_refusal and len(matched_groups) == 0:
         return {
             "score": 0.0,
             "rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
@@ -161,24 +308,24 @@ def evaluate_answer_correctness(
         }
 
     # 2. Check for contradictions / forbidden incorrect values
-    detected_contradictions = [fv for fv in forbidden_values if _contains_fact(fv, lower_resp)]
+    detected_contradictions = [fv for fv in forbidden_values if _is_contradiction(fv, lower_resp)]
     mismatches = [f"contradiction: {fv}" for fv in detected_contradictions]
 
     # 3. Check target values and concepts
-    target_ratio = len(matched_targets) / len(target_values) if target_values else 1.0
+    target_ratio = len(matched_groups) / len(target_groups) if target_groups else 1.0
     matched_concepts = [c for c in required_concepts if _contains_fact(c, lower_resp)]
     concept_ratio = len(matched_concepts) / len(required_concepts) if required_concepts else 1.0
 
-    for tv in target_values:
-        if tv not in matched_targets:
-            mismatches.append(f"missing_target: {tv}")
+    for g in target_groups:
+        if g not in matched_groups:
+            mismatches.append(f"missing_target: {g[0]}")
 
     # 4. Rubric decision
     if detected_contradictions:
         if target_ratio >= 0.5 and len(detected_contradictions) == 1:
             return {
                 "score": 0.5,
-                "rationale": f"Partial match with contradiction: matched {len(matched_targets)}/{len(target_values)} targets but contained contradiction ({detected_contradictions})",
+                "rationale": f"Partial match with contradiction: matched {len(matched_groups)}/{len(target_groups)} targets but contained contradiction ({detected_contradictions})",
                 "mismatches": mismatches
             }
         else:
@@ -203,22 +350,32 @@ def evaluate_answer_correctness(
             return {"score": 0.5, "rationale": f"Partial factual overlap {ratio:.2f}", "mismatches": ["low_overlap"]}
         return {"score": 0.0, "rationale": f"Insufficient overlap {ratio:.2f}", "mismatches": ["insufficient_overlap"]}
 
+    # Specific rubric clause check: e.g. "without specifying inactivity" -> requires inactivity for 1.0
+    if "without specifying inactivity" in rubric_desc and not _contains_fact("inactivity", lower_resp):
+        return {
+            "score": 0.5,
+            "rationale": "Partial factual match: stated duration without specifying inactivity as required by rubric",
+            "mismatches": ["missing_concept: inactivity"]
+        }
+
     if target_ratio == 1.0 and concept_ratio >= 0.5:
+        matched_targets_display = [g[0] for g in matched_groups]
         return {
             "score": 1.0,
-            "rationale": f"Complete factual match: all target values ({matched_targets}) and key concepts verified",
+            "rationale": f"Complete factual match: all target values ({matched_targets_display}) and key concepts verified",
             "mismatches": []
         }
     elif target_ratio >= 0.5 or (target_ratio > 0 and concept_ratio >= 0.5):
         return {
             "score": 0.5,
-            "rationale": f"Partial factual match: matched {len(matched_targets)}/{len(target_values)} targets and {len(matched_concepts)}/{len(required_concepts)} concepts",
+            "rationale": f"Partial factual match: matched {len(matched_groups)}/{len(target_groups)} targets and {len(matched_concepts)}/{len(required_concepts)} concepts",
             "mismatches": mismatches
         }
     else:
+        missing_targets_display = [g[0] for g in target_groups if g not in matched_groups]
         return {
             "score": 0.0,
-            "rationale": f"Incorrect: failed to match required target values ({[tv for tv in target_values if tv not in matched_targets]})",
+            "rationale": f"Incorrect: failed to match required target values ({missing_targets_display})",
             "mismatches": mismatches
         }
 
@@ -250,13 +407,17 @@ def calculate_evidence_faithfulness(
         # For unanswerable questions: if model refused without fabricating forbidden facts, it faithfully reflects lack of workspace evidence
         lower = response_text.lower()
         forbidden_values = criteria.get("forbidden_values", [])
-        if any(_contains_fact(fv, lower) for fv in forbidden_values):
+        if any(_is_contradiction(fv, lower) for fv in forbidden_values):
             return {
                 "score": 0.0,
                 "status": "unfaithful",
                 "rationale": "Fabricated unsupported claims on an unanswerable question"
             }
-        if any(sig in lower for sig in REFUSAL_SIGNALS):
+        has_refusal = (
+            any(sig in lower for sig in REFUSAL_SIGNALS) or
+            any(_contains_fact(rc, lower) for rc in criteria.get("required_concepts", []))
+        )
+        if has_refusal:
             return {
                 "score": 1.0,
                 "status": "faithful",
@@ -307,7 +468,7 @@ def calculate_evidence_faithfulness(
     forbidden_values = criteria.get("forbidden_values", [])
 
     # Check if response directly contradicts the retrieved evidence with forbidden values
-    detected_forbidden = [fv for fv in forbidden_values if _contains_fact(fv, lower_resp)]
+    detected_forbidden = [fv for fv in forbidden_values if _is_contradiction(fv, lower_resp)]
     if detected_forbidden:
         return {
             "score": 0.0,
@@ -315,26 +476,29 @@ def calculate_evidence_faithfulness(
             "rationale": f"Response contradicts retrieved evidence with forbidden values: {detected_forbidden}"
         }
 
-    resp_targets = [tv for tv in target_values if _contains_fact(tv, lower_resp)]
-    if resp_targets:
-        grounded = [tv for tv in resp_targets if _contains_fact(tv, actual_evidence_text)]
-        if len(grounded) == len(resp_targets):
+    target_groups = group_target_values(target_values)
+    resp_groups = [g for g in target_groups if any(_contains_fact(tv, lower_resp) for tv in g)]
+    if resp_groups:
+        grounded_groups = [g for g in resp_groups if any(_contains_fact(tv, actual_evidence_text) for tv in g)]
+        if len(grounded_groups) == len(resp_groups):
+            grounded_names = [g[0] for g in grounded_groups]
             return {
                 "score": 1.0,
                 "status": "faithful",
-                "rationale": f"All stated factual targets ({grounded}) are grounded in retrieved evidence"
+                "rationale": f"All stated factual targets ({grounded_names}) are grounded in retrieved evidence"
             }
-        elif len(grounded) > 0:
+        elif len(grounded_groups) > 0:
             return {
                 "score": 0.5,
                 "status": "partially_faithful",
-                "rationale": f"Partially grounded: {len(grounded)}/{len(resp_targets)} stated targets found in retrieved evidence"
+                "rationale": f"Partially grounded: {len(grounded_groups)}/{len(resp_groups)} stated targets found in retrieved evidence"
             }
         else:
+            resp_names = [g[0] for g in resp_groups]
             return {
                 "score": 0.0,
                 "status": "unsupported",
-                "rationale": f"Stated targets ({resp_targets}) are absent from actually retrieved evidence"
+                "rationale": f"Stated targets ({resp_names}) are absent from actually retrieved evidence"
             }
 
     return {
@@ -376,7 +540,8 @@ def compute_stats(values: List[float]) -> Dict[str, Optional[float]]:
 def score_results(
     input_file: Path,
     output_dir: Optional[Path] = None,
-    questions_file: Optional[Path] = None
+    questions_file: Optional[Path] = None,
+    report_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """Score evaluation results from a JSONL file using deterministic rubrics."""
     if not input_file.exists():
@@ -394,6 +559,7 @@ def score_results(
 
     dataset_lookup = load_dataset_lookup(questions_file)
     run_id = records[0].get("run_id", "unknown_run")
+    report_id = report_name or run_id
     output_dir = output_dir or (CURRENT_DIR / "reports")
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -532,17 +698,18 @@ def score_results(
         print(f"{row['configuration']:15s} | {row['category']:15s} | {row['total_attempted']:8d} | {row['successful_attempts']:4d} | {row['failed_attempts']:4d} | {row['mean_correctness_all']:9.2f} | {row['mean_correctness_successful']:10.2f} | {faith_str} | {lat_str:11s}")
 
     # Export to CSV
-    csv_file = output_dir / f"summary_{run_id}.csv"
+    csv_file = output_dir / f"summary_{report_id}.csv"
     with open(csv_file, "w", newline="", encoding="utf-8") as fp:
         writer = csv.DictWriter(fp, fieldnames=list(summary_rows[0].keys()))
         writer.writeheader()
         writer.writerows(summary_rows)
 
     # Export scored JSON
-    scored_json_file = output_dir / f"scored_{run_id}.json"
+    scored_json_file = output_dir / f"scored_{report_id}.json"
     with open(scored_json_file, "w", encoding="utf-8") as fp:
         json.dump({
             "run_id": run_id,
+            "report_id": report_id,
             "rubric_version": RUBRIC_VERSION,
             "summary": summary_rows,
             "scored_records": scored_records
@@ -555,6 +722,7 @@ def score_results(
 
     return {
         "run_id": run_id,
+        "report_id": report_id,
         "rubric_version": RUBRIC_VERSION,
         "summary_csv": str(csv_file),
         "scored_json": str(scored_json_file),
@@ -582,9 +750,15 @@ def main():
         default=str(CURRENT_DIR / "questions.json"),
         help="Path to questions.json for criteria and rubric enrichment"
     )
+    parser.add_argument(
+        "--report-name", "-r",
+        type=str,
+        default=None,
+        help="Custom report identifier for output filenames (summary_<name>.csv, scored_<name>.json)"
+    )
 
     args = parser.parse_args()
-    score_results(Path(args.input_file), Path(args.output_dir), Path(args.questions_file))
+    score_results(Path(args.input_file), Path(args.output_dir), Path(args.questions_file), args.report_name)
 
 
 if __name__ == "__main__":

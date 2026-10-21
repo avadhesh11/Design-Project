@@ -54,6 +54,8 @@ def get_agent_tools(
         - completed tasks
         - task status
         - assigned work
+
+        status: Optional status filter ('todo', 'in_progress', 'done').
         """
         return get_tasks.func(workspace_id=workspace_id, status=status)
 
@@ -290,6 +292,29 @@ Security Rules (NEVER VIOLATE):
             {"source": "documents", "content": c.get("content", ""), "similarity": c.get("similarity")}
             for c in matched_chunks
         ] if should_preinject and matched_chunks else []
+
+        for m in result.get("messages", []):
+            msg_type = getattr(m, "type", None)
+            tool_name = getattr(m, "name", None)
+            if msg_type == "tool" or (hasattr(m, "tool_call_id") and tool_name):
+                content = getattr(m, "content", "")
+                if content:
+                    content_str = content if isinstance(content, str) else str(content)
+                    tool_lower = (tool_name or "").lower()
+                    if "task" in tool_lower:
+                        source = "tasks"
+                    elif "chat" in tool_lower or "message" in tool_lower:
+                        source = "chat"
+                    elif "document" in tool_lower or "workspace" in tool_lower:
+                        source = "documents"
+                    else:
+                        source = "tool"
+
+                    retrieved_evidence.append({
+                        "source": source,
+                        "tool_name": tool_name,
+                        "content": content_str
+                    })
 
         return {
             "response": resp_text,

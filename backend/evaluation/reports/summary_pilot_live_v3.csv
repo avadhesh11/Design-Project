@@ -1,0 +1,7 @@
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+pilot_live_v3,2.0-deterministic-factual,plain_llm,ALL,1,1,0,1.0,0.0,0.0,0.0,0,,,4470.0,4470.0,0.0,,83.0
+pilot_live_v3,2.0-deterministic-factual,rag_docs_only,ALL,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6607.16,6607.16,0.0,,693.0
+pilot_live_v3,2.0-deterministic-factual,full_agent,ALL,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6334.58,6334.58,0.0,,807.0
+pilot_live_v3,2.0-deterministic-factual,plain_llm,single_source,1,1,0,1.0,0.0,0.0,0.0,0,,,4470.0,4470.0,0.0,,83.0
+pilot_live_v3,2.0-deterministic-factual,rag_docs_only,single_source,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6607.16,6607.16,0.0,,693.0
+pilot_live_v3,2.0-deterministic-factual,full_agent,single_source,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6334.58,6334.58,0.0,,807.0

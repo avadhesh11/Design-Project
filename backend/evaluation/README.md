@@ -22,7 +22,7 @@ The benchmark evaluates three configurations on an identical deterministic synth
 
 ## 2. Model Selection and Attribution Policy
 
-- **Standardization:** All three configurations use the workspace's configured model (`gemini-2.5-flash` by default in live runs, or `mock-eval-model` in offline mode) with matching generation parameters (`temperature=0.3`).
+- **Standardization:** All three configurations use the workspace's configured model (`gemini-3.5-flash-lite` by default in live runs, or `mock-eval-model` in offline mode) with matching generation parameters (`temperature=0.3`).
 - **Attribution Auditing:** Every evaluation attempt inspects the active model instance to record both:
   - `configured_model`: Model specified in the workspace database record or environment.
   - `resolved_model`: The concrete model identifier returned by the provider/LLM instance.

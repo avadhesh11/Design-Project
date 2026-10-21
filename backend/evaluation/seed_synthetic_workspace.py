@@ -83,7 +83,7 @@ def seed_synthetic_workspace(skip_embeddings: bool = False) -> dict:
             invite_code="EVAL-SYNTHETIC-2026",
             owner_id=SYNTHETIC_OWNER_ID,
             ai_provider="gemini",
-            ai_model="gemini-2.5-flash"
+            ai_model="gemini-3.5-flash-lite"
         )
         db.add(ws)
         db.commit()
