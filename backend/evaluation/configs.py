@@ -118,6 +118,14 @@ def get_llm_metadata(
     # Only report temperature if actually present on the LLM instance; never fabricate 0.3 as verified metadata
     verified_temp = temp if isinstance(temp, (int, float)) else None
 
+    params = {
+        "temperature": verified_temp
+    }
+    if hasattr(llm, "num_ctx") and getattr(llm, "num_ctx", None) is not None:
+        params["num_ctx"] = getattr(llm, "num_ctx")
+    if hasattr(llm, "base_url") and getattr(llm, "base_url", None) is not None:
+        params["base_url"] = str(getattr(llm, "base_url"))
+
     return {
         "resolved_model": str(resolved or "unknown"),
         "runtime_resolved_model": str(resolved) if resolved is not None else None,
@@ -126,9 +134,7 @@ def get_llm_metadata(
         "model_source": model_source,
         "provider": resolved_provider,
         "temperature": verified_temp,
-        "parameters": {
-            "temperature": verified_temp
-        }
+        "parameters": params
     }
 
 
@@ -259,6 +265,7 @@ async def execute_evaluation_configuration(
         "error": error_message,
         "resolved_model": meta["resolved_model"],
         "configured_model": meta["configured_model"],
+        "model_parameters": meta["parameters"],
         "provider": meta["provider"],
         "temperature": meta["temperature"]
     }
