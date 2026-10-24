@@ -95,14 +95,20 @@ def get_llm_metadata(
     if not configured:
         configured = os.getenv("GEMINI_MODEL") or os.getenv("OLLAMA_MODEL") or str(resolved or "unknown")
 
+    params = {
+        "temperature": temp if temp is not None else 0.3
+    }
+    if hasattr(llm, "num_ctx") and getattr(llm, "num_ctx", None) is not None:
+        params["num_ctx"] = getattr(llm, "num_ctx")
+    if hasattr(llm, "base_url") and getattr(llm, "base_url", None) is not None:
+        params["base_url"] = str(getattr(llm, "base_url"))
+
     return {
         "resolved_model": str(resolved or "unknown"),
         "configured_model": str(configured),
         "provider": provider,
         "temperature": temp if temp is not None else 0.3,
-        "parameters": {
-            "temperature": temp if temp is not None else 0.3
-        }
+        "parameters": params
     }
 
 
@@ -233,6 +239,7 @@ async def execute_evaluation_configuration(
         "error": error_message,
         "resolved_model": meta["resolved_model"],
         "configured_model": meta["configured_model"],
+        "model_parameters": meta["parameters"],
         "provider": meta["provider"],
         "temperature": meta["temperature"]
     }
