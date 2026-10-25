@@ -1,0 +1,25 @@
+{
+  "run_id": "phase3_benchmark_gemini_35_lite_20261025_165427",
+  "start_time": "2026-10-25T11:24:33.412978+00:00",
+  "end_time": "2026-10-25T11:53:34.552251+00:00",
+  "duration_seconds": 1741.14,
+  "provider": "gemini",
+  "configured_model": "gemini-3.5-flash-lite",
+  "resolved_model": "gemini-3.5-flash-lite",
+  "temperature": 0.3,
+  "num_ctx": null,
+  "base_url": null,
+  "schedule_strategy": "sequential",
+  "seed": null,
+  "configurations": [
+    "plain_llm",
+    "rag_docs_only",
+    "full_agent"
+  ],
+  "questions_file": "evaluation\\questions_phase3_100.json",
+  "questions_count": 100,
+  "total_attempts": 300,
+  "successful_attempts": 300,
+  "failed_attempts": 0,
+  "git_commit": "7ff99c5dc7f6f78ee6e56c5f7bf7bf088e9cd10c"
+}

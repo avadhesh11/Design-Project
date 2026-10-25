@@ -1,0 +1,13 @@
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,plain_llm,ALL,100,100,0,1.0,0.0,0.055,0.055,3,0.1,0.1,6300.38,5727.42,1818.61,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,rag_docs_only,ALL,100,100,0,1.0,0.0,0.455,0.455,25,0.755,0.755,18028.22,17918.24,2378.18,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,full_agent,ALL,100,100,0,1.0,0.0,0.47,0.47,24,0.75,0.75,19495.74,19608.99,3496.0,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,plain_llm,single_source,40,40,0,1.0,0.0,0.075,0.075,2,,,6286.45,5587.19,1908.73,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,rag_docs_only,single_source,40,40,0,1.0,0.0,0.45,0.45,0,0.725,0.725,17186.91,17131.31,2057.64,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,full_agent,single_source,40,40,0,1.0,0.0,0.425,0.425,0,0.7125,0.7125,18453.09,18150.02,3079.67,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,plain_llm,multi_source,40,40,0,1.0,0.0,0.0125,0.0125,1,,,6592.29,5850.01,1959.26,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,rag_docs_only,multi_source,40,40,0,1.0,0.0,0.3125,0.3125,25,0.7875,0.7875,19171.15,19349.14,2133.69,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,full_agent,multi_source,40,40,0,1.0,0.0,0.4,0.4,24,0.8125,0.8125,21316.3,21344.66,3161.34,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,plain_llm,unanswerable,20,20,0,1.0,0.0,0.1,0.1,0,0.1,0.1,5744.44,5662.39,1170.56,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,rag_docs_only,unanswerable,20,20,0,1.0,0.0,0.75,0.75,0,0.75,0.75,17424.97,18070.17,2609.74,,
+phase3_benchmark_llama32_20261025_173645,2.2-deterministic-audited,full_agent,unanswerable,20,20,0,1.0,0.0,0.7,0.7,0,0.7,0.7,17939.9,18881.98,3447.71,,

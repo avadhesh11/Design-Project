@@ -169,6 +169,7 @@ async def run_evaluation(
     limit: Optional[int] = None,
     run_id: Optional[str] = None,
     mock_mode: bool = False,
+    offline: bool = False,
     workspace_id: Optional[str] = None,
     user_id: Optional[str] = None,
     user_email: Optional[str] = None,
@@ -182,7 +183,7 @@ async def run_evaluation(
 ) -> Path:
     """Main evaluation runner loop."""
     active_provider = (provider or os.getenv("LLM_PROVIDER", "gemini")).strip().lower()
-    if mock_mode:
+    if offline or mock_mode:
         active_provider = "mock"
     elif active_provider not in ["gemini", "ollama"]:
         raise ValueError(f"Unsupported provider: '{active_provider}'. Supported providers are: 'gemini', 'ollama'.")
@@ -193,7 +194,7 @@ async def run_evaluation(
     if num_ctx < 512 or num_ctx > 131072:
         raise ValueError(f"Invalid context window size {num_ctx}. Must be between 512 and 131072.")
 
-    validate_environment(mock_mode=mock_mode, provider=active_provider)
+    validate_environment(mock_mode=(mock_mode or offline), provider=active_provider)
 
     questions = load_dataset(questions_file)
     if limit is not None and limit > 0:
@@ -210,7 +211,11 @@ async def run_evaluation(
     target_uid = user_id or str(SYNTHETIC_DEV1_ID)
     target_email = user_email or "eval-dev1@synthetic.orbit.local"
 
-    if mock_mode:
+    if offline:
+        from evaluation.mock_offline_harness import OfflineMockEvaluationLLM, offline_evaluation_harness
+        model_name = model or "mock-offline-llm"
+        llm_instance = OfflineMockEvaluationLLM(model_name=model_name, temperature=temperature)
+    elif mock_mode:
         model_name = model or "mock-eval-model"
         llm_instance = MockEvaluationLLM(model_name=model_name, temperature=temperature)
     else:
@@ -236,7 +241,7 @@ async def run_evaluation(
     print(f"\n=======================================================")
     print(f" ORBIT RESEARCH EVALUATION RUNNER")
     print(f" Run ID       : {run_id}")
-    print(f" Mode         : {'OFFLINE (Mock LLM)' if mock_mode else 'LIVE (' + active_provider + ' / ' + model_name + ')'}")
+    print(f" Mode         : {'OFFLINE (Mock Harness)' if offline else ('OFFLINE (Mock LLM)' if mock_mode else 'LIVE (' + active_provider + ' / ' + model_name + ')')}")
     print(f" Provider     : {active_provider}")
     print(f" Model        : {model_name}")
     print(f" Temperature  : {temperature}")
@@ -254,7 +259,14 @@ async def run_evaluation(
     successful_count = 0
     failed_count = 0
 
-    with open(output_file, "a", encoding="utf-8") as out_fp:
+    if offline:
+        from evaluation.mock_offline_harness import offline_evaluation_harness
+        harness_context = offline_evaluation_harness(strict_negative_guards=True)
+    else:
+        from contextlib import nullcontext
+        harness_context = nullcontext()
+
+    with harness_context, open(output_file, "a", encoding="utf-8") as out_fp:
         for attempt in scheduled_attempts:
             q = attempt["question"]
             q_id = attempt["question_id"]
@@ -366,10 +378,11 @@ def main():
         help="Limit number of questions to evaluate (e.g. 5 for smoke test)"
     )
     parser.add_argument(
-        "--questions-file", "-q",
+        "--questions-file", "--dataset", "-q",
         type=str,
+        dest="questions_file",
         default=str(CURRENT_DIR / "questions.json"),
-        help="Path to questions JSON file"
+        help="Path to questions JSON file (alias: --dataset)"
     )
     parser.add_argument(
         "--output-dir", "-o",
@@ -387,6 +400,11 @@ def main():
         "--mock-llm",
         action="store_true",
         help="Run evaluation using Mock LLM for offline tests and sanity checking"
+    )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Run fully offline smoke test with in-memory fixtures and negative network/database guards"
     )
     parser.add_argument(
         "--workspace-id",
@@ -465,6 +483,7 @@ def main():
         limit=args.limit,
         run_id=args.run_id,
         mock_mode=args.mock_llm,
+        offline=args.offline,
         workspace_id=args.workspace_id,
         provider=args.provider,
         model=args.model,

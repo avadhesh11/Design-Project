@@ -1,0 +1,25 @@
+{
+  "run_id": "phase3_benchmark_llama32_20261025_173645",
+  "start_time": "2026-10-25T12:06:51.572421+00:00",
+  "end_time": "2026-10-25T13:26:14.904964+00:00",
+  "duration_seconds": 4763.33,
+  "provider": "ollama",
+  "configured_model": "llama3.2:latest",
+  "resolved_model": "llama3.2:latest",
+  "temperature": 0.3,
+  "num_ctx": 8192,
+  "base_url": null,
+  "schedule_strategy": "sequential",
+  "seed": null,
+  "configurations": [
+    "plain_llm",
+    "rag_docs_only",
+    "full_agent"
+  ],
+  "questions_file": "evaluation\\questions_phase3_100.json",
+  "questions_count": 100,
+  "total_attempts": 300,
+  "successful_attempts": 300,
+  "failed_attempts": 0,
+  "git_commit": "7ff99c5dc7f6f78ee6e56c5f7bf7bf088e9cd10c"
+}

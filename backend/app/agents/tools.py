@@ -64,14 +64,15 @@ Use this whenever the user asks about:
 
 @tool
 def get_tasks(workspace_id: str, status: str = None, db = None) -> str:
-    """Retrieve workspace tasks.
+    """Retrieve workspace tasks and task tracker records.
 
-Use this whenever the user asks:
-- what tasks exist
-- pending tasks
-- completed tasks
-- task status
-- assigned work
+Use this whenever the user asks about:
+- what tasks exist or specific tasks
+- task due dates, deadlines, or timelines
+- task owners, assignees, or work assignments
+- pending or completed tasks
+- task status or progress
+Always use this tool when a question asks for a task due date, status, or owner, even if documents discuss related feature names.
 """
     close_db = False
     if db is None:
@@ -96,6 +97,7 @@ Use this whenever the user asks:
         return json.dumps([{
             "id": str(t.id),
             "title": t.title,
+            "description": t.description,
             "status": t.status.value if hasattr(t.status, 'value') else t.status,
             "priority": t.priority.value if hasattr(t.priority, 'value') else t.priority,
             "due_date": t.due_date.isoformat() if t.due_date else None,

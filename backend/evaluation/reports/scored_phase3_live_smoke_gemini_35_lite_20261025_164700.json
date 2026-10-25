@@ -1,0 +1,912 @@
+{
+  "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+  "report_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+  "rubric_version": "2.1-deterministic-audited",
+  "summary": [
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "plain_llm",
+      "category": "ALL",
+      "total_attempted": 3,
+      "successful_attempts": 3,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.3333,
+      "mean_correctness_successful": 0.3333,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 1470.46,
+      "median_latency_ms": 951.45,
+      "stddev_latency_ms": 1040.89,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 92.67
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "rag_docs_only",
+      "category": "ALL",
+      "total_attempted": 3,
+      "successful_attempts": 3,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.8333,
+      "mean_correctness_successful": 0.8333,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 7693.55,
+      "median_latency_ms": 5030.61,
+      "stddev_latency_ms": 6221.23,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 896.33
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "full_agent",
+      "category": "ALL",
+      "total_attempted": 3,
+      "successful_attempts": 3,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 5213.28,
+      "median_latency_ms": 4653.98,
+      "stddev_latency_ms": 1456.4,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 2101.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "plain_llm",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": null,
+      "mean_faithfulness_successful": null,
+      "mean_latency_ms": 2668.81,
+      "median_latency_ms": 2668.81,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 89.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "rag_docs_only",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 5030.61,
+      "median_latency_ms": 5030.61,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 717.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "full_agent",
+      "category": "single_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 4653.98,
+      "median_latency_ms": 4653.98,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 1005.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "plain_llm",
+      "category": "multi_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.0,
+      "mean_correctness_successful": 0.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": null,
+      "mean_faithfulness_successful": null,
+      "mean_latency_ms": 791.13,
+      "median_latency_ms": 791.13,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 98.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "rag_docs_only",
+      "category": "multi_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 0.5,
+      "mean_correctness_successful": 0.5,
+      "partial_credit_count": 1,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 14803.02,
+      "median_latency_ms": 14803.02,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 1016.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "full_agent",
+      "category": "multi_source",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 6866.42,
+      "median_latency_ms": 6866.42,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 4041.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "plain_llm",
+      "category": "unanswerable",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 951.45,
+      "median_latency_ms": 951.45,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 91.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "rag_docs_only",
+      "category": "unanswerable",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 3247.02,
+      "median_latency_ms": 3247.02,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 956.0
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "rubric_version": "2.1-deterministic-audited",
+      "configuration": "full_agent",
+      "category": "unanswerable",
+      "total_attempted": 1,
+      "successful_attempts": 1,
+      "failed_attempts": 0,
+      "coverage": 1.0,
+      "error_rate": 0.0,
+      "mean_correctness_all": 1.0,
+      "mean_correctness_successful": 1.0,
+      "partial_credit_count": 0,
+      "mean_faithfulness_all": 1.0,
+      "mean_faithfulness_successful": 1.0,
+      "mean_latency_ms": 4119.44,
+      "median_latency_ms": 4119.44,
+      "stddev_latency_ms": 0.0,
+      "mean_latency_failed_ms": null,
+      "mean_tokens": 1257.0
+    }
+  ],
+  "scored_records": [
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:14.106281+00:00",
+      "question_id": "Q21",
+      "question": "What API prefix should clients use?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The Orbit API uses REST endpoints under the /api/v2 prefix.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture Specification",
+          "excerpt": "The Orbit API uses REST endpoints under the /api/v2 prefix."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "/api/v2"
+        ],
+        "required_concepts": [
+          "api",
+          "prefix"
+        ],
+        "forbidden_values": [
+          "/api/v1"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "Must state /api/v2; penalize contradictory values."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "I do not have enough information to answer this question. Please provide more context about the specific system, application, or service you are referring to, as API prefixes vary depending on the platform or architecture.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 2668.81,
+      "token_usage": {
+        "input_tokens": 49,
+        "output_tokens": 40,
+        "total_tokens": 89,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": null,
+      "faithfulness_status": "not_evaluable",
+      "faithfulness_rationale": "No retrieval or context sources were available to the model in this configuration (faithfulness is not evaluable)"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:20.511144+00:00",
+      "question_id": "Q21",
+      "question": "What API prefix should clients use?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The Orbit API uses REST endpoints under the /api/v2 prefix.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture Specification",
+          "excerpt": "The Orbit API uses REST endpoints under the /api/v2 prefix."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "/api/v2"
+        ],
+        "required_concepts": [
+          "api",
+          "prefix"
+        ],
+        "forbidden_values": [
+          "/api/v1"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "Must state /api/v2; penalize contradictory values."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "Clients should use the `/api/v2` prefix for Orbit API REST endpoints.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.647126813147278
+        }
+      ],
+      "latency_ms": 5030.61,
+      "token_usage": {
+        "input_tokens": 700,
+        "output_tokens": 17,
+        "total_tokens": 717,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['/api/v2']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "All stated factual targets (['/api/v2']) are grounded in retrieved evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:26.407591+00:00",
+      "question_id": "Q21",
+      "question": "What API prefix should clients use?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "answerable": true,
+      "reference_answer": "The Orbit API uses REST endpoints under the /api/v2 prefix.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture Specification",
+          "excerpt": "The Orbit API uses REST endpoints under the /api/v2 prefix."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "/api/v2"
+        ],
+        "required_concepts": [
+          "api",
+          "prefix"
+        ],
+        "forbidden_values": [
+          "/api/v1"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "Must state /api/v2; penalize contradictory values."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "Based on the Orbit Architecture Specification, clients should use the `/api/v2` prefix for REST endpoints.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.647126813147278
+        }
+      ],
+      "latency_ms": 4653.98,
+      "token_usage": {
+        "input_tokens": 983,
+        "output_tokens": 22,
+        "total_tokens": 1005,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['/api/v2']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "All stated factual targets (['/api/v2']) are grounded in retrieved evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:28.404093+00:00",
+      "question_id": "Q53",
+      "question": "When is the Sprint 15 release candidate planned, and what is the due date for Priya's document export task?",
+      "category": "multi_source",
+      "required_sources": [
+        "documents",
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The Sprint 15 release candidate is planned for 11 November 2026, and Priya's document export task is due on 7 November 2026.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Release Plan Sprint 15",
+          "excerpt": "The release candidate is planned for 11 November 2026."
+        },
+        {
+          "source": "tasks",
+          "task_title": "Document export",
+          "excerpt": "Task T01: Document export. Owner: Priya. Status: in_progress. Due: 7 November 2026. Add CSV and PDF export for saved workspace reports."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "11 November 2026",
+          "7 November 2026"
+        ],
+        "required_concepts": [
+          "release candidate",
+          "export"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "Full credit requires combining all specified facts across at least two source records/source types without contradiction."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "I do not have enough information to answer your question, as I do not have access to your internal project schedules, sprint plans, or task management systems.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 791.13,
+      "token_usage": {
+        "input_tokens": 67,
+        "output_tokens": 31,
+        "total_tokens": 98,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 0.0,
+      "scoring_rationale": "Unnecessary refusal: question is answerable from workspace context but model refused",
+      "mismatches": [
+        "unnecessary_refusal"
+      ],
+      "score_faithfulness": null,
+      "faithfulness_status": "not_evaluable",
+      "faithfulness_rationale": "No retrieval or context sources were available to the model in this configuration (faithfulness is not evaluable)"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:44.458155+00:00",
+      "question_id": "Q53",
+      "question": "When is the Sprint 15 release candidate planned, and what is the due date for Priya's document export task?",
+      "category": "multi_source",
+      "required_sources": [
+        "documents",
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The Sprint 15 release candidate is planned for 11 November 2026, and Priya's document export task is due on 7 November 2026.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Release Plan Sprint 15",
+          "excerpt": "The release candidate is planned for 11 November 2026."
+        },
+        {
+          "source": "tasks",
+          "task_title": "Document export",
+          "excerpt": "Task T01: Document export. Owner: Priya. Status: in_progress. Due: 7 November 2026. Add CSV and PDF export for saved workspace reports."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "11 November 2026",
+          "7 November 2026"
+        ],
+        "required_concepts": [
+          "release candidate",
+          "export"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "Full credit requires combining all specified facts across at least two source records/source types without contradiction."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "Based on the Orbit Release Plan Sprint 15:\n\n* **Sprint 15 release candidate:** Planned for 11 November 2026.\n* **Priya's document export task:** Priya owns the document export feature. However, the specific due date for her task is not available in the workspace documents (though the feature scope freezes at 5 PM UTC on 10 November 2026, and the target production launch date is 16 November 2026).",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Release Plan Sprint 15:\n- Sprint 15 runs from 2 November through 13 November 2026.\n- The release candidate is planned for 11 November 2026.\n- The target production launch date is 16 November 2026.\n- The release requires zero open P0 or P1 defects.\n- Priya owns the document export feature.\n- Omar owns the workspace search improvement.\n- Lin owns the mobile layout fixes.\n- Feature scope freezes at 5 PM UTC on 10 November 2026.\n- The release retrospective is scheduled for 18 November 2026.\n- A successful database migration rehearsal is required before release.\n- The rollout plan uses a 10 percent canary before full production rollout.\n- The release manager owns the rollback decision.",
+          "similarity": 0.768796444275762
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.618034260976
+        }
+      ],
+      "latency_ms": 14803.02,
+      "token_usage": {
+        "input_tokens": 910,
+        "output_tokens": 106,
+        "total_tokens": 1016,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 0.5,
+      "scoring_rationale": "Partial factual match: matched 1/2 targets and 2/2 concepts",
+      "mismatches": [
+        "missing_target: 7 November 2026"
+      ],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "All stated factual targets (['11 November 2026']) are grounded in retrieved evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:52.566847+00:00",
+      "question_id": "Q53",
+      "question": "When is the Sprint 15 release candidate planned, and what is the due date for Priya's document export task?",
+      "category": "multi_source",
+      "required_sources": [
+        "documents",
+        "tasks"
+      ],
+      "answerable": true,
+      "reference_answer": "The Sprint 15 release candidate is planned for 11 November 2026, and Priya's document export task is due on 7 November 2026.",
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Release Plan Sprint 15",
+          "excerpt": "The release candidate is planned for 11 November 2026."
+        },
+        {
+          "source": "tasks",
+          "task_title": "Document export",
+          "excerpt": "Task T01: Document export. Owner: Priya. Status: in_progress. Due: 7 November 2026. Add CSV and PDF export for saved workspace reports."
+        }
+      ],
+      "evaluation_criteria": {
+        "target_values": [
+          "11 November 2026",
+          "7 November 2026"
+        ],
+        "required_concepts": [
+          "release candidate",
+          "export"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "Full credit requires combining all specified facts across at least two source records/source types without contradiction."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "- The Sprint 15 release candidate is planned for **11 November 2026**.\n- The due date for Priya's document export task (Task T01) is **7 November 2026**.",
+      "tools_used": [
+        "get_tasks_tool"
+      ],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Release Plan Sprint 15:\n- Sprint 15 runs from 2 November through 13 November 2026.\n- The release candidate is planned for 11 November 2026.\n- The target production launch date is 16 November 2026.\n- The release requires zero open P0 or P1 defects.\n- Priya owns the document export feature.\n- Omar owns the workspace search improvement.\n- Lin owns the mobile layout fixes.\n- Feature scope freezes at 5 PM UTC on 10 November 2026.\n- The release retrospective is scheduled for 18 November 2026.\n- A successful database migration rehearsal is required before release.\n- The rollout plan uses a 10 percent canary before full production rollout.\n- The release manager owns the rollback decision.",
+          "similarity": 0.768796444275762
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.618034260976
+        },
+        {
+          "source": "tasks",
+          "tool_name": "get_tasks_tool",
+          "content": "[\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000051\",\n    \"title\": \"Document export\",\n    \"description\": \"Task T01: Document export. Owner: Priya. Status: in_progress. Due: 7 November 2026. Add CSV and PDF export for saved workspace reports.\",\n    \"status\": \"in_progress\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-07T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000031\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000052\",\n    \"title\": \"Search relevance tuning\",\n    \"description\": \"Task T02: Search relevance tuning. Owner: Omar. Status: todo. Due: 9 November 2026. Tune ranking for exact title matches.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-09T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000032\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000053\",\n    \"title\": \"Mobile navigation fixes\",\n    \"description\": \"Task T03: Mobile navigation fixes. Owner: Lin. Status: in_progress. Due: 6 November 2026. Fix collapsed navigation on small screens.\",\n    \"status\": \"in_progress\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-06T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000033\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000054\",\n    \"title\": \"Migration rehearsal\",\n    \"description\": \"Task T04: Migration rehearsal. Owner: Mateo. Status: todo. Due: 10 November 2026. Run a staging rehearsal of the production database migration.\",\n    \"status\": \"todo\",\n    \"priority\": \"high\",\n    \"due_date\": \"2026-11-10T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000034\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000055\",\n    \"title\": \"P0/P1 defect triage\",\n    \"description\": \"Task T05: P0/P1 defect triage. Owner: Nina. Status: in_progress. Due: daily. Review all open P0 and P1 defects before release.\",\n    \"status\": \"in_progress\",\n    \"priority\": \"high\",\n    \"due_date\": \"2026-11-02T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000035\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000056\",\n    \"title\": \"Canary rollout checklist\",\n    \"description\": \"Task T06: Canary rollout checklist. Owner: Mateo. Status: todo. Due: 12 November 2026. Prepare the 10 percent canary rollout checklist.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-12T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000034\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000057\",\n    \"title\": \"Audit log export review\",\n    \"description\": \"Task T07: Audit log export review. Owner: Priya. Status: todo. Due: 11 November 2026. Verify encryption requirements for exported audit logs.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-11T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000031\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000058\",\n    \"title\": \"Service account rotation\",\n    \"description\": \"Task T08: Service account rotation. Owner: Omar. Status: todo. Due: 13 November 2026. Rotate the integration service account credentials.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-13T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000032\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000059\",\n    \"title\": \"Status page separation check\",\n    \"description\": \"Task T09: Status page separation check. Owner: Lin. Status: done. Due: 5 November 2026. Confirm the status page remains separate from the API.\",\n    \"status\": \"done\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-05T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000033\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000060\",\n    \"title\": \"English retrieval test\",\n    \"description\": \"Task T10: English retrieval test. Owner: Nina. Status: done. Due: 5 November 2026. Verify English-only retrieval behavior.\",\n    \"status\": \"done\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-05T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000035\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000061\",\n    \"title\": \"Request ID error test\",\n    \"description\": \"Task T11: Request ID error test. Owner: Mateo. Status: in_progress. Due: 8 November 2026. Check request_id in API error responses.\",\n    \"status\": \"in_progress\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-08T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000034\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000062\",\n    \"title\": \"Session expiry regression test\",\n    \"description\": \"Task T12: Session expiry regression test. Owner: Nina. Status: todo. Due: 9 November 2026. Test session expiration after inactivity.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-09T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000035\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000063\",\n    \"title\": \"Quarterly access review\",\n    \"description\": \"Task T13: Quarterly access review. Owner: Omar. Status: todo. Due: 30 November 2026. Collect workspace administrator access review evidence.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-30T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000032\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000064\",\n    \"title\": \"Incident reporting drill\",\n    \"description\": \"Task T14: Incident reporting drill. Owner: Priya. Status: todo. Due: 12 November 2026. Rehearse the security reporting process.\",\n    \"status\": \"todo\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-12T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000031\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000065\",\n    \"title\": \"Backup restore check\",\n    \"description\": \"Task T15: Backup restore check. Owner: Mateo. Status: in_progress. Due: 11 November 2026. Verify encrypted off-site backup restoration.\",\n    \"status\": \"in_progress\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-11T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000034\"\n  },\n  {\n    \"id\": \"00000000-0000-4000-8000-000000000066\",\n    \"title\": \"Embedding pipeline monitor\",\n    \"description\": \"Task T16: Embedding pipeline monitor. Owner: Lin. Status: done. Due: 4 November 2026. Confirm document indexing completes asynchronously.\",\n    \"status\": \"done\",\n    \"priority\": \"medium\",\n    \"due_date\": \"2026-11-04T00:00:00\",\n    \"assigned_to\": \"00000000-0000-4000-8000-000000000033\"\n  }\n]"
+        }
+      ],
+      "latency_ms": 6866.42,
+      "token_usage": {
+        "input_tokens": 3992,
+        "output_tokens": 49,
+        "total_tokens": 4041,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Complete factual match: all target values (['11 November 2026', '7 November 2026']) and key concepts verified",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "All stated factual targets (['11 November 2026', '7 November 2026']) are grounded in retrieved evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:54.732025+00:00",
+      "question_id": "Q85",
+      "question": "What exact date and time will the next major Orbit mobile app version be released?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "answerable": false,
+      "reference_answer": "The workspace does not contain enough information to answer this question; the assistant should acknowledge the missing fact rather than guess.",
+      "evidence_references": [],
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": [
+          "not available",
+          "no information",
+          "not found",
+          "cannot be answered",
+          "does not contain"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "Must clearly state that the requested fact is unavailable and must not invent a specific answer."
+      },
+      "configuration": "plain_llm",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [],
+      "execution_status": "success",
+      "response": "I do not have enough information to answer this question, as I do not have access to real-time data or the specific release schedule for the Orbit mobile app.",
+      "tools_used": [],
+      "retrieved_evidence": [],
+      "latency_ms": 951.45,
+      "token_usage": {
+        "input_tokens": 58,
+        "output_tokens": 33,
+        "total_tokens": 91,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Valid refusal: correctly identified insufficient workspace information without hallucinating forbidden facts",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "Faithfully acknowledged lack of workspace evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:17:59.205210+00:00",
+      "question_id": "Q85",
+      "question": "What exact date and time will the next major Orbit mobile app version be released?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "answerable": false,
+      "reference_answer": "The workspace does not contain enough information to answer this question; the assistant should acknowledge the missing fact rather than guess.",
+      "evidence_references": [],
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": [
+          "not available",
+          "no information",
+          "not found",
+          "cannot be answered",
+          "does not contain"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "Must clearly state that the requested fact is unavailable and must not invent a specific answer."
+      },
+      "configuration": "rag_docs_only",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents"
+      ],
+      "execution_status": "success",
+      "response": "Based on the available workspace documents, there is no information regarding the release date and time of a dedicated mobile app version. The Orbit Release Plan Sprint 15 mentions mobile layout fixes owned by Lin, but a release date for a mobile application is not available in the workspace.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Release Plan Sprint 15:\n- Sprint 15 runs from 2 November through 13 November 2026.\n- The release candidate is planned for 11 November 2026.\n- The target production launch date is 16 November 2026.\n- The release requires zero open P0 or P1 defects.\n- Priya owns the document export feature.\n- Omar owns the workspace search improvement.\n- Lin owns the mobile layout fixes.\n- Feature scope freezes at 5 PM UTC on 10 November 2026.\n- The release retrospective is scheduled for 18 November 2026.\n- A successful database migration rehearsal is required before release.\n- The rollout plan uses a 10 percent canary before full production rollout.\n- The release manager owns the rollback decision.",
+          "similarity": 0.693131322258642
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.678529971434548
+        }
+      ],
+      "latency_ms": 3247.02,
+      "token_usage": {
+        "input_tokens": 901,
+        "output_tokens": 55,
+        "total_tokens": 956,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Valid refusal: correctly identified insufficient workspace information without hallucinating forbidden facts",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "Faithfully acknowledged lack of workspace evidence"
+    },
+    {
+      "run_id": "phase3_live_smoke_gemini_35_lite_20261025_164700",
+      "timestamp": "2026-10-25T11:18:04.621954+00:00",
+      "question_id": "Q85",
+      "question": "What exact date and time will the next major Orbit mobile app version be released?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "answerable": false,
+      "reference_answer": "The workspace does not contain enough information to answer this question; the assistant should acknowledge the missing fact rather than guess.",
+      "evidence_references": [],
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": [
+          "not available",
+          "no information",
+          "not found",
+          "cannot be answered",
+          "does not contain"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "Must clearly state that the requested fact is unavailable and must not invent a specific answer."
+      },
+      "configuration": "full_agent",
+      "configured_model": "gemini-3.5-flash-lite",
+      "resolved_model": "gemini-3.5-flash-lite",
+      "model_parameters": {
+        "temperature": 0.3
+      },
+      "provider": "gemini",
+      "available_sources": [
+        "documents",
+        "tasks",
+        "chat"
+      ],
+      "execution_status": "success",
+      "response": "Based on the workspace documents, there is no mention of a dedicated mobile app version release date. The documents only mention \"Lin owns the mobile layout fixes\" for Sprint 15 and a production launch date of 16 November 2026 for the Orbit web release, but specific release details for a mobile app version are not available in the workspace.",
+      "tools_used": [],
+      "retrieved_evidence": [
+        {
+          "source": "documents",
+          "content": "Orbit Release Plan Sprint 15:\n- Sprint 15 runs from 2 November through 13 November 2026.\n- The release candidate is planned for 11 November 2026.\n- The target production launch date is 16 November 2026.\n- The release requires zero open P0 or P1 defects.\n- Priya owns the document export feature.\n- Omar owns the workspace search improvement.\n- Lin owns the mobile layout fixes.\n- Feature scope freezes at 5 PM UTC on 10 November 2026.\n- The release retrospective is scheduled for 18 November 2026.\n- A successful database migration rehearsal is required before release.\n- The rollout plan uses a 10 percent canary before full production rollout.\n- The release manager owns the rollback decision.",
+          "similarity": 0.693131322258642
+        },
+        {
+          "source": "documents",
+          "content": "Orbit Architecture Specification:\n- The Orbit API uses REST endpoints under the /api/v2 prefix.\n- The production web frontend is deployed to Vercel.\n- The primary application database is PostgreSQL.\n- Background jobs use a Redis-backed worker queue.\n- The API rate limit is 120 requests per minute per user.\n- The maximum supported upload size is 25 MB per file.\n- Uploaded documents are indexed asynchronously after upload.\n- Document embeddings are stored in pgvector.\n- API timestamps are normalized to UTC.\n- This release supports English-language document retrieval only.\n- The public status page is hosted separately from the application API.\n- API error responses include a request_id field.",
+          "similarity": 0.678529971434548
+        }
+      ],
+      "latency_ms": 4119.44,
+      "token_usage": {
+        "input_tokens": 1184,
+        "output_tokens": 73,
+        "total_tokens": 1257,
+        "input_token_details": {
+          "cache_read": 0
+        }
+      },
+      "error": null,
+      "rubric_version": "2.1-deterministic-audited",
+      "score_correctness": 1.0,
+      "scoring_rationale": "Valid refusal: correctly identified insufficient workspace information without hallucinating forbidden facts",
+      "mismatches": [],
+      "score_faithfulness": 1.0,
+      "faithfulness_status": "faithful",
+      "faithfulness_rationale": "Faithfully acknowledged lack of workspace evidence"
+    }
+  ]
+}

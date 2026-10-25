@@ -1,0 +1,120 @@
+{
+  "version": "3.0.0",
+  "description": "Orbit Phase 3 Representative 3-Question Smoke Test (Q21, Q53, Q85)",
+  "workspace": "[SYNTHETIC] Orbit Research Evaluation Workspace",
+  "split": {
+    "development_validation": {
+      "ids": "Q01-Q20",
+      "count": 20,
+      "instruction": "preserved existing development/validation questions unchanged"
+    },
+    "held_out": {
+      "ids": "Q21-Q100",
+      "count": 80,
+      "instruction": "held-out evaluation set, not used for scorer tuning"
+    }
+  },
+  "distribution": {
+    "single_source": 1,
+    "multi_source": 1,
+    "unanswerable": 1,
+    "total": 3
+  },
+  "questions": [
+    {
+      "id": "Q21",
+      "question": "What API prefix should clients use?",
+      "category": "single_source",
+      "required_sources": [
+        "documents"
+      ],
+      "reference_answer": "The Orbit API uses REST endpoints under the /api/v2 prefix.",
+      "evaluation_criteria": {
+        "target_values": [
+          "/api/v2"
+        ],
+        "required_concepts": [
+          "api",
+          "prefix"
+        ],
+        "forbidden_values": [
+          "/api/v1"
+        ]
+      },
+      "rubric": {
+        "type": "exact_value",
+        "description": "Must state /api/v2; penalize contradictory values."
+      },
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Architecture Specification",
+          "excerpt": "The Orbit API uses REST endpoints under the /api/v2 prefix."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q53",
+      "question": "When is the Sprint 15 release candidate planned, and what is the due date for Priya's document export task?",
+      "category": "multi_source",
+      "required_sources": [
+        "documents",
+        "tasks"
+      ],
+      "reference_answer": "The Sprint 15 release candidate is planned for 11 November 2026, and Priya's document export task is due on 7 November 2026.",
+      "evaluation_criteria": {
+        "target_values": [
+          "11 November 2026",
+          "7 November 2026"
+        ],
+        "required_concepts": [
+          "release candidate",
+          "export"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "multi_source_synthesis",
+        "description": "Full credit requires combining all specified facts across at least two source records/source types without contradiction."
+      },
+      "evidence_references": [
+        {
+          "source": "documents",
+          "document_title": "Release Plan Sprint 15",
+          "excerpt": "The release candidate is planned for 11 November 2026."
+        },
+        {
+          "source": "tasks",
+          "task_title": "Document export",
+          "excerpt": "Task T01: Document export. Owner: Priya. Status: in_progress. Due: 7 November 2026. Add CSV and PDF export for saved workspace reports."
+        }
+      ],
+      "answerable": true
+    },
+    {
+      "id": "Q85",
+      "question": "What exact date and time will the next major Orbit mobile app version be released?",
+      "category": "unanswerable",
+      "required_sources": [],
+      "reference_answer": "The workspace does not contain enough information to answer this question; the assistant should acknowledge the missing fact rather than guess.",
+      "evaluation_criteria": {
+        "target_values": [],
+        "required_concepts": [
+          "not available",
+          "no information",
+          "not found",
+          "cannot be answered",
+          "does not contain"
+        ],
+        "forbidden_values": []
+      },
+      "rubric": {
+        "type": "refusal",
+        "description": "Must clearly state that the requested fact is unavailable and must not invent a specific answer."
+      },
+      "evidence_references": [],
+      "answerable": false
+    }
+  ]
+}

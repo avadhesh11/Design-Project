@@ -1,0 +1,13 @@
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,plain_llm,ALL,3,3,0,1.0,0.0,0.3333,0.3333,0,1.0,1.0,1470.46,951.45,1040.89,,92.67
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,rag_docs_only,ALL,3,3,0,1.0,0.0,0.8333,0.8333,1,1.0,1.0,7693.55,5030.61,6221.23,,896.33
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,full_agent,ALL,3,3,0,1.0,0.0,1.0,1.0,0,1.0,1.0,5213.28,4653.98,1456.4,,2101.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,plain_llm,single_source,1,1,0,1.0,0.0,0.0,0.0,0,,,2668.81,2668.81,0.0,,89.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,rag_docs_only,single_source,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,5030.61,5030.61,0.0,,717.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,full_agent,single_source,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,4653.98,4653.98,0.0,,1005.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,plain_llm,multi_source,1,1,0,1.0,0.0,0.0,0.0,0,,,791.13,791.13,0.0,,98.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,rag_docs_only,multi_source,1,1,0,1.0,0.0,0.5,0.5,1,1.0,1.0,14803.02,14803.02,0.0,,1016.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,full_agent,multi_source,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6866.42,6866.42,0.0,,4041.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,plain_llm,unanswerable,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,951.45,951.45,0.0,,91.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,rag_docs_only,unanswerable,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,3247.02,3247.02,0.0,,956.0
+phase3_live_smoke_gemini_35_lite_20261025_164700,2.1-deterministic-audited,full_agent,unanswerable,1,1,0,1.0,0.0,1.0,1.0,0,1.0,1.0,4119.44,4119.44,0.0,,1257.0

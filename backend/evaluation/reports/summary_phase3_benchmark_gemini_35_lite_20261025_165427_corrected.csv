@@ -1,0 +1,13 @@
+run_id,rubric_version,configuration,category,total_attempted,successful_attempts,failed_attempts,coverage,error_rate,mean_correctness_all,mean_correctness_successful,partial_credit_count,mean_faithfulness_all,mean_faithfulness_successful,mean_latency_ms,median_latency_ms,stddev_latency_ms,mean_latency_failed_ms,mean_tokens
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,plain_llm,ALL,100,100,0,1.0,0.0,0.225,0.225,1,1.0,1.0,1332.36,911.95,1651.78,,96.07
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,rag_docs_only,ALL,100,100,0,1.0,0.0,0.53,0.53,28,0.835,0.835,5909.73,4093.86,3573.67,,1083.61
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,full_agent,ALL,100,100,0,1.0,0.0,0.745,0.745,11,0.9,0.9,6415.27,5998.09,2662.4,,2981.88
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,plain_llm,single_source,40,40,0,1.0,0.0,0.0625,0.0625,1,,,1012.4,1000.37,347.46,,97.85
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,rag_docs_only,single_source,40,40,0,1.0,0.0,0.4875,0.4875,1,0.75,0.75,4786.65,3904.9,2340.87,,1005.9
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,full_agent,single_source,40,40,0,1.0,0.0,0.6625,0.6625,1,0.8375,0.8375,5761.95,5045.26,2803.24,,2504.12
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,plain_llm,multi_source,40,40,0,1.0,0.0,0.0,0.0,0,,,1554.7,875.52,2408.05,,98.83
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,rag_docs_only,multi_source,40,40,0,1.0,0.0,0.3375,0.3375,27,0.8375,0.8375,7727.28,6393.23,4464.78,,1220.28
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,full_agent,multi_source,40,40,0,1.0,0.0,0.7,0.7,10,0.9125,0.9125,6802.18,6157.34,2103.71,,3920.2
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,plain_llm,unanswerable,20,20,0,1.0,0.0,1.0,1.0,0,1.0,1.0,1527.62,933.5,1306.19,,87.0
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,rag_docs_only,unanswerable,20,20,0,1.0,0.0,1.0,1.0,0,1.0,1.0,4520.81,4063.47,1654.73,,965.7
+phase3_benchmark_gemini_35_lite_20261025_165427,2.2-deterministic-audited,full_agent,unanswerable,20,20,0,1.0,0.0,1.0,1.0,0,1.0,1.0,6948.07,6550.1,3194.93,,2060.75

@@ -13,7 +13,7 @@ BACKEND_ROOT = CURRENT_DIR.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-RUBRIC_VERSION = "2.1-deterministic-audited"
+RUBRIC_VERSION = "2.2-deterministic-audited"
 
 REFUSAL_SIGNALS = [
     "not available",
@@ -22,6 +22,14 @@ REFUSAL_SIGNALS = [
     "cannot be answered",
     "not found",
     "does not contain",
+    "do not contain",
+    "does not mention",
+    "do not mention",
+    "does not specify",
+    "do not specify",
+    "not specified",
+    "does not provide",
+    "do not provide",
     "not mentioned",
     "lack sufficient",
     "no such task",
@@ -115,12 +123,13 @@ def _contains_fact(target: str, text: str) -> bool:
     text_clean = text.lower()
     if not target_clean:
         return False
-    # Use word boundary or non-word lookaround to prevent substring false positives
+    # Use word boundary or delimiter lookaround to prevent substring false positives
+    # while allowing Markdown formatting (backticks, asterisks, underscores) and punctuation
     if target_clean in {"$", "€", "£", "¥"}:
-        pattern = r"(?<!\S)" + re.escape(target_clean) + r"(?=[\d\s]|$)"
+        pattern = r"(?<![^\s`*_\'\"(\[{<])" + re.escape(target_clean) + r"(?=[\d\s]|$)"
     else:
-        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<!\S)"
-        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?!\S)"
+        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<![^\s`*_\'\"(\[{<])"
+        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?![^\s`*_\'\"\)\]}>,.;:!?])"
         pattern = prefix + re.escape(target_clean) + suffix
     return bool(re.search(pattern, text_clean))
 
@@ -138,10 +147,10 @@ def _is_contradiction(fv: str, text: str) -> bool:
         return False
 
     if target_clean in {"$", "€", "£", "¥"}:
-        pattern = r"(?<!\S)" + re.escape(target_clean) + r"(?=[\d\s]|$)"
+        pattern = r"(?<![^\s`*_\'\"(\[{<])" + re.escape(target_clean) + r"(?=[\d\s]|$)"
     else:
-        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<!\S)"
-        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?!\S)"
+        prefix = r"\b" if re.match(r"^\w", target_clean) else r"(?<![^\s`*_\'\"(\[{<])"
+        suffix = r"\b" if re.search(r"\w$", target_clean) else r"(?![^\s`*_\'\"\)\]}>,.;:!?])"
         pattern = prefix + re.escape(target_clean) + suffix
 
     matches = list(re.finditer(pattern, text_clean))
@@ -154,17 +163,17 @@ def _is_contradiction(fv: str, text: str) -> bool:
         following = text_clean[end:min(len(text_clean), end + 60)]
 
         is_transitional = False
-        if re.search(r"\b(?:moved|rescheduled|changed|shifted|delayed|pushed|updated)\s+from\s*[:\s*]*$", preceding):
+        if re.search(r"\b(?:moved|rescheduled|changed|shifted|delayed|pushed|updated)\s+from\s*[:\s*(`*_\'\"(\[{<]*$", preceding):
             is_transitional = True
-        elif re.search(r"\bfrom\s*[:\s*]*$", preceding) and re.search(r"^\s+to\b", following):
+        elif re.search(r"\bfrom\s*[:\s*(`*_\'\"(\[{<]*$", preceding) and re.search(r"^\s*[`*_\'\"\)\]}>,.;:!?]*\s*to\b", following):
             is_transitional = True
-        elif re.search(r"\b(?:no|zero|without|not|never|neither|nor|none|n/a|isn't|wasn't|aren't|weren't|don't|didn't|doesn't|instead of|rather than|previously|originally)\s*[:\s*(]*$", preceding):
+        elif re.search(r"\b(?:no|zero|without|not|never|neither|nor|none|n/a|isn't|wasn't|aren't|weren't|don't|didn't|doesn't|instead of|rather than|previously|originally)\s*(?:\w+\s+)?[:\s*(`*_\'\"(\[{<]*$", preceding):
             is_transitional = True
-        elif re.search(r"^\s*[:=-]?\s*(?:none|no|zero|0|false|nil|null)\b", following):
+        elif re.search(r"^\s*[:=-]?\s*[`*_\'\"\)\]}>,.;:!?]*\s*(?:none|no|zero|0|false|nil|null)\b", following):
             is_transitional = True
-        elif re.search(r"\bfeature freeze(?:\s+(?:deadline|date))?(?:\s+(?:is|of|on|at|set for))?[:\s*(]+$", preceding):
+        elif re.search(r"\bfeature freeze(?:\s+(?:deadline|date))?(?:\s+(?:is|of|on|at|set for))?[:\s*(`*_\'\"(\[{<]+$", preceding):
             is_transitional = True
-        elif re.search(r"\boverflow(?:\s+(?:limit|connections?))?(?:\s+(?:is|of|to|at))?[:\s*]+$", preceding):
+        elif re.search(r"\boverflow(?:\s+(?:limit|connections?))?(?:\s+(?:is|of|to|at))?[:\s*(`*_\'\"(\[{<]+$", preceding):
             is_transitional = True
 
         if not is_transitional:
@@ -253,9 +262,18 @@ def evaluate_unanswerable_refusal(
         }
 
     # Check for valid refusal signals or required refusal concepts
+    # Also support semantically equivalent plural/singular variations (e.g. 'do not contain' / 'does not contain')
+    req_concepts = criteria.get("required_concepts", [])
+    expanded_concepts = set(req_concepts)
+    for rc in req_concepts:
+        if rc.startswith("does not "):
+            expanded_concepts.add(rc.replace("does not ", "do not "))
+        elif rc.startswith("do not "):
+            expanded_concepts.add(rc.replace("do not ", "does not "))
+
     has_refusal = (
         any(sig in lower for sig in REFUSAL_SIGNALS) or
-        any(_contains_fact(rc, lower) for rc in criteria.get("required_concepts", []))
+        any(_contains_fact(rc, lower) for rc in expanded_concepts)
     )
     if has_refusal:
         return {
@@ -745,10 +763,11 @@ def main():
         help="Directory to save summary CSV and scored JSON reports"
     )
     parser.add_argument(
-        "--questions-file", "-q",
+        "--questions-file", "--dataset", "-q",
         type=str,
+        dest="questions_file",
         default=str(CURRENT_DIR / "questions.json"),
-        help="Path to questions.json for criteria and rubric enrichment"
+        help="Path to questions.json for criteria and rubric enrichment (alias: --dataset)"
     )
     parser.add_argument(
         "--report-name", "-r",
