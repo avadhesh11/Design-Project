@@ -71,6 +71,44 @@ def test_canonical_phase3_dataset_schema_and_counts():
     assert heldout_categories.count("unanswerable") == 16
 
 
+def test_category_cohort_boundaries_and_anti_naive_range_assumption():
+    """
+    Ensure category mapping is strictly determined by the 'category' field and never
+    by naive question ID intervals.
+
+    Regression Guard:
+    - Baseline (Q01-Q20): contains 8 single_source (Q01-Q08), 8 multi_source (Q09-Q16), 4 unanswerable (Q17-Q20).
+    - Held-out (Q21-Q100): contains 32 single_source (Q21-Q52), 32 multi_source (Q53-Q84), 16 unanswerable (Q85-Q100).
+    - Prevents naive range bug where Q41-Q52 were assumed to be multi_source or Q81-Q84 were assumed unanswerable.
+    """
+    questions = load_dataset(PHASE3_DATASET)
+    q_map = {q["id"]: q["category"] for q in questions}
+
+    # Verify Baseline cohort mapping
+    for i in range(1, 9):
+        assert q_map[f"Q{i:02d}"] == "single_source"
+    for i in range(9, 17):
+        assert q_map[f"Q{i:02d}"] == "multi_source"
+    for i in range(17, 21):
+        assert q_map[f"Q{i:02d}"] == "unanswerable"
+
+    # Verify Held-out cohort mapping
+    for i in range(21, 53):
+        assert q_map[f"Q{i:02d}"] == "single_source", f"Q{i:02d} must be single_source, got {q_map[f'Q{i:02d}']}"
+    for i in range(53, 85):
+        assert q_map[f"Q{i:02d}"] == "multi_source", f"Q{i:02d} must be multi_source, got {q_map[f'Q{i:02d}']}"
+    for i in range(85, 101):
+        qid = f"Q{i:02d}" if i < 100 else f"Q{i}"
+        assert q_map[qid] == "unanswerable", f"{qid} must be unanswerable, got {q_map[qid]}"
+
+    # Explicit anti-pattern assertions:
+    assert q_map["Q41"] == "single_source", "Q41 is single_source, NOT multi_source"
+    assert q_map["Q52"] == "single_source", "Q52 is single_source, NOT multi_source"
+    assert q_map["Q81"] == "multi_source", "Q81 is multi_source, NOT unanswerable"
+    assert q_map["Q84"] == "multi_source", "Q84 is multi_source, NOT unanswerable"
+    assert q_map["Q85"] == "unanswerable", "Q85 is unanswerable"
+
+
 def test_heldout_multi_source_cross_source_requirements():
     """Verify that every multi-source question genuinely requires >=2 distinct source types."""
     questions = load_dataset(PHASE3_DATASET)
