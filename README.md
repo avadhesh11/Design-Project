@@ -7,1037 +7,381 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0.49-D71F00?style=flat-square)](https://www.sqlalchemy.org/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-1.2.5-1C3C3C?style=flat-square)](https://langchain-ai.github.io/langgraph/)
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-Flash%202.5-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-Flash%202.5%20%7C%203.5-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-Orbit (formerly *Nexus AI*) is an enterprise-ready, open-source collaborative workspace and autonomous agent platform. It unifies project management, rich documentation, real-time team messaging, interactive visual workflow design, and autonomous AI agents powered by LangGraph, Google Gemini, and pgvector-backed Retrieval-Augmented Generation (RAG).
-
----
-
-## Table of Contents
-
-- [Overview and Problem Statement](#overview-and-problem-statement)
-- [Key Features](#key-features)
-- [System Architecture](#system-architecture)
-  - [High-Level System Architecture](#high-level-system-architecture)
-  - [End-to-End Request Lifecycle](#end-to-end-request-lifecycle)
-  - [Authentication and Session Lifecycle](#authentication-and-session-lifecycle)
-  - [RAG Document Ingestion & Retrieval Pipeline](#rag-document-ingestion--retrieval-pipeline)
-  - [LangGraph Autonomous Agent Execution Loop](#langgraph-autonomous-agent-execution-loop)
-  - [Database Entity-Relationship (ER) Diagram](#database-entity-relationship-er-diagram)
-- [Technology Stack](#technology-stack)
-- [Repository and Directory Structure](#repository-and-directory-structure)
-- [Database Design and Models](#database-design-and-models)
-- [API Reference and Route Inventory](#api-reference-and-route-inventory)
-  - [Route Inventory Summary](#route-inventory-summary)
-  - [Authentication & Identity (`/api/auth`)](#authentication--identity-apiauth)
-  - [Workspaces & Membership (`/api/workspaces`)](#workspaces--membership-apiworkspaces)
-  - [Tasks & Kanban Operations (`/api/tasks`)](#tasks--kanban-operations-apitasks)
-  - [Knowledge Base & Documents (`/api/documents`)](#knowledge-base--documents-apidocuments)
-  - [Agentic AI & Chat Sessions (`/api/ai`)](#agentic-ai--chat-sessions-apiai)
-  - [Team Channels & Direct Messaging (`/api/chat`)](#team-channels--direct-messaging-apichat)
-  - [Collaborative Flows & Workflows (`/api/flows`)](#collaborative-flows--workflows-apiflows)
-  - [GitHub App & Integrations (`/api/integrations`, `/api/github`, `/api/webhooks`)](#github-app--integrations-apiintegrations-apigithub-apiwebhooks)
-  - [System Health (`/api/health`)](#system-health-apihealth)
-- [Installation and Local Setup](#installation-and-local-setup)
-  - [Prerequisites](#prerequisites)
-  - [Quickstart with Docker Compose](#quickstart-with-docker-compose)
-  - [Manual Local Development Setup](#manual-local-development-setup)
-- [Environment Variables and Configuration](#environment-variables-and-configuration)
-- [Engineering Decisions and Implementation Patterns](#engineering-decisions-and-implementation-patterns)
-- [Testing and Quality Assurance](#testing-and-quality-assurance)
-- [Known Limitations and Production Considerations](#known-limitations-and-production-considerations)
-- [Future Roadmap](#future-roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+Orbit is an open-source collaborative engineering workspace and autonomous agent platform. It unifies project management, rich technical documentation, real-time team messaging, interactive visual workflow diagrams, and action-oriented AI agents powered by LangGraph, Google Gemini, local Ollama models, and pgvector-backed Retrieval-Augmented Generation (RAG).
 
 ---
 
-## Overview and Problem Statement
+## Overview
 
-Modern product engineering teams often switch between disconnected tools: Linear or Jira for tasks, Notion for documentation, Slack for messaging, Miro for system diagrams, and external ChatGPT/Claude web interfaces for AI queries. This causes:
-1. **Context Fragmentation**: AI assistants lack access to private tasks, team documents, architecture diagrams, and ongoing sprint discussions.
-2. **Action Inability**: Traditional chat tools cannot modify tasks, send status emails, or directly read internal documents.
-3. **Data Silos**: Diagrams, project specifications, and commit activity live in separate ecosystems.
+Modern product engineering teams face acute context fragmentation across disconnected tools: issue trackers (Linear/Jira), wikis (Notion), team chat (Slack), architecture canvases (Miro), and external LLM web chats. General-purpose chat interfaces lack access to internal project tickets, sprint discussions, and architectural diagrams, and cannot take actions on behalf of engineers.
 
-**Orbit** solves this by consolidating workspace collaboration tools into a single platform backed by an **action-capable, context-aware autonomous agent**. The agent not only retrieves information across workspace docs and task boards via vector search, but also takes deterministic actions—such as creating tasks, assigning team members, and drafting email reminders—governed by user workspace permissions.
+**Orbit** solves this challenge by unifying workspace collaboration into a single, cohesive platform backed by an **action-capable, context-aware autonomous agent**. Rather than serving as a passive question-answering tool, the agent actively inspects tasks, queries domain documents using vector similarity search, traverses team chat history, creates or updates task tickets, and sends automated email notifications through an authenticated LangGraph ReAct execution loop.
+
+### Key Differentiators
+
+- **Action-Oriented ReAct Architecture:** The AI agent does not just summarize text; it uses function calling to query databases, modify task trackers, and dispatch operational notifications within strict role-based permission boundaries.
+- **Fail-Closed Retrieval Security:** Document chunks are verified against workspace membership and active database records at query time, preventing cross-tenant data leakage or orphaned chunk hallucinations.
+- **Hybrid Provider Support:** Supports cloud inference via Google Gemini alongside local, private execution via Ollama (e.g., Llama 3.2) with automatic model verification and resilient fallbacks.
+- **Visual Architecture & Workflow Canvas:** Features an interactive node-and-edge workflow builder powered by `@xyflow/react` with version snapshotting, state restoration, and automated AI architectural explanation.
+- **Bi-Directional Developer Integrations:** Integrates with GitHub via GitHub App webhooks to synchronize issues, pull requests, and commit pushes, automatically surfacing "When You Were Away" catch-up digests.
 
 ---
 
 ## Key Features
 
-- 🏢 **Multi-Tenant Workspaces**: Isolated workspaces with role-based access control (`owner`, `admin`, `member`, `viewer`), join codes, invite links, and granular member management.
-- 🔐 **Dual Authentication Mechanism**: Email/password authentication using Argon2 password hashing alongside native GitHub OAuth, backed by short-lived JWT access tokens and HTTP-only refresh tokens with automatic token rotation.
-- 📋 **Interactive Kanban Task Management**: Multi-status workflow boards (`todo`, `in_progress`, `review`, `done`), multi-assignee support, priority indicators, due dates, search filtering, and task audit logs.
-- 📚 **Knowledge Base & Deep RAG Pipeline**: Ingest and index PDF, DOCX, TXT, MD, CSV, and XLSX files. Chunks documents (1000 characters with 50-character overlap), generates vector embeddings via `gemini-embedding-001`, and queries relevant context using PostgreSQL `pgvector` vector similarity search.
-- ✍️ **Collaborative TipTap Document Editor**: Rich text editing with live word/character counting, headings, formatting blocks, and real-time backend synchronization.
-- 🤖 **Autonomous AI Agent (LangGraph + Gemini 2.5 Flash)**: An agentic loop executing tools dynamically:
-  - `search_documents`: Semantic search across workspace knowledge bases.
-  - `get_workspace_tasks`: Real-time query of tasks filtered by status and assignee.
-  - `create_task`: Direct task creation with title, description, priority, and assignees.
-  - `update_task_status`: Status transition execution for existing tasks.
-  - `send_task_reminder_email`: Automated assignee task reminder dispatch via Resend.
-  - `send_task_deadline_email`: Urgent deadline warning email dispatch.
-  - `send_announcement_email`: Workspace-wide broadcast email dispatch.
-  - `get_recent_chat_messages`: Context retrieval from team messaging channels.
-- 💬 **Real-Time Team Messaging**: Channel-based chat and 1-on-1 direct messaging (DMs) powered by Supabase Realtime WebSocket broadcasting with fallback persistence in PostgreSQL.
-- 🗺️ **Orbit Flow Collaborative Canvas**: Drag-and-drop workflow diagram editor built on `@xyflow/react` featuring custom nodes, edges, comments, version checkpointing/restoration, PNG exports, and AI-powered workflow analysis via Google Gemini.
-- 🐙 **GitHub App Integration Architecture**: GitHub App webhook ingestion for repository issues, pull requests, and commit pushes, mapping repository events directly to workspace tasks and calculating away-time activity summaries.
+### 1. Multi-Tenant Workspaces & Role-Based Access Control
+- Isolated workspace scoping for all data entities (tasks, documents, chat messages, flow diagrams, and embeddings).
+- Role-based permissions (`owner`, `admin`, `member`) enforced across both REST API endpoints and autonomous agent tool invocations.
+- Secure invite codes with one-click regeneration and validation.
+
+### 2. Dual-Token Authentication & Identity
+- Secure credential management using Argon2 password hashing via `passlib`.
+- Dual-token session model: short-lived access tokens (JWT) paired with long-lived, HTTP-only refresh cookies.
+- Native GitHub OAuth integration for single-click developer onboarding.
+- Rate-limiting protection on authentication routes powered by SlowAPI.
+
+### 3. Deep Knowledge Base & Multi-Format RAG Pipeline
+- Ingestion support for `.pdf`, `.docx`, `.txt`, `.md`, `.csv`, `.xlsx`, and `.xls` files (up to 10 MB).
+- Multi-format extraction with structural preservation: extracts markdown-formatted tables from PDF and Word documents via `pdfplumber` and `python-docx`, alongside structured CSV/Excel parsing via `pandas`.
+- Chunking engine splitting text into 1,000-word segments with 50-word overlaps.
+- High-dimensional vector embeddings generated via `gemini-embedding-2-preview` (768 dimensions).
+- Cosine similarity vector search executed via PostgreSQL pgvector RPC function (`match_embeddings`) with strict fail-closed workspace isolation.
+
+### 4. Autonomous Agent Engine (LangGraph + Gemini / Ollama)
+- Built on LangGraph's prebuilt ReAct agent pattern with conversational memory.
+- Dynamic tool discovery scoped to user authorization:
+  - `search_workspace_tool`: Performs semantic similarity search across workspace knowledge bases.
+  - `get_tasks_tool`: Retrieves real-time tasks filtered by workflow status and assignees.
+  - `get_recent_chat_tool`: Inspects recent team channel discussions to capture immediate context.
+  - `create_task_tool`: Directly provisions tasks with title, description, priority, and assignees (admin only).
+  - `update_task_tool`: Executes task state transitions and metadata updates (admin only).
+  - `send_task_reminder_email_tool`: Dispatches task assignment reminders via SMTP (admin only).
+  - `send_deadline_alert_email_tool`: Scans for tasks due within 48 hours and alerts assignees (admin only).
+  - `send_important_info_email_tool`: Broadcasts critical operational announcements to workspace members (admin only).
+
+### 5. Interactive Kanban Task Tracker
+- Multi-column workflow boards (`todo`, `in_progress`, `review`, `done`).
+- Granular task metadata: priority levels (`low`, `medium`, `high`, `urgent`), due dates, assignees, and audit timestamps.
+- Direct commit and pull request association: links Git commit hashes (7–40 hex characters) to tasks, automatically transitioning ticket statuses.
+
+### 6. Interactive Visual Workflow Builder (Orbit Flow)
+- Node-and-edge visual canvas built with `@xyflow/react`.
+- Supports custom system component nodes, directional connection handles, and canvas annotations.
+- Full state synchronization, version checkpoint snapshots, and rollback restoration.
+- **AI Graph Explanation:** Ingests the canvas graph topology and generates structured architectural explanations using Gemini.
+
+### 7. Real-Time Team Messaging & Collaboration
+- Team workspace channels and direct messaging.
+- Real-time message broadcasting powered by Supabase Realtime WebSocket subscriptions with persistent PostgreSQL storage.
+- Document editor powered by TipTap with word counting and live content autosave.
+
+### 8. GitHub Integration & Catch-Up Digest
+- Webhook processor for GitHub App events (`issues`, `pull_request`, `push`, `installation`).
+- Automated "When You Were Away" digest calculating recent commits, opened pull requests, task changes, and missed conversations since the user's last heartbeat.
+
+---
+
+## Tech Stack
+
+### Frontend
+- **Framework:** Next.js 14 (App Router)
+- **Library:** React 18, TypeScript 5
+- **Styling:** Tailwind CSS, PostCSS, Lucide React
+- **UI Components:** Radix UI Primitives, Class Variance Authority (CVA)
+- **State Management:** Zustand, TanStack Query v5
+- **Canvas / Diagramming:** `@xyflow/react` (React Flow v12)
+- **Rich Text Editing:** TipTap (`@tiptap/react`, `@tiptap/starter-kit`)
+- **HTTP Client:** Axios
+
+### Backend
+- **Framework:** FastAPI 0.137.1 (Python 3.11+)
+- **Server:** Uvicorn (ASGI)
+- **Agent Orchestration:** LangGraph 1.2.5, LangChain Core
+- **LLM Integrations:** `langchain-google-genai` (Gemini 2.5/3.5), `langchain-ollama` (Local Llama/Ollama)
+- **ORM & Data Layer:** SQLAlchemy 2.0, Alembic
+- **Validation & Settings:** Pydantic v2, Pydantic Settings
+- **Security & Cryptography:** Passlib (Argon2), PyJWT, Cryptography
+- **Rate Limiting:** SlowAPI (Limits)
+- **Document Processing:** PyPDF, `pdfplumber`, `python-docx`, `pandas`, `openpyxl`
+
+### Storage & Infrastructure
+- **Primary Relational Database:** PostgreSQL 16
+- **Vector Search Engine:** PostgreSQL `pgvector` extension (768-dimensional embeddings via Supabase RPC)
+- **Caching & Broker:** Redis 7 Alpine
+- **Realtime Layer:** Supabase Realtime (WebSockets)
+- **Containerization:** Docker, Docker Compose (multi-stage builds)
 
 ---
 
 ## System Architecture
 
-### High-Level System Architecture
+### High-Level Architecture
 
 ```mermaid
 graph TB
-    subgraph Client["Client Tier (Browser)"]
-        FE["Next.js 14 App Router (React 18 / TypeScript)"]
-        Zustand["Zustand Stores (Auth & Workspace)"]
-        TQ["TanStack Query v5 (Server Cache)"]
-        Canvas["@xyflow/react (Flow Canvas)"]
-        TipTap["TipTap Rich Editor"]
+    subgraph ClientTier["Client Tier (Browser)"]
+        NextJS["Next.js 14 App Router"]
+        Zustand["Zustand Client Stores"]
+        ReactQuery["TanStack Query v5"]
+        FlowCanvas["@xyflow/react Canvas"]
+        TipTapEditor["TipTap Rich Editor"]
     end
 
-    subgraph Gateway["API Gateway & Reverse Proxy"]
-        Caddy["Docker / Reverse Proxy / localhost:8000"]
+    subgraph GatewayTier["Gateway & Middleware"]
+        FastAPIApp["FastAPI Application Gateway"]
+        SlowAPILimiter["SlowAPI Rate Limiter"]
+        AuthMiddleware["JWT & Cookie Auth Validator"]
     end
 
-    subgraph Backend["Application Tier (FastAPI / Python 3.11+)"]
-        API["FastAPI HTTP Server"]
-        Middleware["SlowAPI Rate Limiter & CORS Middleware"]
-        AuthLayer["JWT & Argon2 Security Layer"]
-        
-        subgraph Subsystems["Application Subsystems"]
-            RAG["RAG Ingestion & Vector Service (Gemini Embeddings)"]
-            Agent["LangGraph ReAct Autonomous Agent (Gemini 2.5 Flash)"]
-            ChatSys["Realtime Chat & DM Hub"]
-            FlowSys["Flow Canvas & AI Explainer Engine"]
-            TaskSys["Task & Kanban Service"]
-            GHSys["GitHub App Webhook Ingestion Engine"]
+    subgraph ServiceTier["Core Application Services"]
+        AuthService["Authentication & GitHub OAuth"]
+        WorkspaceService["Workspace & Member Service"]
+        TaskService["Kanban & GitHub Link Service"]
+        DocService["Document Ingestion & Parser"]
+        FlowService["Workflow Canvas & Versioning Engine"]
+        AgentService["LangGraph ReAct Autonomous Agent"]
+    end
+
+    subgraph DataTier["Data & Inference Tier"]
+        PostgreSQL[("PostgreSQL 16 (Primary DB)")]
+        PGVector[("Supabase / pgvector (Embeddings)")]
+        RedisCache[("Redis 7 (Session & Cache)")]
+        GeminiAPI["Google Gemini LLM & Embeddings"]
+        OllamaLocal["Local Ollama Server (Optional)"]
+        SMTPServer["SMTP Email Gateway"]
+    end
+
+    ClientTier -->|REST API / JSON| FastAPIApp
+    ClientTier -->|WebSocket Subscriptions| PGVector
+
+    FastAPIApp --> SlowAPILimiter --> AuthMiddleware
+    AuthMiddleware --> ServiceTier
+
+    DocService -->|Extract Text| DocService
+    DocService -->|Generate 768d Vectors| GeminiAPI
+    DocService -->|Store Vectors| PGVector
+    DocService -->|Store Metadata| PostgreSQL
+
+    AgentService -->|Semantic Search| PGVector
+    AgentService -->|Read / Write Tasks| TaskService
+    AgentService -->|Dispatch Notifications| SMTPServer
+    AgentService -->|ReAct Reasoning Loop| GeminiAPI
+    AgentService -.->|Local Inference| OllamaLocal
+
+    ServiceTier --> PostgreSQL
+    ServiceTier --> RedisCache
+```
+
+### End-to-End Request & Agent ReAct Execution Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Browser
+    participant API as FastAPI Router
+    participant Auth as Auth & Permission Gate
+    participant Agent as LangGraph ReAct Engine
+    participant LLM as Google Gemini / Ollama
+    participant Tools as Tool Execution Layer
+    participant DB as PostgreSQL & pgvector
+
+    User->>API: POST /api/ai/chat { message, workspace_id }
+    API->>Auth: Validate JWT / Session & Check Membership
+    Auth-->>API: User Context (role, user_id, is_admin)
+    
+    API->>Agent: Initialize ReAct Loop with Contextual Tools
+    Agent->>DB: Pre-inject Relevant Document Chunks (Vector Search)
+    DB-->>Agent: Top matching document chunks
+    
+    loop Dynamic Reasoning & Tool Calling
+        Agent->>LLM: Prompt + Conversation History + Available Tools
+        LLM-->>Agent: Action Decision (e.g. call `get_tasks_tool` or `search_workspace_tool`)
+        alt Tool Invocation Required
+            Agent->>Tools: Execute Scoped Tool (with workspace_id closure)
+            Tools->>DB: Query / Mutate Records
+            DB-->>Tools: Structured Result
+            Tools-->>Agent: Observation Data
+        else Final Answer Ready
+            LLM-->>Agent: Synthesized Markdown Response
         end
     end
 
-    subgraph External["External Cloud & AI Services"]
-        GoogleAI["Google Gemini API (gemini-2.5-flash & text-embedding-004)"]
-        SupabaseRT["Supabase Realtime (WebSocket Broadcasting)"]
-        ResendAPI["Resend Email API (Transactional Alerts)"]
-        GHAPI["GitHub REST API & Webhooks"]
-    end
-
-    subgraph Storage["Persistence & Caching Tier"]
-        PG[("PostgreSQL 16 (Relational Tables)")]
-        PGV[("pgvector Extension (Supabase Vector Store)")]
-        Redis[("Redis 7 (Distributed Caching & Sessions)")]
-    end
-
-    FE -->|HTTP / REST (Axios Interceptors)| Caddy
-    FE -.->|WebSocket Channels| SupabaseRT
-    Caddy --> API
-    API --> Middleware
-    Middleware --> AuthLayer
-    AuthLayer --> Subsystems
-
-    RAG --> GoogleAI
-    RAG --> PGV
-    Agent --> GoogleAI
-    Agent --> Subsystems
-    Agent --> ResendAPI
-    GHSys --> GHAPI
-
-    Subsystems --> PG
-    Subsystems -.-> Redis
+    Agent->>DB: Save Message History in `ai_chats`
+    Agent-->>API: Final Answer + Source Attribution
+    API-->>User: 200 OK Response
 ```
 
----
-
-### End-to-End Request Lifecycle
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Client (Next.js)
-    participant RateLimit as SlowAPI Middleware
-    participant Auth as Auth Dependency (get_current_user)
-    participant Route as FastAPI Router Handler
-    participant Service as Service / Agent Layer
-    participant DB as PostgreSQL (SQLAlchemy)
-    participant Ext as External Service (Gemini / Resend)
-
-    User->>RateLimit: HTTP Request with Bearer Token & Cookies
-    alt Rate Limit Exceeded
-        RateLimit-->>User: 429 Too Many Requests
-    else Allowed
-        RateLimit->>Auth: Forward Request
-    end
-
-    Auth->>Auth: Decode & Verify JWT Access Token
-    alt Invalid or Expired Token
-        Auth-->>User: 401 Unauthorized (Triggers Frontend Refresh)
-    else Token Valid
-        Auth->>DB: Fetch Active User Record
-        DB-->>Auth: User Entity
-        Auth->>Route: Inject Current User
-    end
-
-    Route->>Route: Validate Request Payload (Pydantic Schema)
-    alt Validation Error
-        Route-->>User: 422 Unprocessable Entity
-    else Schema Valid
-        Route->>Service: Execute Business Logic
-    end
-
-    opt Invokes External Service
-        Service->>Ext: External API Call (Gemini / Resend)
-        Ext-->>Service: Service Response
-    end
-
-    Service->>DB: Read/Write Database Transaction
-    DB-->>Service: Commit / Result
-    Service-->>Route: Return Structured DTO
-    Route-->>User: 200/201 JSON Response
-```
-
----
-
-### Authentication and Session Lifecycle
-
-Orbit implements a secure dual-token authentication pattern with automatic silent token renewal.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as Browser Client
-    participant AuthAPI as /api/auth
-    participant DB as PostgreSQL
-    participant Storage as Client State (Zustand & Cookies)
-
-    Note over Client,AuthAPI: 1. User Registration / Login
-    Client->>AuthAPI: POST /api/auth/login { email, password }
-    AuthAPI->>DB: Query User by Email
-    DB-->>AuthAPI: User record (with Argon2 password_hash)
-    AuthAPI->>AuthAPI: Verify Password Hash
-    AuthAPI->>AuthAPI: Generate Short-Lived Access Token (15-60m)
-    AuthAPI->>AuthAPI: Generate Long-Lived Refresh Token (7-30d)
-    AuthAPI-->>Client: 200 OK + JSON { access_token, user } + Set-Cookie: refresh_token (HttpOnly)
-    Client->>Storage: Store access_token in Memory / Zustand
-
-    Note over Client,AuthAPI: 2. Authenticated API Call
-    Client->>AuthAPI: GET /api/workspaces (Authorization: Bearer <access_token>)
-    AuthAPI-->>Client: 200 OK (Workspace List)
-
-    Note over Client,AuthAPI: 3. Silent Refresh Interceptor
-    Client->>AuthAPI: GET /api/tasks (Expired access_token)
-    AuthAPI-->>Client: 401 Unauthorized
-    Client->>AuthAPI: POST /api/auth/refresh (Sends HttpOnly Cookie)
-    AuthAPI->>AuthAPI: Validate Refresh Token
-    AuthAPI-->>Client: 200 OK + New access_token
-    Client->>AuthAPI: Retry Original GET /api/tasks with new token
-    AuthAPI-->>Client: 200 OK (Task List)
-
-    Note over Client,AuthAPI: 4. Logout
-    Client->>AuthAPI: POST /api/auth/logout
-    AuthAPI-->>Client: 200 OK + Clear-Cookie: refresh_token
-```
-
----
-
-### RAG Document Ingestion & Retrieval Pipeline
+### RAG Ingestion and Fail-Closed Vector Search
 
 ```mermaid
 flowchart TD
     subgraph Ingestion["Document Ingestion Pipeline"]
-        A["Document Uploaded (.pdf, .docx, .txt, .csv, .xlsx)"] --> B["FastAPI Upload Endpoint: /api/documents/upload"]
-        B --> C{"Format Parser"}
-        C -->|PDF| D1["pdfplumber Extractor"]
-        C -->|DOCX| D2["python-docx Extractor"]
-        C -->|Excel / CSV| D3["pandas / openpyxl Extractor"]
-        C -->|Plain Text / MD| D4["Standard UTF-8 Reader"]
-        D1 & D2 & D3 & D4 --> E["Text Chunker (1000 chars / 50 overlap)"]
-        E --> F["Google GenAI Embeddings API (gemini-embedding-001)"]
-        F --> G["Store in Supabase pgvector table: document_embeddings"]
-        B --> H["Store Document Metadata in PostgreSQL: documents table"]
+        Upload["File Upload: .pdf, .docx, .txt, .csv, .xlsx"] --> Parse{"Document Parser"}
+        Parse -->|PDF| P1["pdfplumber (Text & Markdown Tables)"]
+        Parse -->|DOCX| P2["python-docx (Text & Structural Tables)"]
+        Parse -->|CSV / Excel| P3["pandas (Dataframe to Structured Text)"]
+        Parse -->|Plain Text| P4["UTF-8 Raw Extractor"]
+        
+        P1 & P2 & P3 & P4 --> Chunk["Word Chunker (1,000 words, 50-word overlap)"]
+        Chunk --> Embed["Gemini Embedding 2 Preview (768-dim)"]
+        Embed --> Upsert["Insert into Supabase 'embeddings' table"]
+        Upload --> Meta["Record Document in PostgreSQL 'documents' table"]
     end
 
-    subgraph Retrieval["Agent Retrieval Phase"]
-        Q["User / Agent asks question"] --> R["Embed Query via gemini-embedding-001"]
-        R --> S["Call PostgreSQL RPC: match_embeddings(query_vector, match_threshold, match_count)"]
-        S --> G
-        G --> T["Cosine Similarity Matching"]
-        T --> U["Return Top-K Relevant Document Chunks"]
-        U --> V["Inject Chunks into LangGraph Prompt Context"]
+    subgraph Retrieval["Fail-Closed Vector Retrieval Pipeline"]
+        Query["User Query / Agent Search"] --> QEmbed["Query Vector Embedding (768-dim)"]
+        QEmbed --> RPC["Call PostgreSQL RPC: match_embeddings"]
+        RPC --> Cosine["Calculate Cosine Similarity: 1 - (embedding <=> query)"]
+        Cosine --> Filter["Filter: workspace_id == target AND similarity >= 0.55"]
+        Filter --> Validate{"Verify Source Doc in PostgreSQL"}
+        Validate -->|Active Doc Found| ReturnChunks["Return Validated Evidence Chunks"]
+        Validate -->|Doc Missing / Deleted| Discard["Drop Chunk (Prevent Leakage)"]
     end
 ```
-
----
-
-### LangGraph Autonomous Agent Execution Loop
-
-The AI Assistant uses a **LangGraph StateGraph ReAct Loop** to parse instructions, call tools deterministically, inspect results, and synthesize answers.
-
-```mermaid
-flowchart TD
-    Start([User Prompt Received]) --> Init[Load Agent State: messages, workspace_id, user_id]
-    Init --> AgentNode[Agent Node: Google Gemini 2.5 Flash]
-    AgentNode --> Eval{Tool Call Requested?}
-    
-    Eval -->|No: Final Answer Synthesized| Output([Stream / Return Markdown Response])
-    
-    Eval -->|Yes: Tool Call Required| Router{Tool Dispatcher}
-    Router -->|search_documents| T1["RAG Vector Similarity Search"]
-    Router -->|get_workspace_tasks| T2["Query Tasks DB by Status/Assignee"]
-    Router -->|create_task| T3["Insert Task into PostgreSQL"]
-    Router -->|update_task_status| T4["Update Task Status in DB"]
-    Router -->|send_task_reminder_email| T5["Trigger Resend API Email"]
-    Router -->|send_task_deadline_email| T6["Trigger Resend API Urgent Alert"]
-    Router -->|send_announcement_email| T7["Broadcast Resend Email to Workspace"]
-    Router -->|get_recent_chat_messages| T8["Fetch Chat History from DB"]
-    
-    T1 & T2 & T3 & T4 & T5 & T6 & T7 & T8 --> ToolNode[Append Tool Message to History]
-    ToolNode --> AgentNode
-```
-
----
 
 ### Database Entity-Relationship (ER) Diagram
 
 ```mermaid
 erDiagram
-    User ||--o{ Workspace : "creates"
-    User ||--o{ WorkspaceMember : "has"
-    User ||--o{ Document : "authors"
-    User ||--o{ Task : "creates"
-    User ||--o{ TaskAssignee : "assigned_to"
-    User ||--o{ AIChatSession : "owns"
-    User ||--o{ Flow : "authors"
-    User ||--o{ GitHubConnection : "connects"
+    USERS ||--o{ WORKSPACE_MEMBERS : "belongs_to"
+    USERS ||--o{ TASKS : "assigns"
+    USERS ||--o{ FLOWS : "authors"
+    USERS ||--o{ DOCUMENTS : "uploads"
+    USERS ||--o{ AI_CHAT_SESSIONS : "creates"
+    USERS ||--o{ GITHUB_CONNECTIONS : "authorizes"
 
-    Workspace ||--o{ WorkspaceMember : "contains"
-    Workspace ||--o{ Document : "owns"
-    Workspace ||--o{ Task : "manages"
-    Workspace ||--o{ AIChatSession : "scopes"
-    Workspace ||--o{ Flow : "hosts"
-    Workspace ||--o{ GitHubConnection : "integrates"
+    WORKSPACES ||--o{ WORKSPACE_MEMBERS : "contains"
+    WORKSPACES ||--o{ TASKS : "manages"
+    WORKSPACES ||--o{ DOCUMENTS : "owns"
+    WORKSPACES ||--o{ FLOWS : "contains"
+    WORKSPACES ||--o{ AI_CHAT_SESSIONS : "scopes"
+    WORKSPACES ||--o{ GITHUB_REPOSITORIES : "tracks"
 
-    Task ||--o{ TaskAssignee : "assigned"
-    Task ||--o{ TaskGitHubLink : "linked_to"
+    TASKS ||--o{ TASK_ASSIGNEES : "has"
+    USERS ||--o{ TASK_ASSIGNEES : "assigned"
+    TASKS ||--o{ TASK_GITHUB_LINKS : "links"
+    GITHUB_COMMITS ||--o{ TASK_GITHUB_LINKS : "associated_with"
+    GITHUB_PULL_REQUESTS ||--o{ TASK_GITHUB_LINKS : "associated_with"
 
-    AIChatSession ||--o{ AIChat : "contains_messages"
+    FLOWS ||--o{ FLOW_NODES : "contains"
+    FLOWS ||--o{ FLOW_EDGES : "contains"
+    FLOWS ||--o{ FLOW_COMMENTS : "has"
+    FLOWS ||--o{ FLOW_VERSIONS : "snapshots"
 
-    Flow ||--o{ FlowNode : "defines"
-    Flow ||--o{ FlowEdge : "connects"
-    Flow ||--o{ FlowComment : "annotated_with"
-    Flow ||--o{ FlowVersion : "snapshots"
-
-    GitHubConnection ||--o{ GitHubRepository : "installs"
-    GitHubRepository ||--o{ GitHubEvent : "records"
-    GitHubRepository ||--o{ GitHubPullRequest : "tracks"
-    GitHubRepository ||--o{ GitHubCommit : "tracks"
-    GitHubRepository ||--o{ TaskGitHubLink : "references"
-
-    User {
-        uuid id PK
-        string email UK
-        string name
-        string password_hash
-        string avatar_url
-        string github_id
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    Workspace {
-        uuid id PK
-        string name
-        string slug UK
-        string invite_code UK
-        uuid created_by FK
-        jsonb settings
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    WorkspaceMember {
-        uuid id PK
-        uuid workspace_id FK
-        uuid user_id FK
-        string role "owner | admin | member | viewer"
-        timestamp joined_at
-    }
-
-    Document {
-        uuid id PK
-        uuid workspace_id FK
-        uuid author_id FK
-        string title
-        text content
-        string file_url
-        string file_type
-        jsonb metadata
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    Task {
-        uuid id PK
-        uuid workspace_id FK
-        uuid creator_id FK
-        string title
-        text description
-        string status "todo | in_progress | review | done"
-        string priority "low | medium | high | urgent"
-        timestamp due_date
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    TaskAssignee {
-        uuid id PK
-        uuid task_id FK
-        uuid user_id FK
-    }
-
-    AIChatSession {
-        uuid id PK
-        uuid workspace_id FK
-        uuid user_id FK
-        string title
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    AIChat {
-        uuid id PK
-        uuid session_id FK
-        string role "user | assistant | system"
-        text content
-        jsonb tool_calls
-        timestamp created_at
-    }
-
-    Flow {
-        uuid id PK
-        uuid workspace_id FK
-        uuid author_id FK
-        string title
-        text description
-        jsonb viewport
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    FlowNode {
-        uuid id PK
-        uuid flow_id FK
-        string node_type
-        float position_x
-        float position_y
-        jsonb data
-    }
-
-    FlowEdge {
-        uuid id PK
-        uuid flow_id FK
-        string source_node_id
-        string target_node_id
-        string label
-        jsonb data
-    }
-
-    FlowComment {
-        uuid id PK
-        uuid flow_id FK
-        uuid user_id FK
-        float position_x
-        float position_y
-        text comment
-        timestamp created_at
-    }
-
-    FlowVersion {
-        uuid id PK
-        uuid flow_id FK
-        int version_number
-        jsonb snapshot_data
-        timestamp created_at
-    }
+    AI_CHAT_SESSIONS ||--o{ AI_CHATS : "records"
 ```
 
 ---
 
-## Technology Stack
-
-| Layer | Technology | Version | Purpose in Orbit |
-|---|---|---|---|
-| **Frontend Framework** | [Next.js](https://nextjs.org/) | `14.2.35` | React framework using App Router, SSR, and standalone build support |
-| **Language (Frontend)**| [TypeScript](https://www.typescriptlang.org/) | `5.x` | Type-safe UI components, DTOs, and state definitions |
-| **Styling** | [Tailwind CSS](https://tailwindcss.com/) | `v3.4.1` | Utility-first CSS styling, animations via `tailwindcss-animate` |
-| **Workflow Canvas** | [@xyflow/react](https://reactflow.dev/) | `^12.15.1` | Interactive node-based diagramming, custom cards, and edge connections |
-| **Document Editor** | [TipTap](https://tiptap.dev/) | `^2.11.5` | Headless rich-text editor with real-time formatting |
-| **Client State** | [Zustand](https://github.com/pmndrs/zustand) | `^5.0.3` | Lightweight state stores for authentication and active workspace context |
-| **Server State / Cache**| [TanStack Query](https://tanstack.com/query) | `^5.67.1` | Server state management, caching, optimistic mutations, and retries |
-| **Backend Framework** | [FastAPI](https://fastapi.tiangolo.com/) | `0.137.1` | High-performance Python async web framework with automatic OpenAPI documentation |
-| **ASGI Web Server** | [Uvicorn](https://www.uvicorn.org/) | `0.44.0` | Production ASGI web server supporting async event loops |
-| **Language (Backend)** | [Python](https://www.python.org/) | `3.11+` | Backend business logic, AI orchestration, and database operations |
-| **ORM / Data Access** | [SQLAlchemy](https://www.sqlalchemy.org/) | `2.0.49` | Python SQL toolkit and Object-Relational Mapper (ORM) |
-| **Database Migrations**| [Alembic](https://alembic.sqlalchemy.org/) | `1.15.1` | Database migration engine for schema evolution |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) | `16` | Primary ACID relational database storing workspace models and metadata |
-| **Vector Storage** | [pgvector](https://github.com/pgvector/pgvector) | Compatible | Vector similarity search extension accessed via Supabase RPC |
-| **Cache & Key-Value** | [Redis](https://redis.io/) | `7.0-alpine` | Distributed cache, temporary states, and future queue processing |
-| **AI Orchestration** | [LangGraph](https://langchain-ai.github.io/langgraph/) | `1.2.5` | Graph-based cyclic execution framework for ReAct autonomous agent loops |
-| **LangChain Core** | [LangChain](https://www.langchain.com/) | `1.3.9` | Tool declarations, prompt management, and model interface adapters |
-| **Foundation LLM** | [Google Gemini](https://ai.google.dev/) | `2.5 Flash` | Reasoning engine for agent tool selection, chat, and flow analysis |
-| **Vector Embeddings** | Google GenAI | `gemini-embedding-001` | High-dimensional dense embeddings for RAG document chunking |
-| **Realtime Messaging** | [Supabase Realtime](https://supabase.com/docs/guides/realtime) | Client-backed | WebSocket broadcasting for channel messages and notifications |
-| **Transactional Email**| [Resend](https://resend.com/) | API-driven | Transactional emails for deadlines, task reminders, and announcements |
-| **Document Parsers** | `pdfplumber`, `python-docx`, `pandas`, `openpyxl` | Latest | Multi-format document parsing for knowledge base ingestion |
-| **Rate Limiting** | [SlowAPI](https://github.com/laurents/slowapi) | `0.1.9` | Request throttling and endpoint-level abuse prevention |
-| **Password Security** | Passlib / Argon2 | `1.7.4` | Argon2id cryptographic password hashing algorithm |
-
----
-
-## Repository and Directory Structure
+## Project Structure
 
 ```text
 Design-Project/
-├── docker-compose.yml              # Multi-container orchestration (PostgreSQL, Redis, Backend, Frontend)
-├── README.md                       # Comprehensive system documentation
-│
-├── backend/                        # FastAPI Backend Application
-│   ├── Dockerfile                  # Container definition for Python 3.11 FastAPI service
-│   ├── requirements.txt            # Python dependencies and locked versions
-│   ├── alembic.ini                 # Database migration tool configuration
-│   ├── alembic/                    # Database migration scripts and versions
-│   └── app/                        # Application Source Code
-│       ├── main.py                 # Application entry point, CORS, RateLimiter, Route mounting
-│       ├── config.py               # Settings loader (Pydantic BaseSettings) reading from .env
-│       ├── database.py             # SQLAlchemy engine, sessionmaker, and get_db dependency
-│       ├── models.py               # Complete SQLAlchemy relational database models (17 entities)
-│       │
-│       ├── agents/                 # LangGraph Autonomous Agent Implementation
-│       │   ├── agent.py            # LangGraph ReAct StateGraph definition and loop runner
-│       │   ├── prompts.py          # System instructions and dynamic agent prompts
-│       │   └── tools.py            # 8 actionable tools (RAG, tasks, email, chat retrieval)
-│       │
-│       ├── rag/                    # Retrieval-Augmented Generation Engine
-│       │   ├── chunker.py          # Text chunking logic (1000 char windows, 50 char overlap)
-│       │   ├── embeddings.py       # Google GenAI vector generation client
-│       │   ├── parsers.py          # Parsers for PDF, Word, Excel, CSV, and Plaintext
-│       │   └── vector_store.py     # Supabase pgvector client and similarity RPC interface
-│       │
-│       ├── routes/                 # FastAPI HTTP Routers (63 operational endpoints)
-│       │   ├── auth.py             # User registration, Argon2 login, JWT tokens, GitHub OAuth
-│       │   ├── workspaces.py       # Multi-tenant workspace management, invites, roles
-│       │   ├── tasks.py            # Kanban task board CRUD, multi-assignees, task filters
-│       │   ├── documents.py        # File upload, document indexing, and CRUD
-│       │   ├── ai.py               # AI chat sessions, message histories, LangGraph invocation
-│       │   ├── chat.py             # Team channels, direct messages, inbox aggregators
-│       │   ├── flows.py            # Visual canvas CRUD, sync, version snapshots, AI explainer
-│       │   └── github.py           # GitHub App installation, webhooks, and repository synchronization
-│       │
-│       ├── schemas/                # Pydantic Schemas / Request and Response DTOs
-│       │   ├── auth.py             # Auth payloads and token responses
-│       │   ├── workspaces.py       # Workspace creation, updates, and member DTOs
-│       │   ├── tasks.py            # Task schemas and filtering parameters
-│       │   ├── documents.py        # Document create/update models
-│       │   ├── ai.py               # Chat session and messaging models
-│       │   ├── chat.py             # Chat message requests and inbox DTOs
-│       │   ├── flows.py            # Node, edge, and canvas synchronization DTOs
-│       │   └── github.py           # GitHub webhook and installation models
-│       │
-│       └── services/               # Shared Reusable Business Services
-│           ├── email.py            # Resend email client (task reminders, alerts, announcements)
-│           ├── github.py           # GitHub REST API client, installation token exchange
-│           └── presence.py         # User activity state tracking
-│
-└── frontend/                       # Next.js 14 Web Application
-    ├── Dockerfile                  # Multi-stage production build container (Next.js standalone)
-    ├── package.json                # Frontend dependencies, scripts, and build tools
-    ├── tsconfig.json               # TypeScript configuration and path aliases (@/*)
-    ├── tailwind.config.ts          # Tailwind styling tokens, colors, and layout breakpoints
-    ├── next.config.mjs             # Next.js build configuration (standalone output)
-    │
-    ├── app/                        # Next.js App Router Structure
-    │   ├── layout.tsx              # Root HTML layout and global font provider
-    │   ├── globals.css             # Tailwind base styles and design variables
-    │   ├── page.tsx                # Public product landing page
-    │   ├── (auth)/                 # Public Authentication Route Group
-    │   │   ├── login/page.tsx      # Login form with email/password and GitHub OAuth
-    │   │   └── register/page.tsx   # User registration form
-    │   │
-    │   └── (app)/                  # Protected Application Route Group
-    │       ├── layout.tsx          # Authenticated app shell and global navigation
-    │       └── dashboard/          # Dashboard Features
-    │           ├── page.tsx        # Workspace overview, metrics, and activity feed
-    │           ├── documents/      # Knowledge base view and TipTap document editor
-    │           ├── tasks/          # Drag-and-drop Kanban task management board
-    │           ├── ai/             # Agentic AI assistant interface and multi-session sidebar
-    │           ├── chat/           # Real-time channels and direct messaging interface
-    │           ├── flows/          # Collaborative ReactFlow workflow canvas editor
-    │           ├── integrations/   # GitHub App connection and repository sync dashboard
-    │           └── settings/       # Workspace configuration, member roles, invite links
-    │
-    ├── components/                 # Reusable UI Component Library
-    │   ├── ui/                     # Primitives (Buttons, Dialogs, Inputs, Dropdowns, Badges)
-    │   ├── layout/                 # Sidebar, Topbar, WorkspaceSwitcher, UserDropdown
-    │   ├── tasks/                  # KanbanBoard, TaskCard, TaskModal, AssigneePicker
-    │   ├── documents/              # TipTapEditor, DocumentList, FileUploader
-    │   ├── flows/                  # FlowCanvas, CustomNodes, EdgeOptions, VersionHistoryModal
-    │   ├── chat/                   # ChannelList, MessageFeed, DMList, ChatInput
-    │   └── ai/                     # AIAgentChat, ToolCallBadge, SessionList, PromptSuggestions
-    │
-    ├── hooks/                      # Custom React Hooks
-    │   ├── use-auth.ts             # Auth session wrapper and user profile access
-    │   ├── use-workspace.ts        # Active workspace context and switching logic
-    │   └── use-chat.ts             # Supabase Realtime channel subscription hook
-    │
-    ├── lib/                        # Shared Utilities and API Clients
-    │   ├── api.ts                  # Axios instance with auth headers and refresh interceptor
-    │   ├── supabase.ts             # Supabase Realtime client initialization
-    │   └── utils.ts                # Formatting, date parsing, and class name merge utilities
-    │
-    └── store/                      # Zustand Client State Stores
-        ├── auth-store.ts           # Access token and user authentication state
-        └── workspace-store.ts      # Active workspace selection and metadata
+├── docker-compose.yml          # Multi-container orchestration (Backend, Frontend, Postgres, Redis)
+├── LICENSE                     # MIT License
+├── README.md                   # Primary project documentation
+├── fesign project.md           # Preserved legacy technical reference
+├── backend/
+│   ├── Dockerfile              # Python 3.11-slim production container
+│   ├── requirements.txt        # Pinned Python package dependencies
+│   ├── .env.example            # Backend environment template
+│   ├── app/
+│   │   ├── main.py             # FastAPI entrypoint, middleware, rate limiter, and health check
+│   │   ├── database.py         # SQLAlchemy engine, session factory, Base declarative
+│   │   ├── models.py           # Relational SQLAlchemy ORM schemas
+│   │   ├── schemas.py          # Pydantic request and response contracts
+│   │   ├── dependencies.py     # Auth session injection and permission dependencies
+│   │   ├── migrations.py       # Idempotent database migrations and RPC function definitions
+│   │   ├── agents/
+│   │   │   ├── agent.py        # LangGraph ReAct agent loop and dynamic tool factory
+│   │   │   ├── state.py        # Agent state definitions
+│   │   │   └── tools.py        # Workspace-bound tool implementations (search, tasks, email)
+│   │   ├── rag/
+│   │   │   ├── chunker.py      # Overlapping word-level text chunking engine
+│   │   │   ├── embedder.py     # Google GenAI 768-dim embedding client
+│   │   │   └── vector_store.py # Fail-closed pgvector search and persistence
+│   │   ├── routes/
+│   │   │   ├── auth.py         # Registration, login, token refresh, logout, GitHub OAuth
+│   │   │   ├── workspaces.py   # Multi-tenant workspace lifecycle, members, and settings
+│   │   │   ├── tasks.py        # Kanban task CRUD, commit linking, and completion
+│   │   │   ├── documents.py    # Document upload, extraction, and vector indexation
+│   │   │   ├── ai.py           # Agent session management and conversational chat
+│   │   │   ├── chat.py         # Workspace team messaging channels and inbox
+│   │   │   ├── flows.py        # Visual canvas CRUD, sync, versioning, and AI explanation
+│   │   │   ├── github.py       # GitHub App webhooks, repository sync, and activity digest
+│   │   │   └── dashboard.py    # User presence heartbeats and catch-up analytics
+│   │   ├── services/
+│   │   │   └── github_app.py   # GitHub App JWT generator and Octokit API integration
+│   │   └── utils/
+│   │       ├── document_parser.py # PDF, DOCX, CSV, Excel structural text extractors
+│   │       ├── llm_factory.py     # Multi-provider LLM factory (Gemini + Local Ollama)
+│   │       └── supabase_client.py # Supabase client wrapper
+│   ├── evaluation/             # Research evaluation benchmark infrastructure
+│   │   ├── configs.py          # Empirical evaluation configurations (A/B/C testing)
+│   │   ├── run_evaluation.py   # Benchmark execution runner
+│   │   ├── score_results.py    # Deterministic scoring rubrics and factual metric evaluators
+│   │   ├── questions.json      # Grounded 20-question evaluation dataset
+│   │   └── questions_phase3_100.json # 100-question empirical evaluation benchmark
+│   └── tests/                  # Pytest test suite (unit, integration, permission isolation)
+└── frontend/
+    ├── Dockerfile              # Multi-stage Next.js standalone container
+    ├── package.json            # Node.js dependencies and run scripts
+    ├── next.config.mjs         # Next.js standalone build configuration
+    ├── tailwind.config.ts      # Tailwind CSS styling and theme configuration
+    ├── app/
+    │   ├── (auth)/             # Authentication views (login, registration)
+    │   ├── (app)/dashboard/    # Protected application dashboard layout and views
+    │   │   ├── ai/             # Autonomous agent assistant and chat interface
+    │   │   ├── tasks/          # Interactive Kanban board
+    │   │   ├── documents/      # Knowledge base repository and TipTap rich editor
+    │   │   ├── flows/          # Orbit Flow visual architecture canvas
+    │   │   ├── chat/           # Real-time team messaging interface
+    │   │   ├── integrations/   # GitHub App connection and repository controls
+    │   │   └── settings/       # Workspace member controls and AI provider settings
+    │   └── status/             # System health status page
+    ├── components/             # Reusable UI component library (Radix UI wrappers)
+    ├── hooks/                  # Custom React hooks
+    ├── lib/                    # API clients and utilities
+    ├── store/                  # Zustand stores (authentication, workspace state)
+    └── types/                  # TypeScript interface definitions
 ```
 
 ---
 
-## Database Design and Models
-
-The backend persists application state across **17 SQLAlchemy models** defined in `backend/app/models.py`:
-
-| Model Name | Table Name | Purpose | Primary Relationships |
-|---|---|---|---|
-| `User` | `users` | User credentials, profile info, and OAuth IDs | Author of Workspaces, Documents, Tasks, Flows, and Sessions |
-| `Workspace` | `workspaces` | Multi-tenant tenant boundary | Owns Members, Tasks, Docs, Flows, Integrations, and Sessions |
-| `WorkspaceMember` | `workspace_members` | Associates users to workspaces with roles | Belongs to `Workspace` and `User` (`owner`, `admin`, `member`, `viewer`) |
-| `Document` | `documents` | Stores knowledge base docs and TipTap content | Belongs to `Workspace` and author `User` |
-| `Task` | `tasks` | Kanban task items, priorities, and status | Belongs to `Workspace` and creator `User`; has multiple assignees |
-| `TaskAssignee` | `task_assignees` | Many-to-many link between tasks and users | Links `Task` to `User` |
-| `AIChatSession` | `ai_chat_sessions` | AI conversation thread containers | Belongs to `Workspace` and `User`; contains messages |
-| `AIChat` | `ai_chats` | Individual AI messages, role, and tool calls | Belongs to `AIChatSession` |
-| `Flow` | `flows` | Workflow diagram metadata and viewport data | Belongs to `Workspace` and author `User` |
-| `FlowNode` | `flow_nodes` | Position, type, and payload data for canvas nodes | Belongs to `Flow` (Cascading delete) |
-| `FlowEdge` | `flow_edges` | Connections between flow canvas nodes | Belongs to `Flow` (Cascading delete) |
-| `FlowComment` | `flow_comments` | Positioned spatial annotations on canvas | Belongs to `Flow` and author `User` |
-| `FlowVersion` | `flow_versions` | Immutable JSON snapshots of canvas versions | Belongs to `Flow` |
-| `GitHubConnection` | `github_connections`| Workspace connection to GitHub App installation| Belongs to `Workspace` and installing `User` |
-| `GitHubRepository` | `github_repositories`| Tracked GitHub repositories in workspace | Belongs to `GitHubConnection` |
-| `GitHubEvent` | `github_events` | Raw webhook event log from GitHub | Belongs to `GitHubRepository` |
-| `GitHubPullRequest`| `github_pull_requests`| PR lifecycle records | Belongs to `GitHubRepository` |
-| `GitHubCommit` | `github_commits` | Commit metadata and author tracking | Belongs to `GitHubRepository` |
-| `TaskGitHubLink` | `task_github_links` | Links a workspace task to a PR or Issue | Belongs to `Task` and `GitHubRepository` |
-| `UserActivityState`| `user_activity_states`| Tracks last-seen activity for away catch-up | Belongs to `User` and `Workspace` |
-
----
-
-## API Reference and Route Inventory
-
-All backend routes are mounted under the `/api` prefix in `backend/app/main.py`. The backend implements **63 verified HTTP operations** across 48 path endpoints.
-
-### Route Inventory Summary
-
-| Method | Complete Endpoint | Module | Description | Protected? |
-|---|---|---|---|:---:|
-| `GET` | `/api/health` | System | Service health and database ping | No |
-| `POST` | `/api/auth/register` | Auth | Register a new user with Argon2 password hashing | No |
-| `POST` | `/api/auth/login` | Auth | Authenticate user, receive JWT access token & refresh cookie | No |
-| `POST` | `/api/auth/logout` | Auth | Revoke session and clear refresh token cookie | No |
-| `POST` | `/api/auth/refresh` | Auth | Exchange HttpOnly refresh cookie for a new access token | No |
-| `GET` | `/api/auth/me` | Auth | Get current authenticated user profile | Yes |
-| `GET` | `/api/auth/github` | Auth | Initiate GitHub OAuth authorization flow | No |
-| `GET` | `/api/auth/github/callback`| Auth | GitHub OAuth redirect callback | No |
-| `GET` | `/api/workspaces/` | Workspaces | List all workspaces the user belongs to | Yes |
-| `POST` | `/api/workspaces/` | Workspaces | Create a new workspace (creator becomes owner) | Yes |
-| `GET` | `/api/workspaces/{workspace_id}` | Workspaces | Fetch workspace details and member count | Yes |
-| `DELETE` | `/api/workspaces/{workspace_id}` | Workspaces | Delete workspace (Owner only) | Yes |
-| `POST` | `/api/workspaces/join/{invite_code}` | Workspaces | Join workspace using an invite code | Yes |
-| `POST` | `/api/workspaces/{workspace_id}/regenerate-invite` | Workspaces | Generate a new invite code for workspace | Yes |
-| `GET` | `/api/workspaces/{workspace_id}/members` | Workspaces | List all members and roles in workspace | Yes |
-| `DELETE` | `/api/workspaces/{workspace_id}/members/{member_id}` | Workspaces | Remove a member from the workspace | Yes |
-| `PATCH` | `/api/workspaces/{workspace_id}/members/{member_id}/role` | Workspaces | Update a member's role | Yes |
-| `GET` | `/api/workspaces/{workspace_id}/activity` | Workspaces | Get recent audit log activity in workspace | Yes |
-| `GET` | `/api/workspaces/{workspace_id}/settings` | Workspaces | Get workspace configuration and feature flags | Yes |
-| `PATCH` | `/api/workspaces/{workspace_id}/settings` | Workspaces | Update workspace configuration and feature flags | Yes |
-| `GET` | `/api/tasks/` | Tasks | List workspace tasks with optional status/assignee filters | Yes |
-| `POST` | `/api/tasks/` | Tasks | Create a new task with assignees | Yes |
-| `PATCH` | `/api/tasks/{task_id}` | Tasks | Update task status, priority, or metadata | Yes |
-| `DELETE` | `/api/tasks/{task_id}` | Tasks | Delete a task | Yes |
-| `GET` | `/api/documents/` | Documents | List all documents belonging to a workspace | Yes |
-| `POST` | `/api/documents/` | Documents | Create a blank rich-text document | Yes |
-| `POST` | `/api/documents/upload` | Documents | Upload and parse document file into vector embeddings | Yes |
-| `GET` | `/api/documents/{doc_id}` | Documents | Fetch full document content and metadata | Yes |
-| `PATCH` | `/api/documents/{doc_id}` | Documents | Update document title or rich-text content | Yes |
-| `DELETE` | `/api/documents/{doc_id}` | Documents | Delete a document and its embeddings | Yes |
-| `POST` | `/api/ai/chat` | AI | Submit prompt to LangGraph ReAct agent | Yes |
-| `GET` | `/api/ai/{workspace_id}/sessions` | AI | List AI chat conversation sessions | Yes |
-| `POST` | `/api/ai/{workspace_id}/sessions` | AI | Create a new AI chat conversation session | Yes |
-| `PATCH` | `/api/ai/{workspace_id}/sessions/{session_id}` | AI | Rename an AI chat conversation session | Yes |
-| `DELETE` | `/api/ai/{workspace_id}/sessions/{session_id}` | AI | Delete an AI chat conversation session | Yes |
-| `GET` | `/api/ai/{workspace_id}/sessions/{session_id}/messages` | AI | Fetch message history for a session | Yes |
-| `GET` | `/api/ai/{workspace_id}/history` | AI | Fetch flat AI message history for workspace | Yes |
-| `DELETE` | `/api/ai/{workspace_id}/history` | AI | Clear all AI chat messages for workspace | Yes |
-| `GET` | `/api/chat/{workspace_id}/messages` | Chat | Fetch message history for a channel or DM | Yes |
-| `POST` | `/api/chat/{workspace_id}/messages` | Chat | Send a message to a channel or recipient | Yes |
-| `GET` | `/api/chat/{workspace_id}/inbox` | Chat | Get DM inbox overview with unread indicators | Yes |
-| `GET` | `/api/flows/` | Flows | List all diagram flows in workspace | Yes |
-| `POST` | `/api/flows/` | Flows | Create a new workflow canvas | Yes |
-| `GET` | `/api/flows/{flow_id}` | Flows | Fetch complete flow including nodes and edges | Yes |
-| `PUT` | `/api/flows/{flow_id}` | Flows | Update flow title and canvas viewport | Yes |
-| `DELETE` | `/api/flows/{flow_id}` | Flows | Delete flow and associated canvas elements | Yes |
-| `POST` | `/api/flows/{flow_id}/sync` | Flows | Synchronize updated nodes and edges in batch | Yes |
-| `POST` | `/api/flows/{flow_id}/comments` | Flows | Add a spatial comment on the flow canvas | Yes |
-| `POST` | `/api/flows/{flow_id}/versions` | Flows | Snapshot a version checkpoint of the flow canvas | Yes |
-| `POST` | `/api/flows/{flow_id}/versions/{version_id}/restore` | Flows | Restore flow canvas from a past version snapshot | Yes |
-| `POST` | `/api/flows/{flow_id}/ai-explain` | Flows | Analyze flow architecture using Google Gemini | Yes |
-| `GET` | `/api/integrations/github/install-url` | GitHub | Get GitHub App installation redirect URL | Yes |
-| `POST` | `/api/integrations/github/connect` | GitHub | Finalize connection of installed GitHub App | Yes |
-| `GET` | `/api/integrations/github/status` | GitHub | Get current workspace GitHub connection status | Yes |
-| `GET` | `/api/integrations/github/repositories` | GitHub | List tracked repositories in workspace | Yes |
-| `POST` | `/api/integrations/github/repositories/sync` | GitHub | Trigger manual sync of GitHub repositories | Yes |
-| `POST` | `/api/integrations/github/repositories/toggle` | GitHub | Enable or disable event sync for a repository | Yes |
-| `POST` | `/api/integrations/github/sync-activity` | GitHub | Synchronize commit and PR activity | Yes |
-| `GET` | `/api/github/since-last-seen` | GitHub | Retrieve missed commits/PRs since user last viewed | Yes |
-| `GET` | `/api/tasks/{task_id}/github-links` | GitHub | Get linked PRs and commits for a task | Yes |
-| `POST` | `/api/tasks/{task_id}/suggestions/{suggestion_id}/accept` | GitHub | Accept AI suggestion linking GitHub commit to task | Yes |
-| `POST` | `/api/tasks/{task_id}/suggestions/{suggestion_id}/dismiss`| GitHub | Dismiss AI suggestion linking commit to task | Yes |
-| `POST` | `/api/webhooks/github` | Webhooks | Ingest GitHub App webhook events | Verified |
-
----
-
-### Authentication & Identity (`/api/auth`)
-
-#### `POST /api/auth/register`
-Creates a new user account with Argon2 password hashing.
-- **Headers:** `Content-Type: application/json`
-- **Request Body:**
-  ```json
-  {
-    "email": "developer@orbit.local",
-    "password": "StrongPassword123!",
-    "name": "Jane Developer"
-  }
-  ```
-- **Responses:**
-  - `201 Created`:
-    ```json
-    {
-      "id": "e5b8d2a1-4321-4def-a123-0987654321ab",
-      "email": "developer@orbit.local",
-      "name": "Jane Developer",
-      "created_at": "2026-10-13T09:00:00Z"
-    }
-    ```
-  - `400 Bad Request`: Email already registered.
-
-#### `POST /api/auth/login`
-Authenticates a user, issues a short-lived Bearer JWT access token, and sets an HTTP-only refresh token cookie.
-- **Request Body:**
-  ```json
-  {
-    "email": "developer@orbit.local",
-    "password": "StrongPassword123!"
-  }
-  ```
-- **Response Headers:** `Set-Cookie: refresh_token=eyJhbG...; HttpOnly; Path=/api/auth; SameSite=Lax`
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "access_token": "eyJhbGciOi...",
-    "token_type": "bearer",
-    "user": {
-      "id": "e5b8d2a1-4321-4def-a123-0987654321ab",
-      "email": "developer@orbit.local",
-      "name": "Jane Developer"
-    }
-  }
-  ```
-- **Error Codes:** `401 Unauthorized` for invalid credentials.
-
-#### `POST /api/auth/refresh`
-Validates the `refresh_token` HTTP-only cookie and returns a fresh access token.
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "access_token": "eyJhbGciOi...",
-    "token_type": "bearer"
-  }
-  ```
-- **Error Codes:** `401 Unauthorized` if refresh token is absent, invalid, or expired.
-
-#### `GET /api/auth/me`
-Fetches the currently authenticated user profile.
-- **Authentication:** `Bearer <access_token>`
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "id": "e5b8d2a1-4321-4def-a123-0987654321ab",
-    "email": "developer@orbit.local",
-    "name": "Jane Developer",
-    "avatar_url": null,
-    "created_at": "2026-10-13T09:00:00Z"
-  }
-  ```
-
----
-
-### Workspaces & Membership (`/api/workspaces`)
-
-#### `GET /api/workspaces/`
-Returns all workspaces the authenticated user belongs to.
-- **Response JSON (`200 OK`):**
-  ```json
-  [
-    {
-      "id": "7a3f81e2-5678-4321-9876-abcdef012345",
-      "name": "Acme Engineering",
-      "slug": "acme-engineering",
-      "role": "owner",
-      "member_count": 8,
-      "created_at": "2026-10-10T12:00:00Z"
-    }
-  ]
-  ```
-
-#### `POST /api/workspaces/`
-Creates a new workspace. The creating user is automatically assigned the `owner` role.
-- **Request Body:**
-  ```json
-  {
-    "name": "Project Apollo",
-    "slug": "project-apollo"
-  }
-  ```
-- **Response JSON (`201 Created`):**
-  ```json
-  {
-    "id": "9b1c7a4d-1234-5678-90ab-cdef12345678",
-    "name": "Project Apollo",
-    "slug": "project-apollo",
-    "invite_code": "APOLLO-9X2",
-    "role": "owner",
-    "created_at": "2026-10-13T09:15:00Z"
-  }
-  ```
-
-#### `POST /api/workspaces/join/{invite_code}`
-Joins an existing workspace using a unique invite code.
-- **Path Parameters:** `invite_code` (e.g., `APOLLO-9X2`)
-- **Response JSON (`200 OK`):** Returns the joined workspace metadata.
-
----
-
-### Tasks & Kanban Operations (`/api/tasks`)
-
-#### `GET /api/tasks/`
-Retrieves tasks belonging to the active workspace.
-- **Query Parameters:**
-  - `workspace_id` (UUID, required): Target workspace.
-  - `status` (string, optional): Filter by `todo`, `in_progress`, `review`, `done`.
-  - `priority` (string, optional): Filter by `low`, `medium`, `high`, `urgent`.
-  - `assignee_id` (UUID, optional): Filter by assigned user.
-- **Response JSON (`200 OK`):**
-  ```json
-  [
-    {
-      "id": "c1d2e3f4-5678-90ab-cdef-1234567890ab",
-      "title": "Implement Resend Email Alerts",
-      "description": "Connect LangGraph tools to send reminder emails",
-      "status": "in_progress",
-      "priority": "high",
-      "due_date": "2026-10-20T18:00:00Z",
-      "assignees": [
-        {
-          "id": "e5b8d2a1-4321-4def-a123-0987654321ab",
-          "name": "Jane Developer",
-          "email": "developer@orbit.local"
-        }
-      ],
-      "created_at": "2026-10-12T14:00:00Z"
-    }
-  ]
-  ```
-
-#### `POST /api/tasks/`
-Creates a new task.
-- **Request Body:**
-  ```json
-  {
-    "workspace_id": "7a3f81e2-5678-4321-9876-abcdef012345",
-    "title": "Setup PostgreSQL Backup Cron",
-    "description": "Configure pg_dump scheduled nightly backups",
-    "status": "todo",
-    "priority": "medium",
-    "due_date": "2026-10-25T00:00:00Z",
-    "assignee_ids": ["e5b8d2a1-4321-4def-a123-0987654321ab"]
-  }
-  ```
-- **Response JSON (`201 Created`):** Returns the created task record.
-
-#### `PATCH /api/tasks/{task_id}`
-Updates an existing task's status, priority, or content.
-- **Request Body:**
-  ```json
-  {
-    "status": "done"
-  }
-  ```
-- **Response JSON (`200 OK`):** Updated task record.
-
----
-
-### Knowledge Base & Documents (`/api/documents`)
-
-#### `POST /api/documents/upload`
-Uploads a document file, parses text chunks, generates vector embeddings with Gemini, and saves them to pgvector.
-- **Content-Type:** `multipart/form-data`
-- **Form Fields:**
-  - `workspace_id`: UUID
-  - `file`: Binary file (`.pdf`, `.docx`, `.txt`, `.csv`, `.xlsx`)
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "document_id": "d4e5f6a7-8901-2345-6789-012345abcdef",
-    "filename": "System_Design_Specification.pdf",
-    "file_type": "application/pdf",
-    "chunks_indexed": 14,
-    "status": "indexed"
-  }
-  ```
-
-#### `GET /api/documents/`
-Lists all documents belonging to a workspace.
-- **Query Parameters:** `workspace_id` (UUID, required)
-- **Response JSON (`200 OK`):** List of document summaries with author info and timestamps.
-
-#### `PATCH /api/documents/{doc_id}`
-Updates rich-text content for TipTap editor documents.
-- **Request Body:**
-  ```json
-  {
-    "title": "Architecture Blueprint",
-    "content": "<h2>System Overview</h2><p>Orbit utilizes FastAPI and Next.js...</p>"
-  }
-  ```
-
----
-
-### Agentic AI & Chat Sessions (`/api/ai`)
-
-#### `POST /api/ai/chat`
-Invokes the LangGraph ReAct Agent. The agent executes reasoning loops and calls tools.
-- **Request Body:**
-  ```json
-  {
-    "workspace_id": "7a3f81e2-5678-4321-9876-abcdef012345",
-    "session_id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
-    "message": "Find all high-priority tasks in progress and list their assignees."
-  }
-  ```
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "response": "Here are the high-priority tasks currently in progress:\n\n1. **Implement Resend Email Alerts** — Assigned to *Jane Developer*.",
-    "tool_calls": [
-      {
-        "tool": "get_workspace_tasks",
-        "arguments": { "status": "in_progress", "priority": "high" },
-        "result_count": 1
-      }
-    ]
-  }
-  ```
-
-#### `GET /api/ai/{workspace_id}/sessions`
-Retrieves chat sessions for the workspace.
-- **Response JSON (`200 OK`):** List of session objects containing `id`, `title`, and `updated_at`.
-
----
-
-### Collaborative Flows & Workflows (`/api/flows`)
-
-#### `POST /api/flows/{flow_id}/sync`
-Batch synchronizes nodes, positions, and connections created in the ReactFlow canvas.
-- **Request Body:**
-  ```json
-  {
-    "nodes": [
-      {
-        "id": "node_1",
-        "node_type": "serviceCard",
-        "position_x": 250.0,
-        "position_y": 120.0,
-        "data": { "label": "FastAPI Gateway", "status": "active" }
-      }
-    ],
-    "edges": [
-      {
-        "id": "edge_1_2",
-        "source_node_id": "node_1",
-        "target_node_id": "node_2",
-        "label": "Proxies to"
-      }
-    ]
-  }
-  ```
-- **Response JSON (`200 OK`):** `{"synced": true, "nodes_count": 1, "edges_count": 1}`
-
-#### `POST /api/flows/{flow_id}/ai-explain`
-Analyzes canvas architecture and provides an AI evaluation.
-- **Request Body:** `{}`
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "analysis": "### Workflow Architecture Analysis\nThis workflow diagrams an incoming API Gateway directing requests to a Redis caching layer before querying PostgreSQL..."
-  }
-  ```
-
----
-
-### System Health (`/api/health`)
-
-#### `GET /api/health`
-Unauthenticated health probe. Checks database connectivity.
-- **Response JSON (`200 OK`):**
-  ```json
-  {
-    "status": "healthy",
-    "database": "connected"
-  }
-  ```
-
----
-
-## Installation and Local Setup
+## Getting Started
 
 ### Prerequisites
 
-Ensure the following tools are installed:
-- **Node.js**: `18.18.0` or higher (Node 20 LTS recommended)
-- **Python**: `3.11` or higher
-- **PostgreSQL**: `16` (or access to a Supabase PostgreSQL instance with pgvector)
-- **Redis**: `7.x` (optional for standalone local dev; included in Docker)
-- **Git**
+- **Docker & Docker Compose:** Docker Engine 24+ and Docker Compose v2.
+- *Alternatively for manual setup:*
+  - **Python:** 3.11 or 3.12
+  - **Node.js:** 20.x LTS or higher and `npm`
+  - **PostgreSQL:** 16+ with `pgvector` extension enabled
+  - **Redis:** 7+ (optional for local caching)
+- **Google Gemini API Key:** Required for default cloud inference and document embeddings. Obtain one at [Google AI Studio](https://aistudio.google.com/).
 
 ---
 
 ### Quickstart with Docker Compose
 
-Orbit includes a multi-container Docker configuration for PostgreSQL, Redis, FastAPI, and Next.js.
+The fastest way to run Orbit locally with all services (PostgreSQL, Redis, FastAPI backend, and Next.js frontend) is using Docker Compose:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/avadhesh11/Design-Project.git
+   git clone https://github.com/your-username/Design-Project.git
    cd Design-Project
    ```
 
 2. **Configure environment variables:**
-   Create `.env` in the root or copy `.env.example`:
    ```bash
-   cp .env.example .env
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env.local
    ```
+   Open `backend/.env` and insert your `GEMINI_API_KEY` and a secure `JWT_SECRET`.
 
 3. **Start all services:**
    ```bash
@@ -1045,213 +389,339 @@ Orbit includes a multi-container Docker configuration for PostgreSQL, Redis, Fas
    ```
 
 4. **Access the application:**
-   - **Frontend Web UI:** [http://localhost:3000](http://localhost:3000)
+   - **Frontend UI:** [http://localhost:3000](http://localhost:3000)
    - **Backend API & Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-   - **PostgreSQL:** `localhost:5432`
-   - **Redis:** `localhost:6379`
+   - **Health Check:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
 
 ---
 
 ### Manual Local Development Setup
 
-To run frontend and backend independently in local development environments:
-
 #### 1. Backend Setup (FastAPI)
 
-```bash
-cd backend
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-# Create and activate Python virtual environment
-python -m venv venv
+2. Create and activate a Python virtual environment:
+   ```bash
+   # Windows (PowerShell)
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
 
-# Windows (PowerShell)
-venv\Scripts\activate
-# macOS / Linux
-# source venv/bin/activate
+   # macOS / Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
+3. Install pinned Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Create environment configuration
-cp .env.example .env
-```
+4. Configure your `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+   Update `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, and `GEMINI_API_KEY`.
 
-Configure your `backend/.env`:
-```env
-DATABASE_URL=postgresql://orbit:orbit_secret@localhost:5432/orbit_db
-JWT_SECRET=super_secret_jwt_random_key_change_in_production
-GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-RESEND_API_KEY=re_your_resend_api_key
-CORS_ORIGINS=["http://localhost:3000"]
-```
-
-Run database migrations and start the server:
-```bash
-# Run database migrations
-alembic upgrade head
-
-# Start FastAPI development server with auto-reload
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+5. Start the FastAPI development server:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
 
 #### 2. Frontend Setup (Next.js)
 
-```bash
-cd ../frontend
+1. Open a new terminal and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
 
-# Install dependencies
-npm install
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# Create local environment file
-cp .env.example .env.local
-```
+3. Configure your local environment file:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Ensure `NEXT_PUBLIC_API_URL=http://localhost:8000` is set.
 
-Configure `frontend/.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-Start the frontend development server:
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Start the Next.js development server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## Environment Variables and Configuration
+## Environment Variables
 
-### Backend Environment Configuration (`backend/.env`)
+### Backend Configuration (`backend/.env`)
 
-| Variable Name | Required | Default / Format | Purpose |
-|---|:---:|---|---|
-| `DATABASE_URL` | **Yes** | `postgresql://user:pass@host:5432/db` | Connection string for PostgreSQL database |
-| `JWT_SECRET` | **Yes** | Hexadecimal string | Signing key for symmetric HS256 JWT tokens |
-| `JWT_ALGORITHM` | No | `HS256` | JWT signing algorithm |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `30` | Access token lifespan in minutes |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | No | `7` | Refresh token cookie lifespan in days |
-| `GOOGLE_GEMINI_API_KEY` | **Yes** | `AIzaSy...` | Google AI Studio key for Gemini 2.5 Flash and Embeddings |
-| `SUPABASE_URL` | **Yes** | `https://xyz.supabase.co` | Supabase project URL for Vector RPC and Realtime |
-| `SUPABASE_SERVICE_ROLE_KEY`| **Yes** | Secret JWT | Bypasses RLS to insert embeddings and manage storage |
-| `RESEND_API_KEY` | No | `re_...` | API key for Resend transactional email dispatches |
-| `RESEND_FROM_EMAIL` | No | `notifications@yourdomain.com`| Sender email address for task and announcement alerts |
-| `GITHUB_APP_ID` | No | Numeric string | GitHub App ID for workspace integration |
-| `GITHUB_CLIENT_ID` | No | String | GitHub App OAuth Client ID |
-| `GITHUB_CLIENT_SECRET` | No | String | GitHub App OAuth Client Secret |
-| `GITHUB_WEBHOOK_SECRET` | No | String | Secret used to verify HMAC signatures on incoming webhooks |
-| `GITHUB_PRIVATE_KEY_PATH` | No | Path to `.pem` | GitHub App private key for installation token exchange |
-| `REDIS_URL` | No | `redis://localhost:6379/0` | Redis connection URL for caching and rate limiting |
-| `CORS_ORIGINS` | No | `["http://localhost:3000"]` | JSON array of allowed origin URLs for CORS |
+| Variable | Description | Required | Default / Example |
+|---|---|:---:|---|
+| `FRONTEND_URL` | Allowed origin for CORS validation | Yes | `http://localhost:3000` |
+| `PRODUCTION` | Production environment flag | No | `False` |
+| `DATABASE_URL` | PostgreSQL connection string | Yes | `postgresql://user:pass@localhost:5432/nexusai` |
+| `REDIS_URL` | Redis connection URL | No | `redis://localhost:6379/0` |
+| `SUPABASE_URL` | Supabase project URL (for pgvector & Realtime) | Yes | `https://your-project.supabase.co` |
+| `SUPABASE_SERVICE_KEY` | Supabase service role key (bypasses RLS for backend) | Yes | `your-service-role-key` |
+| `JWT_SECRET` | Secret key used to sign and verify JWT tokens | Yes | `your-super-secret-jwt-key` |
+| `JWT_ALGORITHM` | Cryptographic algorithm for JWT | No | `HS256` |
+| `JWT_EXPIRE_MINUTES` | Access token expiration lifetime in minutes | No | `10080` (7 days) |
+| `LLM_PROVIDER` | Primary AI provider (`gemini` or `ollama`) | No | `gemini` |
+| `GEMINI_API_KEY` | Google Gemini API key | Yes* | `your-gemini-api-key` (*if using Gemini) |
+| `GEMINI_MODEL` | Gemini model name | No | `gemini-3.5-flash-lite` |
+| `OLLAMA_MODEL` | Model tag for local Ollama inference | No | `llama3.2` |
+| `OLLAMA_BASE_URL` | Base endpoint URL for Ollama | No | `http://localhost:11434` |
+| `GITHUB_CLIENT_ID` | GitHub OAuth client ID | No | `your-github-client-id` |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret | No | `your-github-client-secret` |
+| `GITHUB_APP_SLUG` | GitHub App public slug | No | `your-github-app-slug` |
+| `GITHUB_APP_ID` | GitHub App numerical ID | No | `your-github-app-id` |
+| `GITHUB_WEBHOOK_SECRET`| Secret key verifying GitHub webhook payloads | No | `your-github-webhook-secret` |
+| `GITHUB_APP_PRIVATE_KEY_PATH` | Path to GitHub App `.pem` private key | No | `nexusai-github.private-key.pem` |
+| `SMTP_HOST` | Outgoing SMTP host for email notifications | No | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP port with STARTTLS | No | `587` |
+| `SMTP_USER` | SMTP username / sender email | No | `your-email@gmail.com` |
+| `SMTP_PASS` | SMTP application password | No | `your-smtp-app-password` |
 
-### Frontend Environment Configuration (`frontend/.env.local`)
+### Frontend Configuration (`frontend/.env.local`)
 
-| Variable Name | Required | Default / Format | Purpose |
-|---|:---:|---|---|
-| `NEXT_PUBLIC_API_URL` | **Yes** | `http://localhost:8000/api` | Base URL for FastAPI backend endpoints |
-| `NEXT_PUBLIC_SUPABASE_URL` | **Yes** | `https://xyz.supabase.co` | Public Supabase URL for Realtime WebSocket client |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Yes** | `eyJ...` | Public Anonymous key for client-side Supabase subscriptions |
+| Variable | Description | Required | Default / Example |
+|---|---|:---:|---|
+| `NEXT_PUBLIC_API_URL` | Base URL of the backend FastAPI service | Yes | `http://localhost:8000` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Public Supabase project URL | Yes | `https://your-project.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public Supabase anonymous client key | Yes | `your-supabase-anon-key` |
 
 ---
 
-## Engineering Decisions and Implementation Patterns
+## API Documentation
 
-### 1. Dual-Token Authentication with HTTP-Only Cookies
-Access tokens are kept short-lived (30 minutes) and stored in client memory (Zustand store), preventing token exfiltration via Cross-Site Scripting (XSS). Long-lived refresh tokens are stored in `HttpOnly`, `SameSite=Lax` cookies, protected from JavaScript access. An Axios response interceptor (`frontend/lib/api.ts`) automatically intercepts `401 Unauthorized` responses and issues a silent `POST /api/auth/refresh` before retrying failed requests.
+Interactive OpenAPI documentation is automatically served at `/docs` (Swagger UI) and `/redoc` (ReDoc) when the backend is running. Below is a reference of the core API routes:
 
-### 2. Autonomous Action ReAct Loop (LangGraph)
-Rather than simple single-prompt completions, Orbit implements a cyclic state graph in `backend/app/agents/agent.py`. The agent receives user intent, queries the tools catalogue, evaluates return values, and executes secondary actions if necessary.
+### Authentication & Identity (`/api/auth`)
 
-### 3. Multi-Format Chunking with High-Dimensional Vectors
-Document ingestion supports multiple enterprise file formats:
-- Multi-page PDF text extraction via `pdfplumber`
-- Document structure parsing via `python-docx`
-- Spreadsheet table serialization via `pandas` and `openpyxl`
-Extracted text is split into chunks of 1000 characters with a 50-character overlap to retain context across boundaries. Embeddings are generated via Google's `gemini-embedding-001` and queried in PostgreSQL using the cosine similarity operator `<=>`.
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `POST` | `/api/auth/register` | No | Register a new user account (rate-limited to 3/min) |
+| `POST` | `/api/auth/login` | No | Authenticate with email/password; returns JWT and sets HTTP-only refresh cookie (rate-limited to 5/min) |
+| `POST` | `/api/auth/refresh` | No | Rotate expired access token using HTTP-only refresh cookie |
+| `POST` | `/api/auth/logout` | No | Invalidate session and clear HTTP-only cookies |
+| `GET` | `/api/auth/me` | Bearer Token | Retrieve authenticated user profile |
+| `GET` | `/api/auth/github` | No | Initiate GitHub OAuth authorization flow |
+| `GET` | `/api/auth/github/callback` | No | Handle GitHub OAuth callback and issue session tokens |
 
-### 4. Interactive Flow Canvas with Optimistic State Synchronization
-The workflow editor at `/dashboard/flows` uses `@xyflow/react`. Node movements and edge connections update local React state immediately, with periodic debounced batch updates sent to `POST /api/flows/{flow_id}/sync`. Snapshots can be saved via `POST /api/flows/{flow_id}/versions`, enabling instant version rollbacks.
+### Workspaces & Membership (`/api/workspaces`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `POST` | `/api/workspaces/` | Bearer Token | Create a new isolated workspace |
+| `GET` | `/api/workspaces/` | Bearer Token | List all workspaces the current user belongs to |
+| `GET` | `/api/workspaces/{workspace_id}` | Bearer Token | Retrieve workspace details |
+| `POST` | `/api/workspaces/join/{invite_code}` | Bearer Token | Join a workspace using an invite code |
+| `POST` | `/api/workspaces/{workspace_id}/regenerate-invite`| Bearer Token | Regenerate invite code (admin/owner only) |
+| `GET` | `/api/workspaces/{workspace_id}/members` | Bearer Token | List members and roles for a workspace |
+| `PATCH` | `/api/workspaces/{workspace_id}/members/{member_id}/role` | Bearer Token | Update member role (admin/owner only) |
+| `DELETE`| `/api/workspaces/{workspace_id}/members/{member_id}` | Bearer Token | Remove member from workspace |
+| `GET` | `/api/workspaces/{workspace_id}/settings` | Bearer Token | Retrieve workspace AI and provider settings |
+| `PATCH` | `/api/workspaces/{workspace_id}/settings` | Bearer Token | Update AI provider, model, and Ollama configuration |
+| `POST` | `/api/workspaces/{workspace_id}/test-ollama` | Bearer Token | Test connectivity to a configured Ollama endpoint |
+
+### Tasks & Kanban Management (`/api/tasks`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `POST` | `/api/tasks/` | Bearer Token | Create a new task ticket |
+| `GET` | `/api/tasks/` | Bearer Token | List tasks filtered by workspace, status, or assignee |
+| `PATCH` | `/api/tasks/{task_id}` | Bearer Token | Update task title, description, status, priority, or due date |
+| `POST` | `/api/tasks/{task_id}/complete` | Bearer Token | Mark task as completed |
+| `POST` | `/api/tasks/{task_id}/link-commit` | Bearer Token | Associate a validated Git commit SHA to a task |
+| `DELETE`| `/api/tasks/{task_id}/links/{link_id}` | Bearer Token | Remove commit/PR link from task |
+| `DELETE`| `/api/tasks/{task_id}` | Bearer Token | Delete a task (admin/owner only) |
+
+### Knowledge Base & Documents (`/api/documents`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `POST` | `/api/documents/upload` | Bearer Token | Upload document (`.pdf`, `.docx`, `.txt`, `.csv`, `.xlsx`), parse content, chunk, and index embeddings |
+| `GET` | `/api/documents/` | Bearer Token | List all documents belonging to a workspace |
+| `GET` | `/api/documents/{doc_id}` | Bearer Token | Retrieve full document content and metadata |
+| `PATCH` | `/api/documents/{doc_id}` | Bearer Token | Update document title or content and refresh vector embeddings |
+| `DELETE`| `/api/documents/{doc_id}` | Bearer Token | Delete document and remove all associated vector embeddings |
+
+### Agentic AI & Chat (`/api/ai`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `POST` | `/api/ai/chat` | Bearer Token | Execute LangGraph autonomous agent with workspace tools |
+| `GET` | `/api/ai/{workspace_id}/sessions` | Bearer Token | List conversation sessions in a workspace |
+| `POST` | `/api/ai/{workspace_id}/sessions` | Bearer Token | Create a new conversational session |
+| `GET` | `/api/ai/{workspace_id}/sessions/{session_id}/messages` | Bearer Token | Retrieve message history for a session |
+| `DELETE`| `/api/ai/{workspace_id}/sessions/{session_id}` | Bearer Token | Delete a conversation session |
+
+### Collaborative Flows (`/api/flows`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `GET` | `/api/flows/` | Bearer Token | List all workflow diagram canvases |
+| `POST` | `/api/flows/` | Bearer Token | Create a new workflow canvas |
+| `GET` | `/api/flows/{flow_id}` | Bearer Token | Retrieve canvas nodes, edges, and comments |
+| `POST` | `/api/flows/{flow_id}/sync` | Bearer Token | Batch synchronize node positions and edge connections |
+| `POST` | `/api/flows/{flow_id}/versions` | Bearer Token | Snapshot a named version checkpoint |
+| `POST` | `/api/flows/{flow_id}/versions/{version_id}/restore` | Bearer Token | Restore canvas to a historic version snapshot |
+| `POST` | `/api/flows/{flow_id}/ai-explain` | Bearer Token | Analyze canvas topology and generate AI architecture explanation |
+
+### GitHub Integration & Dashboard (`/api/github`, `/api/dashboard`, `/api/webhooks`)
+
+| Method | Endpoint | Auth Required | Description |
+|---|---|:---:|---|
+| `GET` | `/api/integrations/github/install-url` | Bearer Token | Generate GitHub App installation URL |
+| `GET` | `/api/integrations/github/repositories` | Bearer Token | List linked GitHub repositories |
+| `POST` | `/api/integrations/github/repositories/sync` | Bearer Token | Sync pull requests and commits from GitHub |
+| `POST` | `/api/webhooks/github` | Webhook Secret | Ingest and process GitHub App webhook events |
+| `POST` | `/api/dashboard/heartbeat` | Bearer Token | Update user activity state timestamp |
+| `GET` | `/api/dashboard/when-you-were-away` | Bearer Token | Retrieve summary of commits, PRs, and tasks since last seen |
+| `GET` | `/api/health` | No | System health check (API, database, agent status) |
+
+---
+
+## How It Works
+
+### 1. LangGraph Autonomous ReAct Execution Loop
+The agent is orchestrated via `langgraph.prebuilt.create_react_agent`. When a prompt arrives at `/api/ai/chat`:
+1. **Dynamic Context Closure:** Tools are instantiated via `get_agent_tools(...)` using lexical closures that bake the current `workspace_id` and `user_id` directly into the tool function. This prevents parameter tampering or cross-tenant leakage while maintaining strict Pydantic argument validation for LLM function calling.
+2. **Context Pre-Injection:** Before invoking the model, Orbit generates query embeddings and performs a vector search against pgvector to extract the top 2 most relevant document chunks, appending them as verified ground truth in the system prompt.
+3. **Execution & Reasoning:** The agent reasons iteratively. If it determines that an action is needed (e.g. querying tasks or sending an alert), it halts generation, emits a structured tool invocation, receives the execution output, and continues until it produces a conclusive markdown response.
+
+### 2. Fail-Closed RAG Vector Search
+Document security is paramount in collaborative multi-tenant systems. Traditional RAG setups often query a vector database and trust the returned IDs without cross-checking relational permissions. Orbit implements a **fail-closed verification layer**:
+- Chunks are stored in the `embeddings` table alongside `workspace_id` and `source_id`.
+- The `match_embeddings` stored procedure performs cosine similarity search filtered strictly by the caller's `workspace_id`.
+- Retrieved chunks are subsequently validated against the active PostgreSQL `documents` table. If a document has been deleted or archived, its chunks are instantly discarded before being returned to the agent context.
+
+### 3. Visual Workflow Builder & AI Architecture Explanation
+The Orbit Flow canvas (`@xyflow/react`) translates system diagrams into interactive graphs:
+- Canvas topology (nodes and directional edges) is stored relationally across `flow_nodes` and `flow_edges`.
+- The `/api/flows/{flow_id}/ai-explain` endpoint serializes node identifiers, types, labels, and adjacency matrices into an architectural prompt. Google Gemini processes the graph topology to identify architectural patterns, potential bottlenecks, and execution flows, returning a structured architectural critique.
 
 ---
 
 ## Testing and Quality Assurance
 
-### Backend Tests
-Backend unit and integration tests are configured with `pytest` and `httpx`:
+Orbit includes a comprehensive automated test suite covering unit tests, permission isolation, evaluation benchmarks, and fail-closed security properties.
+
+### Running Backend Tests
+
+Run all unit and integration tests from the `backend/` directory:
 
 ```bash
 cd backend
-# Run test suite
-pytest -v
+python -m pytest tests
 ```
 
-Test coverage focuses on:
-- Password hashing and JWT generation/validation (`tests/test_auth.py`)
-- Workspace isolation and membership permissions (`tests/test_workspaces.py`)
-- Document parser extraction accuracy (`tests/test_rag.py`)
+#### Test Suite Highlights
 
-### Frontend Type-Checking and Linting
+- `test_agent_tool_permissions.py`: Verifies that member roles are strictly barred from destructive tools (`create_task`, `update_task`, email dispatch), and confirms proper execution for admins.
+- `test_vector_search_fail_closed.py`: Validates that similarity searches fail closed when document validation fails or when queries target unauthorized workspaces.
+- `test_evaluation_config.py`: Tests tool filtering and pre-injection behaviors under various evaluation modes.
+- `test_offline_smoke_harness.py`: Validates end-to-end evaluation runner flows in 100% offline mode using mock LLM harnesses.
+
+### Frontend Quality Checks
+
 ```bash
 cd frontend
-# TypeScript type check
+
+# Run TypeScript type check
 npx tsc --noEmit
 
-# Next.js ESLint validation
+# Run ESLint validation
 npm run lint
 ```
 
 ---
 
-## Known Limitations and Production Considerations
+## Research Evaluation Framework
 
-1. **GitHub App Private Key Configuration**:
-   - Webhook reception and database models for GitHub issues, commits, and PRs are fully implemented.
-   - However, background GitHub App token generation requires a valid App Private Key (`.pem`) file. Without this key, live GitHub App token exchanges will return configuration errors.
-2. **Flow Engine Execution Runtime**:
-   - The ReactFlow canvas allows visual node layout, edge connection, version snapshotting, and Gemini-powered architecture explanations.
-   - Nodes represent visual architectural blocks; automated background execution of custom workflow jobs is not yet implemented.
-3. **Realtime Chat Persistence vs. WebSocket Fallback**:
-   - Realtime chat broadcasting uses the Supabase Realtime client. Messages are saved to PostgreSQL via `POST /api/chat/{workspace_id}/messages`. Environments without Supabase Realtime credentials fall back to standard HTTP polling.
+Located in `backend/evaluation/`, Orbit includes an empirical benchmark suite designed to evaluate multi-source workspace reasoning across three configurations:
+
+1. **`plain_llm`**: Minimal baseline prompt without workspace access.
+2. **`rag_docs_only`**: Documents-only vector search without task or chat context.
+3. **`full_agent`**: Full Orbit ReAct agent integrating documents, tasks, and team chat.
+
+The benchmark evaluates grounded performance on single-source, multi-source synthesis, and unanswerable questions with deterministic rubric scoring. To run the evaluation offline without incurring API costs:
+
+```bash
+cd backend
+python -m evaluation.run_evaluation --mock-llm --dataset evaluation/questions.json
+```
 
 ---
 
-## Future Roadmap
+## Deployment
 
-The following enhancements are planned for future releases:
+### Containerized Deployment (Docker)
 
-- [ ] **Background Execution Engine for Flows**: Celery/Temporal workers to run backend jobs defined in canvas nodes.
-- [ ] **Granular Vector Ingestion Filters**: Document indexing filtered by workspace teams and permission tags.
-- [ ] **Automated GitHub PR Summaries**: LLM-generated summaries and suggested task links for incoming pull requests.
-- [ ] **Self-Hosted Realtime Server**: Native WebSocket gateway option to run without Supabase dependencies.
-- [ ] **Voice Input for Agent**: Speech-to-text integration for AI assistant voice queries.
+Orbit is production-ready for containerized environments:
+
+- **Backend Container:** Runs Python 3.11 with Uvicorn. The Dockerfile supports dynamic port allocation via `${PORT:-8000}`, making it directly compatible with cloud platforms like Render, AWS ECS, GCP Cloud Run, or Railway.
+- **Frontend Container:** Utilizes a multi-stage Alpine build outputting a standalone Next.js server (`server.js`) executed by a non-root user (`nextjs:nodejs`), keeping container sizes minimal and secure.
+
+### Health Probing
+
+All orchestrators and load balancers can probe the dedicated health check endpoint:
+
+```http
+GET /api/health
+```
+
+**Response (200 OK):**
+```json
+{
+  "status": "ok",
+  "services": {
+    "api": "operational",
+    "database": "operational",
+    "agent_engine": "operational"
+  }
+}
+```
+
+---
+
+## Future Improvements
+
+- [ ] **Streaming Token Responses:** Stream agent token generation via Server-Sent Events (SSE) or WebSockets to reduce perceived latency during extended ReAct loops.
+- [ ] **Granular Workspace Auditing:** Comprehensive audit logging for all agent-mediated mutations and email dispatches.
+- [ ] **Local Embedding Fallback:** Enable local SentenceTransformer embedding models when running fully disconnected with Ollama.
+- [ ] **Granular Channel Permissions:** Private team messaging channels with invite-only access control.
 
 ---
 
 ## Contributing
 
-Contributions to Orbit are welcome!
+Contributions are welcomed! To contribute:
 
 1. Fork the repository.
-2. Create a feature branch:
+2. Create a descriptive feature branch:
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. Commit your changes:
+3. Commit your changes following standard commit conventions:
    ```bash
-   git commit -m "feat: add your feature description"
+   git commit -m "feat: implement feature description"
    ```
-4. Push to your branch:
+4. Verify all tests pass:
    ```bash
-   git push origin feature/your-feature-name
+   cd backend && python -m pytest tests
+   cd ../frontend && npm run lint
    ```
-5. Open a Pull Request on GitHub.
+5. Push to your branch and open a Pull Request.
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE) — Copyright (c) 2026 Avadhesh Nagar.
