@@ -615,7 +615,7 @@ Orbit includes a comprehensive automated test suite covering unit tests, permiss
 
 ### Running Backend Tests
 
-Run all unit and integration tests from the `backend/` directory:
+Run all unit, integration, and offline evaluation tests from the `backend/` directory:
 
 ```bash
 cd backend
@@ -627,7 +627,9 @@ python -m pytest tests
 - `test_agent_tool_permissions.py`: Verifies that member roles are strictly barred from destructive tools (`create_task`, `update_task`, email dispatch), and confirms proper execution for admins.
 - `test_vector_search_fail_closed.py`: Validates that similarity searches fail closed when document validation fails or when queries target unauthorized workspaces.
 - `test_evaluation_config.py`: Tests tool filtering and pre-injection behaviors under various evaluation modes.
-- `test_offline_smoke_harness.py`: Validates end-to-end evaluation runner flows in 100% offline mode using mock LLM harnesses.
+- `test_offline_smoke_harness.py`: Validates end-to-end evaluation runner flows in 100% offline mode using in-memory fixtures and negative network/database guards.
+- `test_smoke_audit_fixes.py`: Regression suite verifying regex lookaround robustness for markdown syntax (e.g. `/api/v2`), cross-source task retrieval prompts, and unanswerable question abstention rubrics.
+- `test_evaluation_phase3_dataset_and_fixture.py`: Validates the canonical 100-question Phase 3 dataset schema, immutable baseline preservation, cross-source fact requirements, and cohort-category mapping integrity.
 
 ### Frontend Quality Checks
 
@@ -643,19 +645,69 @@ npm run lint
 
 ---
 
-## Research Evaluation Framework
+## Research Evaluation & Empirical Benchmark
 
-Located in `backend/evaluation/`, Orbit includes an empirical benchmark suite designed to evaluate multi-source workspace reasoning across three configurations:
+Orbit incorporates a rigorous, reproducible empirical evaluation harness located in [`backend/evaluation/`](backend/evaluation/README.md) designed to assess multi-source enterprise question answering across three controlled configurations:
 
-1. **`plain_llm`**: Minimal baseline prompt without workspace access.
-2. **`rag_docs_only`**: Documents-only vector search without task or chat context.
-3. **`full_agent`**: Full Orbit ReAct agent integrating documents, tasks, and team chat.
+1. **`plain_llm`**: Direct standalone model completion without workspace context or tools.
+2. **`rag_docs_only`**: Conventional vector-similarity search retrieving document chunks into prompt context (task and chat tools disabled).
+3. **`full_agent`**: Multi-tool LangGraph ReAct agent equipped with vector document search (`search_workspace_tool`), SQL task lookup (`get_tasks_tool`), and team chat retrieval (`get_recent_chat_tool`).
 
-The benchmark evaluates grounded performance on single-source, multi-source synthesis, and unanswerable questions with deterministic rubric scoring. To run the evaluation offline without incurring API costs:
+### Empirical Benchmark Summary (Rubric `v2.2-deterministic-audited`)
+
+The benchmark evaluates **100 deterministic questions** (40 single-source, 40 multi-source, 20 unanswerable) divided into a diagnostic Baseline Cohort (Q01–Q20, $n=20$) and the primary Phase 3 Held-Out Cohort (Q21–Q100, $n=80$) on a synthetic enterprise workspace.
+
+| Model | Configuration | Full Dataset Accuracy ($n=100$) | Held-Out Cohort Accuracy ($n=80$) | Held-Out Multi-Source ($n=32$) | Mean Faithfulness | Mean Latency |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Google Gemini 3.5 Flash Lite** (Cloud API) | `plain_llm` | 22.50% | 23.13% | 0.00% | 1.0000 | 1,332 ms |
+| | `rag_docs_only` | 53.00% | 60.00% | 40.63% | 0.8350 | 5,910 ms |
+| | `full_agent` | **74.50%** | **86.25%** (+26.25 pp) | **84.38%** (+43.75 pp) | **0.9000** | 6,415 ms |
+| **Meta Llama 3.2:latest (3.2B)** (Local Ollama) | `plain_llm` | 5.50% | 5.00% | 1.56% | 0.1000 | 6,300 ms |
+| | `rag_docs_only` | 45.50% | 50.63% | 35.94% | 0.7550 | 18,028 ms |
+| | `full_agent` | **47.00%** | **52.50%** (+1.88 pp) | **46.88%** (+10.94 pp) | 0.7500 | 19,496 ms |
+
+*Key finding:* For capable hosted models (Gemini 3.5 Flash Lite), tool-augmented multi-source agency achieves an **84.38%** success rate on held-out multi-source questions—a **+43.75 percentage point gain** over conventional document-only RAG.
+
+### Primary Benchmark Result & Report Artifacts
+
+All experimental conclusions, figures, and tables reported in the research paper are strictly grounded in the following version-controlled repository artifacts:
+
+- **Comprehensive Audit Report:**
+  - [`backend/evaluation/reports/final_audit_report_phase3_20261025.md`](backend/evaluation/reports/final_audit_report_phase3_20261025.md): Complete final audit report containing executive summaries, category-level analyses, failure mode breakdowns, and reproducibility criteria.
+- **Summary Metrics & Comparison CSVs:**
+  - [`backend/evaluation/reports/summary_phase3_final_audit_model_comparison_20261025.csv`](backend/evaluation/reports/summary_phase3_final_audit_model_comparison_20261025.csv): Side-by-side comparison across all slices, cohorts, and delta gains ($\Delta$ RAG-over-Plain, $\Delta$ Agent-over-RAG).
+  - [`backend/evaluation/reports/summary_phase3_final_audit_cohort_and_categories_20261025.csv`](backend/evaluation/reports/summary_phase3_final_audit_cohort_and_categories_20261025.csv): Granular breakdown by cohort (`full_dataset`, `baseline_Q01-Q20`, `heldout_Q21-Q100`) and category.
+  - [`backend/evaluation/reports/summary_phase3_benchmark_gemini_35_lite_20261025_165427_corrected.csv`](backend/evaluation/reports/summary_phase3_benchmark_gemini_35_lite_20261025_165427_corrected.csv): Summary scorecard for Gemini 3.5 Flash Lite.
+  - [`backend/evaluation/reports/summary_phase3_benchmark_llama32_20261025_173645.csv`](backend/evaluation/reports/summary_phase3_benchmark_llama32_20261025_173645.csv): Summary scorecard for local Llama 3.2.
+- **Detailed Scored JSON Evaluations:**
+  - [`backend/evaluation/reports/scored_phase3_benchmark_gemini_35_lite_20261025_165427_corrected.json`](backend/evaluation/reports/scored_phase3_benchmark_gemini_35_lite_20261025_165427_corrected.json): 300 scored attempts for Gemini under Rubric 2.2.
+  - [`backend/evaluation/reports/scored_phase3_benchmark_llama32_20261025_173645.json`](backend/evaluation/reports/scored_phase3_benchmark_llama32_20261025_173645.json): 300 scored attempts for Llama 3.2 under Rubric 2.2.
+- **Raw Benchmark Execution Streams (300 Attempts Each, 100% Execution Success):**
+  - [`backend/evaluation/results/phase3_benchmark_gemini_35_lite_20261025_165427.jsonl`](backend/evaluation/results/phase3_benchmark_gemini_35_lite_20261025_165427.jsonl)
+  - [`backend/evaluation/results/phase3_benchmark_llama32_20261025_173645.jsonl`](backend/evaluation/results/phase3_benchmark_llama32_20261025_173645.jsonl)
+- **Run Provenance Metadata:**
+  - [`backend/evaluation/results/meta_phase3_benchmark_gemini_35_lite_20261025_165427.json`](backend/evaluation/results/meta_phase3_benchmark_gemini_35_lite_20261025_165427.json)
+  - [`backend/evaluation/results/meta_phase3_benchmark_llama32_20261025_173645.json`](backend/evaluation/results/meta_phase3_benchmark_llama32_20261025_173645.json)
+- **Dataset and Audit Scripts:**
+  - [`backend/evaluation/questions_phase3_100.json`](backend/evaluation/questions_phase3_100.json): Canonical 100-question evaluation benchmark with explicit rubrics and required evidence sets.
+  - [`backend/evaluation/audit_phase3_verification.py`](backend/evaluation/audit_phase3_verification.py): Standalone programmatic reconciliation harness validating metric calculations and denominators.
+  - [`backend/evaluation/score_results.py`](backend/evaluation/score_results.py): Deterministic keyword and regex scoring engine implementing Rubric `2.2-deterministic-audited`.
+
+> **Detailed Evaluation Documentation:**  
+> For complete experimental methodology, rubric definitions, offline mock test execution, and database seeding procedures, refer to the dedicated [**Evaluation README (`backend/evaluation/README.md`)**](backend/evaluation/README.md).
+
+### Reproducing Benchmark Verification
+
+To independently verify the benchmark metrics from the raw result logs without making any external API calls:
 
 ```bash
 cd backend
-python -m evaluation.run_evaluation --mock-llm --dataset evaluation/questions.json
+
+# Run the programmatic audit and reconciliation verification
+python evaluation/audit_phase3_verification.py
+
+# Run all evaluation harness regression tests
+python -m pytest tests/test_evaluation_phase3_dataset_and_fixture.py tests/test_smoke_audit_fixes.py tests/test_offline_smoke_harness.py -v
 ```
 
 ---
